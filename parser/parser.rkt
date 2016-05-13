@@ -1,6 +1,5 @@
 #lang racket
-(require "../program_representation/simulator-structures.rkt"
-         parser-tools/lex
+(require parser-tools/lex
          (prefix-in re- parser-tools/lex-sre)
          parser-tools/yacc)
 
@@ -284,15 +283,20 @@
     (begin-parse (lex-this simple-math-lexer input))))
 
 
-; Mohdhar's part
+#|
+Written by Mohdhar Noor for CSC494
+        Computer Science Specialist, class of 2016
+        Department of Computer Science, Software Engineering Research Group
+        University of Toronto
 
-; Mileston (May 12, 2016) - accomplish this translation
-;
-;This (C-like program) - <int test (int x, bool y ) {putIfAbsent(m, key, val);}>
-;
-;To this (Racket program) - (Method "test"
-;        (list (Instruction
-;               (lambda (e) (amap-putIfAbsent e "m" "key" "val")))
+ Mileston (May 12, 2016) - accomplish this translation
+
+This (C-like program) - <int test (int x, bool y ) {putIfAbsent(m, key, val);}>
+
+To this (Racket program) - (Method "test"
+        (list (Instruction
+               (lambda (e) (amap-putIfAbsent e "m" "key" "val")))
+|#
 
 #|
 (translate parsed-exp)
