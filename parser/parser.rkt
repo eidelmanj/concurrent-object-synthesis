@@ -1,7 +1,9 @@
 #lang racket
-(require parser-tools/lex
+(require "../program_representation/simulator-structures.rkt"
+         parser-tools/lex
          (prefix-in re- parser-tools/lex-sre)
          parser-tools/yacc)
+
 (provide pp simple-math-parser
          test-parse
          lex-this
@@ -87,7 +89,7 @@
    ("shared" (token-SHARED))
    ("getters" (token-GETTERS))
    ("setters" (token-SETTERS))
-
+   
    ((re-+ basic-types) (token-TYPE lexeme))
    ((re-+ number10) (token-NUM (string->number lexeme)))
    (identifier      (token-VAR lexeme))
@@ -156,16 +158,16 @@
    (precs (left - +))
    (suppress) ;; Remove this line for debugging
    (grammar
-
-
+    
+    
     (start ((\{ user-input \} program) (make-start-node $2 $4)))
     
     ;; User-given information about program
     (user-input ((SHARED \{ arg-list \} GETTERS \{ arg-list \} SETTERS \{ arg-list \})
                  (make-user-input-node $3 $7 $11)))
-
-
-
+    
+    
+    
     ;; The program itself
     (exp ((NUM) (num-exp $1))
          ((VAR) (var-exp $1))
@@ -174,7 +176,7 @@
          ((exp - exp) (make-arith-exp - $1 $3))
          ((exp EQUAL exp) (make-arith-exp "equal" $1 $3))
          ((VAR = exp) (make-assign-exp $1 $3)))
-
+    
     (single-line-if ((IF \( exp \) \{ program \} ) (make-if-node $3 $6 (make-empty-node))))
     ;;(single-line-if ((IF \( exp \) statement) (make-if-node $3 $5 (make-empty-node))))
     (if-else ((IF \( exp \) \{ program \} ELSE \{ program \} ) (make-if-node $3 $6 $10)))
@@ -187,80 +189,80 @@
                ((single-line-if ) (make-if-stmt (make-if-root $1)))
                ((TYPE VAR \;) (make-decl-node $1 $2))
                ((if-else) (make-if-stmt (make-if-root $1))))
-
+    
     (object-access ((VAR) (make-single-var $1))
                    ((function-call) (function-call-root $1)))
-
-
-
+    
+    
+    
     (method-declaration ((TYPE VAR \( var-list \) \{ program \} ) (make-method-node $1 $2 $4 $7) ))
-
+    
     ;; Lists of variables for method/class declarations
     (add-var (() (make-empty-node))
              ((\, TYPE VAR add-var) (make-var-add-node (make-var-decl $2 $3) $4)))
-
+    
     (var-list (() (make-empty-node))
               ((TYPE VAR add-var) (make-var-node (make-var-decl $1 $2) $3)))
-
+    
     ;; List of arguments for function calls
     (add-arg (() (make-empty-node))
              ((\, VAR add-arg) (make-arg-add-node (make-arg-decl $2) $3)))
-
+    
     (arg-list (() (make-empty-node))
               ((VAR add-arg) (make-arg-node (make-arg-decl $1) $2)))
-
-
+    
+    
     ;; function calls
     (function-call ((VAR \( arg-list \)) (function-call-node $1 $3)))
-
+    
     
     ;; Main program
     (program  (() (make-empty-node))
-             ((statement program) (make-program-node $1 $2))))))
+              ((statement program) (make-program-node $1 $2))))))
 
 
 ;; Pretty printer
 (define (pp parsed-exp)
   (match parsed-exp
-
+    
     ((start-node u p) (pp p))
     ((program-node stmt next) (string-append (pp stmt)  "\n" (pp next)))
     ((empty-node) "")
     ((expr e) (pp e))
     ((if-node e p1 p2) (string-append "if (" (pp e) ") {" (pp p1) "} else{" (pp p2) "}" ))
     ((if-root c) (pp c))
-
+    
     ((method-node tp nm vlist p) (string-append (tostring tp) " " (tostring nm) "(" (pp vlist) "){\n" (pp p) "}\n"))
     ((method-root m) (pp m))
-
+    
     ;; Variable lists
     ((var-add-node v next) (string-append ", " (pp v) (pp next)))
     ((var-node v next) (string-append (pp v) (pp next)))
     ((var-decl tp id) (string-append (tostring tp) " " (tostring id)))
-
+    
     ((single-var v) (tostring v))
-
+    
     ((return-node v) (string-append "return " (tostring v) ";\n"))
-
+    
     ((decl-node tp v) (string-append (tostring tp) " " (tostring v) ";"))
-
-
+    
+    
     ;; Function calls
     ((function-call-root f) (string-append (pp f) ";" ))
     ((function-call-node nm args) (string-append (tostring nm) "(" (pp args) ")"))
-
+    
     ;; Argument lists for function calls
     ((arg-add-node v next) (string-append ", " (pp v) (pp next)))
     ((arg-node v next) (string-append (pp v) (pp next)))
     ((arg-decl id) (tostring id))
-
+    
     ;; Object accesses ie x.test()
     ((object-access v acc) (string-append (tostring v) "." (pp acc) ";"))
     ((assign-obj v1 v2 o cnt type) (string-append (tostring v1) "=" (tostring v2) "." (pp o) ))
     ((access-record v1 v2 o args cnt type)
      (if (= type 0) (string-append (tostring v1) "=" (tostring v2) "." (tostring o) (tostring args) ";") (string-append (tostring v1) "=" (tostring v2) "." (tostring o) "AndMark" (tostring args))))
     
-
+    
     ((expr-stmt e) (string-append (pp e) ";"))
     ((if-stmt c) (pp c))
     
@@ -279,9 +281,33 @@
 
 (define-syntax-rule (test-parse str)
   (let ((input (open-input-string str)))
-  (begin-parse (lex-this simple-math-lexer input))))
+    (begin-parse (lex-this simple-math-lexer input))))
 
 
+; Mohdhar's part
+
+; Mileston (May 12, 2016) - accomplish this translation
+;
+;This (C-like program) - <int test (int x, bool y ) {putIfAbsent(m, key, val);}>
+;
+;To this (Racket program) - (Method "test"
+;        (list (Instruction
+;               (lambda (e) (amap-putIfAbsent e "m" "key" "val")))
+
+#|
+(translate parsed-exp)
+  parsed-exp: A parsed expression (AST)
+
+  Returns a list a list of functions representing instructions.
+
+  The subsets can be yielded in any order; however, no subset
+  can appear twice.
+|#
+(define (translate parsed-exp)
+  (match parsed-exp
+    ((start-node u p) (translate p))
+    ((program-node stmt next) (append (translate stmt) (translate next)))
+    ((empty-node) null)))
 
 ;; ;; Unit Tests: 
 
