@@ -7,6 +7,7 @@
  (struct-out Instruction)
  (struct-out Branch)
  (struct-out Loop)
+ (struct-out Assume)
  (struct-out Sketch-placeholder))
 
 ;; Data structure for client
@@ -29,8 +30,11 @@
 ;; atomic - always false
 ;; inner-id - line number? Unique number doesn't matter
 
+(define-struct Assume (condition))
 
 (define-struct Branch (condition branch1 branch2))
 (define-struct Loop (condition instr-list))
+
+
 
 (define-struct Sketch-placeholder (name))
