@@ -1,4 +1,4 @@
-#lang rosette/safe
+#lang rosette
 (require rosette/lib/synthax)
 (require racket/dict)
 (require racket/match)
@@ -6,6 +6,7 @@
 (require rosette/lib/angelic)
 (require "../program_representation/concurrent-object-lib.rkt")
 (require "../program_representation/simulator-structures.rkt")
+(require racket/trace)
 
 
 
@@ -17,15 +18,15 @@
    (list
     (Thread-list
      (list
-      (Client-pre (list (Instruction (lambda (env) (list-add env "l1" 1)) #f 0 0 0))) ;; TODO option not to return
+      (Client-pre (list (Instruction (lambda (env) (list-add env "l1" 1)) #f 0 0 0 #f))) ;; TODO option not to return
       (Client-pre (list (Sketch-placeholder "newMethod"))))))))
 
        
 ;; Example method
 (define method-example
   (Method "newMethod"
-   (list (Instruction (lambda (env) (list-add env "l1" 12 )) #t 1 0 0)
-    (Instruction (lambda (env) (list-remove env "l1" 0 "z1")) #t 1 0 0))))
+   (list (Instruction (lambda (env) (list-add env "l1" 12 )) #t 1 0 0 #f)
+    (Instruction (lambda (env) (list-remove env "l1" 0 "z1")) #t 1 0 0 #f))))
 
 
 ;; Helper function to insert a list into the middle of another list
@@ -89,27 +90,50 @@
   (first (filter found-id? h-list)))
 
 (define (happens-before h-list instr1 instr2)
-  (let ([id1 (Instruction-id instr1)] [id2 (Instruction-id instr2)])
-    (let ([op1 (find-operation-with-id h-list id1)] [op2 (find-operation-with-id h-list id2)])
-      (let ([interval1 (Operation-interval op1)] [interval2 (Operation-interval op2)])
-        ;; (display (> (Interval-start interval2) (Interval-end interval1)))
-        ;; (display "\n")
-        (> (Interval-start interval2) (Interval-end interval1))))))
-  ;; (let ([interval1 (Operation-interval op1)] [interval2 (Operation-interval op2)])
-  ;;   (> (Interval-start op2) (Interval-end op1))))
+  (cond
+    [(Assume? instr1) #t]
+    [(Assume? instr2) #t]
+    [else 
+     (let ([id1 (Instruction-id instr1)] [id2 (Instruction-id instr2)])
+       (let ([op1 (find-operation-with-id h-list id1)] [op2 (find-operation-with-id h-list id2)])
+         (let ([interval1 (Operation-interval op1)] [interval2 (Operation-interval op2)])
+           ;; (display (> (Interval-start interval2) (Interval-end interval1)))
+           ;; (display "\n")
+           (> (Interval-start interval2) (Interval-end interval1)))))]))
+    ;; (let ([interval1 (Operation-interval op1)] [interval2 (Operation-interval op2)])
+    ;;   (> (Interval-start op2) (Interval-end op1))))
+    
 
 
-;; Unpacks all possible branches of a list of instructions into separate traces 
+(define (all-list-combos set1 set2)
+  (define (append-list l1)
+    (lambda (l2) (append l1 l2)))
+  (cond
+    [(empty? set1) (list (list))]
+    [(empty? set2) (list (list))]
+    [else
+     (append
+      (map (append-list (first set1)) set2)
+      (all-list-combos (rest set1) set2))]))
+
+;; Unpacks all possible branches of a list of instructions into separate traces
+(define tracker (void))
+(set! tracker 0)
 (define (unpack-branches l)
+  (set! tracker (+ tracker 1))
+  ;; (display "Unpack called: ") (display tracker) (display " times - length: ") (display (length l)) (display "\n")
   (define (append-list l)
     (lambda (l2)
       (append l l2)))
   (cond
     [(empty? l) (list (list))]
-    [(Branch? (first l))
+    [(Loop? (first l))   (unpack-branches (unroll-loop (first l) 1))] ;; TODO - have to come up with a real solution for this
+    [(Assume? (first l)) (map (append-item (first l)) (unpack-branches (rest l)))]
+    [(Branch? (first l)) ;; (display (unpack-branches (Branch-branch1 (first l)))) (display "\n") (display (unpack-branches (Branch-branch2 (first l)))) (display "\n\n\n")
      (append
-      (map (append-list (Branch-branch1 (first l))) (unpack-branches (rest l)))
-      (map (append-list (Branch-branch2 (first l))) (unpack-branches (rest l))))]
+      (all-list-combos (filter (lambda (l) (not (empty? l))) (unpack-branches (Branch-branch1 (first l)))) (unpack-branches (rest l)))
+      (all-list-combos (filter (lambda (l) (not (empty? l))) (unpack-branches (Branch-branch2 (first l)))) (unpack-branches (rest l))))]
+      ;; (map (append-list (Branch-branch2 (first l))) (unpack-branches (rest l))))]
     [else
      (map (append-item (first l)) (unpack-branches (rest l)))]))
     
@@ -123,6 +147,7 @@
   
   (cond
     [(> 2 (length l)) 9 #t]
+    [(or (Assume? (first l)) (Assume? (second l))) #t] ;; TODO - not sure what needs to go here
     [else (and
            (not (and (atomic? (first l)) (not (equal? (Instruction-id (second l)) (Instruction-id (first l))))))
            (is-possible-execution? (rest l)))]))
@@ -134,22 +159,44 @@
 
                   
 (define (unroll-loop loop depth)
+
   (cond
-    [(equal? depth 0) (append (list (Assume (Loop-condition loop))) (Loop-instr-list loop))]
+    [(equal? depth 0) (list (Assume (lambda (e) (not ((Loop-condition loop) e)))))]
     [else
-     (append (list (Assume (Loop-condition loop))  (Loop-instr-list loop)) (unroll-loop loop (- depth 1)))]))
+     (append (list (Assume (Loop-condition loop)))  (Loop-instr-list loop) (unroll-loop loop (- depth 1)))]))
 
 
+
+(define (range n)
+  (if (= n 0)
+      (list 0)
+      (append (list n) (range (- n 1)))))
+
+(define (all-unrolls loop depth)
+  (define (unroll-loop-with-arg n)
+    (unroll-loop loop n))
+  (map unroll-loop-with-arg (range depth)))
 
 (define (history-aware-shuffles l1 l2 h-list)
-  ;; (display "l1: ") (display l1) (display "\n")
-  ;; (display "l2: ") (display l2) (display "\n")
-  ;; (display "h-list: ") (display h-list) (display "\n")
+  (define (append-list l)
+    (lambda (l2)
+      (append l l2)))
+  (display "l1: ") (display l1) (display "\n")
+  (display "l2: ") (display l2) (display "\n")
+  (display "h-list: ") (display h-list) (display "\n")
   (cond
     [(empty? l1) (unpack-branches l2)] ;; TODO - the problem is (rest l1) doesn't unpack all the branches!
-    [(empty? l2) (unpack-branches l1)]
+    [(empty? l2) (display "l2 empty, unpacking l1: ") (display (length (unpack-branches l1))) (display "\n")(unpack-branches l1)]
     [(Loop? (first l1))
-      (history-aware-shuffles (append (unroll-loop (Loop-instr-list (first l1)) 3) (rest l1)) l2 h-list)]
+     (append
+
+      ;; (history-aware-shuffles (append (unroll-loop (first l1) 2) (rest l1)) l2 h-list)
+
+      ;; (history-aware-shuffles (append (unroll-loop (first l1) 1) (rest l1)) l2 h-list)
+      (history-aware-shuffles (append (unroll-loop (first l1) 0) (rest l1)) l2 h-list))]
+
+    [(Loop? (first l2)) (history-aware-shuffles l1 (append (list (all-unrolls (first l2) 3)) (rest l2)) h-list)]
+    ;;   (history-aware-shuffles (append (unroll-loop  (first l1) 3) (rest l1)) l2 h-list)]
       
     [(Branch? (first l1)) ;; TODO - There are no assume statements.
      (append
@@ -241,7 +288,10 @@
 
 (define (print-instruction-sequence s)
   (define (print-instr instr)
-    (display (Instruction-id instr))
+    (cond
+      [(Instruction? instr) (display (Instruction-id instr))]
+      [(Assume? instr) (display "assumption")])
+
     (display "\n"))
   (for-each print-instr (Instruction-sequence-seq s)))
 
@@ -255,9 +305,12 @@
 
 ;; Assigns a unique id to any program interleaving 
 (define (calculate-sequence-id seq)
-  (if (empty? seq)
-      `()
-      (append (list (Instruction-inner-id (first seq))) (calculate-sequence-id (rest seq)))))
+  ;; (display seq) (display "\n")
+  (cond
+    [(empty? seq) `()]
+    [(or (Continue? (first seq)) (Assume? (first seq)) (Branch? (first seq))) (calculate-sequence-id (rest seq))]
+    [else (append (list (Instruction-inner-id (first seq))) (calculate-sequence-id (rest seq)))]))
+
 
 (define (add-ids-to-instruction-lists inst-seq-list)
 
@@ -285,10 +338,24 @@
 
 (define (run-lists list-set env)
   ;; (display "Running lists...\n")
+
   (define (run-list l e id possible?)
-    (if
-     (empty? l) (add-entry (add-entry e "possible"  possible?) "id" id)
-     (begin  (run-list (rest l) ((Instruction-i (first l)) e) id possible?))))  ;; ((Instruction-i  (first l)) e)) (rest l) )))
+
+    (cond
+      [(empty? l) (add-entry (add-entry e "possible" possible?) "id" id)]
+      [(Assume? (first l)) (if ((Assume-condition (first l)) e)
+                               (run-list (rest l) e id possible?)
+                               (add-entry (add-entry e "possible" #f) "id" id))]
+                            
+      [else (run-list (rest l) ((Instruction-i (first l)) e) id possible?)]))
+  
+  
+  ;; (define (run-list l e id possible?)
+  ;;   (case
+  ;;    [(empty? l) (add-entry (add-entry e "possible"  possible?) "id" id)]
+
+
+  ;;    [else (run-list (rest l) ((Instruction-i (first l)) e) id possible?)]))  ;; ((Instruction-i  (first l)) e)) (rest l) )))
     ;; (cond
     ;;   [(empty? l) (add-entry e "id" id)]
     ;;   [((run-list ((Instruction-i (first l)) e)) (rest l))]))
@@ -552,9 +619,9 @@
 
 (define not-an-instance
   (list
-   (Instruction `() #f 0 0 0)
-   (Instruction `() #f 1 0 0)
-   (Instruction `() #f 2 0 0)))
+   (Instruction `() #f 0 0 0 #f)
+   (Instruction `() #f 1 0 0 #f)
+   (Instruction `() #f 2 0 0 #f)))
 
 (define hist-op-list
   (list
@@ -592,13 +659,13 @@
                           (cond
                             [(= x 0) (list-add e "l1" "z0")]
                             [(= x 1) (list-add e "l1" "z1")]
-                            [(= x 2) (list-remove e "l1" 0 "z6")])) #t 0 0 0)
+                            [(= x 2) (list-remove e "l1" 0 "z6")])) #t 0 0 0 #f)
 
            (Instruction (lambda (e)
                           (cond
                             [(= y 0) (list-add e "l1" "z0")]
                             [(= y 1) (list-add e "l1" "z1")]
-                            [(= y 2) (list-remove e "l1" 0 "z7")])) #t 0 0 0))))
+                            [(= y 2) (list-remove e "l1" 0 "z7")])) #t 0 0 0 #f))))
 
 (define example-client
   (Client-pre
@@ -610,8 +677,8 @@
         (Sketch-placeholder "newMethod")))
       (Client-pre
        (list
-        (Instruction (lambda (e) (list-add e "l1" "z5")) #f 1 0 0)
-        (Instruction (lambda (e) (list-remove e "l1" 4 "z6")) #f 2 0 0))))))))
+        (Instruction (lambda (e) (list-add e "l1" "z5")) #f 1 0 0 #f)
+        (Instruction (lambda (e) (list-remove e "l1" 4 "z6")) #f 2 0 0 #f))))))))
 
 
 (define (newMethod e)
@@ -642,7 +709,7 @@
 ;;           [(
       
       
-  
+
 
 
 
@@ -892,7 +959,7 @@
         (Sketch-placeholder "removeAttribute")))
       (Client-pre
        (list
-        (Instruction (lambda (e) (amap-remove-arg e "m1" "a1" "z0")) #f 0 0 0))))))))
+        (Instruction (lambda (e) (amap-remove-arg e "m1" "a1" "z0")) #f 0 0 0 #f))))))))
        
 
 (define concurrent-history
@@ -973,14 +1040,14 @@
 (define concurrent-sketch
   (Method "removeAttribute"
           (list
-           (Instruction (lambda (e) (display "line: 1\n")(update-mapped e "val" "Null")) #t 1 mystery4 100)
-           (Instruction (lambda (e) (display "line:2\n")(amap-contains-arg e "m1" "a1" "found")) #t 1 mystery3 101)
+           (Instruction (lambda (e) (display "line: 1\n")(update-mapped e "val" "Null")) #t 1 mystery4 100 #f)
+           (Instruction (lambda (e) (display "line:2\n")(amap-contains-arg e "m1" "a1" "found")) #t 1 mystery3 101 #f)
            (Branch (lambda (e) (display "branch\n")(get-mapped e "found"))
                    (list 
-                    (Instruction (lambda (e) (display "line: 3\n")(amap-get-arg e "m1" "a1" "val")) #t 1 mystery2 102)
-                    (Instruction  (lambda (e) (display "line: 4\n") (amap-remove-arg e "m1" "a1" "forget")) #t 1 mystery 103))                   
+                    (Instruction (lambda (e) (display "line: 3\n")(amap-get-arg e "m1" "a1" "val")) #t 1 mystery2 102 #f)
+                    (Instruction  (lambda (e) (display "line: 4\n") (amap-remove-arg e "m1" "a1" "forget")) #t 1 mystery 103 #f))                   
                    (list))
-           (Instruction (lambda (e) (display "line: 5\n") (update-mapped e "r0" (get-mapped e "val"))) #t 1 mystery5 104))))
+           (Instruction (lambda (e) (display "line: 5\n") (update-mapped e "r0" (get-mapped e "val"))) #t 1 mystery5 104 #f))))
 
 (define-struct Tuple (a b) #:transparent)
 
@@ -1004,9 +1071,10 @@
   (if (empty? instr-list)
       env
       (match (first instr-list)
-        [(Instruction f is-method id atomic inner-id) (run-method-list (rest instr-list) (f env))]
+        [(Instruction f is-method id atomic inner-id rw?) (run-method-list (rest instr-list) (f env))]
         [(Loop condition loop-contents)
          (doloop condition loop-contents env 3)]
+        [(Continue) env]
            
         [(Branch condition branch1 branch2) (let ([cond-result (and (condition env) (boolean? (condition env)))])
 
@@ -1025,30 +1093,30 @@
 ;; (run-sequential-sketch-symbolic (add-optimistic concurrent-sketch) seq-test-env)
 
 ;; (let ([test-env (list (list "m1" (AMap-entry e2 e1) (AMap-entry 1 7)) (cons "a1" a1))])
-;;   (synthesize #:forall (list a1 e1 e2)
-;;               #:guarantee (assert (equivalent-envs? (run-sequential-sketch-symbolic (Tuple-b (add-optimistic concurrent-sketch)) test-env) (reference test-env)))))
+  ;; (synthesize #:forall (list)
+  ;;             #:guarantee (assert (equivalent-envs? (run-sequential-sketch-symbolic (Tuple-b (add-optimistic concurrent-sketch)) test-env) (reference test-env))))
 
 
 (define-symbolic* test-sym integer?)
 (define concurrent-sketch-optim
   (Method "removeAttribute"
           (list
-           (Instruction (lambda (e) (update-mapped e "optim" #t)) #t 1 0 99)
+           (Instruction (lambda (e) (update-mapped e "optim" #t)) #t 1 0 99 #f)
            (Loop (lambda (e) (get-mapped e "optim"))
                  (list 
-                  (Instruction (lambda (e) (update-mapped e "val" "Null")) #t 1 mystery4 100)
-                  (Instruction (lambda (e) (amap-contains-arg e "m1" "a1" "found")) #t 1 mystery3 101)
+                  (Instruction (lambda (e) (update-mapped e "val" "Null")) #t 1 mystery4 100 #f)
+                  (Instruction (lambda (e) (amap-contains-arg e "m1" "a1" "found")) #t 1 mystery3 101 #f)
                   (Branch (lambda (e) (get-mapped e "found"))
                           (list 
                            (if (= test-sym 0)
                                (Branch (choose* (lambda (e) (get-mapped e "found")) (lambda (e) (get-mapped e "z0")) )
                                        (list
-                                        (Instruction (lambda (e) (amap-get-arg e "m1" "a1" "val")) #t 1 mystery2 102)
-                                        (Instruction (lambda (e) (update-mapped e "optim" #f)) #t 1 0 98))
+                                        (Instruction (lambda (e) (amap-get-arg e "m1" "a1" "val")) #t 1 mystery2 102 #f)
+                                        (Instruction (lambda (e) (update-mapped e "optim" #f)) #t 1 0 98 #f))
                                        (list))
 
                                 (Branch (lambda (e) #t)
-                                        (list (Instruction (lambda (e) (amap-get-arg e "m1" "a1" "val")) #t 1 mystery2 102))
+                                        (list (Instruction (lambda (e) (amap-get-arg e "m1" "a1" "val")) #t 1 mystery2 102 #f))
                                         (list))
                                 )
 
@@ -1057,12 +1125,12 @@
                                ;; (Instruction (lambda (e) e)))
                            
 
-                           (Instruction (lambda (e) (amap-remove-arg e "m1" "a1" "forget")) #t 1 mystery 103))
+                           (Instruction (lambda (e) (amap-remove-arg e "m1" "a1" "forget")) #t 1 mystery 103 #f))
                    `())
                    
                     
 
-                 (Instruction (lambda (e) (update-mapped e "r0" (get-mapped e "val"))) #t 1 mystery5 104))))))
+                 (Instruction (lambda (e) (update-mapped e "r0" (get-mapped e "val"))) #t 1 mystery5 104 #f))))))
 
 
 
@@ -1147,8 +1215,9 @@
                     (Branch (choose* (lambda (e) #f) (lambda (e) (get-mapped e "found")))
                             (list
                              (first instr-list)
-                             (Instruction (lambda (e) (display "updated optim here: ") (display e) (display "\n")(update-mapped e "optim" #f)) #t 1 0 98))
-                            (list)))
+                             (Instruction (lambda (e) (display "updated optim here: ") (display e) (display "\n")(update-mapped e "optim" #f)) #t 1 0 98 #f))
+                            (list
+                             (Continue))))
                    (list
                     (Branch (lambda (e) #t)
                             (list (first instr-list))
@@ -1163,17 +1232,58 @@
     (Method
      name
      (append
-      (list (Instruction (lambda (e) (update-mapped e "optim" #t)) #t 1 0 105))
+      (list (Instruction (lambda (e) (update-mapped e "optim" #t)) #t 1 0 105 #f))
       (list (Loop (lambda (e) (get-mapped e "optim"))
                   (let ([opt-helper-res (add-optimistic-helper instr-list)])
                     (Tuple-b opt-helper-res))))))))
 
 
-(define bindings (let ([test-env (list (list "m1" (AMap-entry 4 "A") (AMap-entry 1 7)) (cons "a1" 4))])
-  (synthesize #:forall (list)
-              #:guarantee (assert (equivalent-envs? (run-sequential-sketch-symbolic (add-optimistic concurrent-sketch) test-env) (reference test-env))))))
-bindings
+(define (is-rw-call? instr)
+  #t)
 
+(define (Make-announcement instr)
+  instr)
+
+
+(define (add-announcements sketch)
+  (define-symbolic* do-announcement? integer?)
+  (define (add-announcements-helper instr-list)
+    (cond
+      [(empty? instr-list) `()]
+      [(Branch? (first instr-list))
+       (let ([condition (Branch-condition (first instr-list))]
+             [branch1 (Branch-branch1 (first instr-list))]
+             [branch2 (Branch-branch2 (first instr-list))])
+         (let ([b1-res (add-announcements-helper branch1)]
+               [b2-res (add-announcements-helper branch2)]
+               [rec-result (add-announcements-helper (rest instr-list))])
+           (Branch condition b1-res b2-res)))]
+      [(is-rw-call? (first instr-list))
+       (cond
+         [(equal? do-announcement? 1)
+          (let ([rec-result (add-announcements-helper (rest instr-list))])
+            (append
+             (list (Make-announcement (first instr-list))
+                   (first instr-list))
+             rec-result))]
+         [else
+          (append (list (first instr-list)) (add-announcements-helper (rest instr-list)))])]))
+
+  
+  (let ([instr-list (Method-instr-list sketch)] [name (Method-id sketch)])
+    (Method
+     name
+     (add-announcements-helper instr-list))))
+
+;; (define bindings (let ([test-env (list (list "m1" (AMap-entry 4 "A") (AMap-entry 1 7)) (cons "a1" 4))])
+;;   (synthesize #:forall (list)
+;;               #:guarantee (assert (equivalent-envs? (run-sequential-sketch-symbolic (add-optimistic concurrent-sketch) test-env) (reference test-env))))))
+;; bindings
+
+;; (add-ids-to-instruction-lists 
+;; (get-interleavings-as-lists
+  ;; (generate-interleavings
+ ;; (replace-calls concurrent-client (add-optimistic concurrent-sketch)) (History-op-list concurrent-history))
 ;; ;; bindings
 ;; ((Branch-condition (first (Branch-branch1 (third (Loop-instr-list (second (Method-instr-list (add-optimistic concurrent-sketch))))))))
 ;;  (list (cons "z0" true) (cons "r0" false)))
@@ -1191,8 +1301,12 @@ bindings
                 
 
 (define test-env (list (list "m1" (AMap-entry 4 "A") (AMap-entry 1 7)) (cons "a1" 4)))
-
+;; (length  (generate-simulation concurrent-client (add-optimistic concurrent-sketch) concurrent-history))
 ;; (run-sequential-sketch-symbolic (add-optimistic concurrent-sketch) test-env)
+(synthesize #:forall (list)
+            #:guarantee (assert
+                        (equivalent-envs? (run-sequential-sketch-symbolic (add-optimistic concurrent-sketch) test-env)
+                                         (reference test-env))))
 ;; (run-sequential-sketch-symbolic (add-optimistic concurrent-sketch) test-env)
 ;; ((Instruction-i (first (Branch-branch1 (second (Loop-instr-list (second (Method-instr-list (add-optimistic concurrent-sketch)))))))) test-env)
 
@@ -1293,7 +1407,7 @@ bindings
         (Client-pre
          (list (Sketch-placeholder sketch-name)))
         (Client-pre
-          (map (lambda (proc) (Instruction proc #f depth 0 0)) proc-list)))))))
+          (map (lambda (proc) (Instruction proc #f depth 0 0 #f)) proc-list)))))))
     
   (let ([proc-lists (all-clients-up-to (get-all-enabled-operations all-shared-vars) depth)])
     (map transform-to-client (filter (lambda (x) (not (empty? x))) proc-lists))))
