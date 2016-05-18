@@ -14,6 +14,8 @@
          amap-remove-arg
          AMap-entry
          amap-put
+         amap-putIfAbsent
+         amap-contains
          )
 
 
