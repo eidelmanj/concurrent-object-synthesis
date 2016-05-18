@@ -31,7 +31,8 @@
          decl-node
          method-root
          method-node
-         empty-node)
+         empty-node
+         tostring)
 (require racket/match)
 
 
@@ -271,47 +272,11 @@
     ((assign-exp v e) (string-append (tostring v) "=" (tostring (pp e))))
     ((var-exp i) (error 'pp "undefined identifier ~a" i))))
 
-
-
-
-
-
 (define (lex-this lexer input) (lambda () (lexer input)))
 
 (define-syntax-rule (test-parse str)
   (let ((input (open-input-string str)))
     (begin-parse (lex-this simple-math-lexer input))))
-
-
-#|
-Written by Mohdhar Noor for CSC494
-        Computer Science Specialist, class of 2016
-        Department of Computer Science, Software Engineering Research Group
-        University of Toronto
-
- Mileston (May 12, 2016) - accomplish this translation
-
-This (C-like program) - <int test (int x, bool y ) {putIfAbsent(m, key, val);}>
-
-To this (Racket program) - (Method "test"
-        (list (Instruction
-               (lambda (e) (amap-putIfAbsent e "m" "key" "val")))
-|#
-
-#|
-(translate parsed-exp)
-  parsed-exp: A parsed expression (AST)
-
-  Returns a list a list of functions representing instructions.
-
-  The subsets can be yielded in any order; however, no subset
-  can appear twice.
-|#
-(define (translate parsed-exp)
-  (match parsed-exp
-    ((start-node u p) (translate p))
-    ((program-node stmt next) (append (translate stmt) (translate next)))
-    ((empty-node) null)))
 
 ;; ;; Unit Tests: 
 
