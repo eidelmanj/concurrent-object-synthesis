@@ -9,6 +9,8 @@
  (struct-out Loop)
  (struct-out Assume)
  (struct-out Continue)
+ (struct-out Empty)
+ (struct-out Meta-information)
  (struct-out Sketch-placeholder))
 
 ;; Data structure for client
@@ -23,13 +25,16 @@
 (define-struct Thread-list (instr-list))
 
 ;; Data structure containing an instruction from a program - also shows whether it is part of the client or the method sketch
-(define-struct Instruction (i is-method id atomic inner-id))
+(define-struct Instruction (i is-method id atomic inner-id rw? meta))
 ;; i - (lambda (e) (amap-putIfAbsent(e "m" "key" "val"  "")))
 ;; i - this is the actual function ie (lambda (e) (update-thing e "jfeioa" fhfeoia" "ret"))
 ;; id - always 0
 ;; is-method - always true
 ;; atomic - always false
 ;; inner-id - line number? Unique number doesn't matter
+(define-struct Empty ())
+(define-struct Meta-information (obj method arg1 arg2 arg3))
+
 
 (define-struct Assume (condition))
 (define-struct Continue ())
