@@ -6,12 +6,21 @@
  (struct-out Thread-list)
  (struct-out Instruction)
  (struct-out Branch)
+ (struct-out Meta-branch)
+ (struct-out Single-branch)
  (struct-out Loop)
- (struct-out Assume)
+ ;; (struct-out Assume)
+ Assume?
+ Assume-condition
+ (struct-out Assume-meta)
+ (struct-out Assume-simulation)
  (struct-out Continue)
  (struct-out Empty)
  (struct-out Meta-information)
  (struct-out Sketch-placeholder))
+
+
+
 
 ;; Data structure for client
 (define-struct Client-pre (instr-list))
@@ -36,11 +45,26 @@
 (define-struct Meta-information (obj method arg1 arg2 arg3))
 
 
-(define-struct Assume (condition))
+;; (define-struct Assume (condition))
+(define-struct Assume-meta (condition))
+(define-struct Assume-simulation (condition))
+
 (define-struct Continue ())
 (define-struct Branch (condition branch1 branch2))
+(define-struct Meta-branch (condition branch1 branch2))
+
+(define-struct Single-branch (condition branch))
 (define-struct Loop (condition instr-list))
 
 
 
 (define-struct Sketch-placeholder (name))
+
+
+(define (Assume? a)
+  (or (Assume-meta? a) (Assume-simulation? a)))
+
+(define (Assume-condition a)
+  (cond
+    [(Assume-meta? a) (Assume-meta-condition a)]
+    [(Assume-simulation? a) (Assume-simulation-condition a)]))
