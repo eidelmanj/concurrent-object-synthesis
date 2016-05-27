@@ -33,20 +33,25 @@ To this (Racket struct) - (Method "test"
 
 (define (translate parsed-exp)
   (match parsed-exp
-    ((start-node u p) (translate p))
+    ((empty-node) null)
+    ((start-node p) (translate p))
     ((program-node stmt next) (append (translate stmt) (translate next)))
     ((method-root m) (translate m))
     ((method-node tp nm vlist p) (list (make-Method
-                                        (tostring tp) (list (translate p)))))
+                                        (tostring nm) (translate p))))
     ((function-call-root f) (translate f))
-    ((function-call-node nm args) (make-Instruction
+    ((function-call-node nm args) (list (make-Instruction
                                    (lambda (e)
-                                     ((find-method nm) e (tostring nm) ))
+                                     (apply (find-method nm) (translate args)))
                                    #t
                                    0
                                    #f
-                                   100))
-    ((empty-node) null)))
+                                   100
+                                   #t
+                                   null)))
+    ((arg-node v next) (append (list v) (translate next)))
+    ((arg-add-node v next) (append (list v) (translate next)))
+    ((arg-decl id) id)))
 
 #|
 (find-method name)
@@ -61,3 +66,11 @@ To this (Racket struct) - (Method "test"
                        ["get" amap-get]
                        ["putIfAbsent" amap-putIfAbsent]
                        ["contains" amap-contains]))
+
+;(let*
+;      ((test-program "int test (int x, bool y ) {int x; x = putIfAbsent(m, key, val);}")
+;         (input (open-input-string test-program)))
+;    (translate (simple-math-parser (lex-this simple-math-lexer input))))
+
+;; (let ((input (open-input-string "int test (int x, bool y ) {int x = putIfAbsent(m, key, val);}")))
+;;   (display (translate (simple-math-parser (lex-this simple-math-lexer input)))))

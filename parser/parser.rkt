@@ -130,7 +130,7 @@
 (define-struct assign-obj (v1 v2 o id-num type) #:transparent)
 
 ;; Start node
-(define-struct start-node (u p) #:transparent)
+(define-struct start-node (p) #:transparent)
 
 ;; Manually provided information
 (define-struct user-input-node (s g p))
@@ -160,11 +160,11 @@
    (grammar
     
     
-    (start ((\{ user-input \} program) (make-start-node $2 $4)))
+    (start ((program) (make-start-node $1)))
     
     ;; User-given information about program
-    (user-input ((SHARED \{ arg-list \} GETTERS \{ arg-list \} SETTERS \{ arg-list \})
-                 (make-user-input-node $3 $7 $11)))
+;;    (user-input ((SHARED \{ arg-list \} GETTERS \{ arg-list \} SETTERS \{ arg-list \})
+;;                 (make-user-input-node $3 $7 $11)))
     
     
     
@@ -175,7 +175,8 @@
          ((exp + exp) (make-arith-exp + $1 $3))
          ((exp - exp) (make-arith-exp - $1 $3))
          ((exp EQUAL exp) (make-arith-exp "equal" $1 $3))
-         ((VAR = exp) (make-assign-exp $1 $3)))
+         ((VAR = exp \;) (make-assign-exp $1 $3))
+         ((function-call) (make-function-call-root $1)))
     
     (single-line-if ((IF \( exp \) \{ program \} ) (make-if-node $3 $6 (make-empty-node))))
     ;;(single-line-if ((IF \( exp \) statement) (make-if-node $3 $5 (make-empty-node))))
@@ -184,7 +185,7 @@
                ((method-declaration) (make-method-root $1))
                ((function-call \;) (make-function-call-root $1))
                ((VAR \. object-access \;) (make-object-access $1 $3))
-               ((VAR = VAR \. object-access \;) (new-assign-obj $1 $3 $5))
+               ;((VAR = VAR \. object-access \;) (new-assign-obj $1 $3 $5))
                ((RETURN VAR \;) (make-return-node $2))
                ((single-line-if ) (make-if-stmt (make-if-root $1)))
                ((TYPE VAR \;) (make-decl-node $1 $2))
@@ -225,7 +226,7 @@
 (define (pp parsed-exp)
   (match parsed-exp
     
-    ((start-node u p) (pp p))
+    ((start-node p) (pp p))
     ((program-node stmt next) (string-append (pp stmt)  "\n" (pp next)))
     ((empty-node) "")
     ((expr e) (pp e))

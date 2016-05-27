@@ -32,9 +32,13 @@
 ;; is-method - always true
 ;; atomic - always false
 ;; inner-id - line number? Unique number doesn't matter
+;; rw? - #t, if rw? is #f, then instruction is empty
+;; meta - meta information object
 (define-struct Empty ())
 (define-struct Meta-information (obj method arg1 arg2 arg3))
-
+;; obj - shared data structure name
+;; method - name of the method from concurr lib
+;; arg1/2/3 - the arguments of the function call
 
 (define-struct Assume (condition))
 (define-struct Continue ())
