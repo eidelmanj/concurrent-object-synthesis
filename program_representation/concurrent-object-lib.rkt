@@ -12,7 +12,7 @@
          amap-remove
          amap-contains-arg
          amap-remove-arg
-         AMap-entry
+         (struct-out AMap-entry)
          amap-put
          amap-putIfAbsent
          amap-contains
@@ -59,7 +59,7 @@
 ;; The following is a representation of the Java ConcurrentHashmap library object
 ;; Each function takes as input an environment (a list of pairs) and returns an environment
 ;; with the necessary changes to the requested data structure
-(define-struct AMap-entry (key val) #:transparent)
+(define-struct AMap-entry (key val announced) #:transparent)
 ;; (define test-amap (list (AMap-entry "thing" 12) (AMap-entry "other" "thing") (AMap-entry "thing" 25)))
 
 
@@ -98,7 +98,7 @@
     (let ([new-amap
            (append
             (filter (lambda (entry) (not (equal? (AMap-entry-key entry) key))) old-amap)
-            (list (AMap-entry key val)))])
+            (list (AMap-entry key val #f)))])
       (update-mapped e m-name new-amap))))
 
 (define (amap-put-arg e m-name key-store val-store)
@@ -114,7 +114,7 @@
          (let ([new-amap
                 (append
                  (filter (lambda (entry) (not (equal? (AMap-entry-key entry) key))) old-amap)
-                 (list (AMap-entry key val)))])
+                 (list (AMap-entry key val #f)))])
            (update-mapped (update-mapped e target-var val) m-name new-amap))]
         [else (update-mapped e target-var "Null")]))))
 
