@@ -1,6 +1,7 @@
 #lang rosette/safe
 (require rosette/lib/synthax)
 (require racket/dict)
+(require (only-in racket make-hash))
 
 (require racket/match)
 (require racket/string)
@@ -11,6 +12,11 @@
 
 (define (append-item item)
   (lambda (l) (append (list item) l)))
+
+
+
+
+
 
 
 
@@ -300,6 +306,70 @@
   (if (null? (cdr list))
       (car list)
       (func (car list) (reduce func (cdr list)))))
+
+
+
+;; (define (cex-hole-aware-shuffle l1 l2 hole-list)
+;;   (define (append-list l)
+;;     (lambda (l2)
+;;       (append l l2)))
+;;   ;; (display "l1: ") (map (lambda (i) (display (cond [(Instruction? i) (Instruction-inner-id i)] [(Assume? i)  "ASSUME"] [else "BRANCH"])) (display "-")) l1) (display "\n")
+;;   ;; (display "l2: ") (map (lambda (i) (display (cond [(Instruction? i) (Instruction-inner-id i)] [(Assume? i)  "ASSUME"] [else "BRANCH"])) (display "-")) l2) (display "\n")
+;;   ;; (display "h-list: ") (display h-list) (display "\n")
+;;   (cond
+;;     [(empty? l1) ;; (display (unpack-branches l2)) 
+;;      (unpack-branches l2)] ;; TODO - the problem is (rest l1) doesn't unpack all the branches!
+;;     [(empty? l2) ;; (display (unpack-branches l1)) (display "unpacking l1" ) (display l1)(display "\n") 
+;;      (unpack-branches l1)]
+;;     [(Loop? (first l1))
+;;      ;; (display "loop: ")
+;;      ;; (display (reduce append (map (lambda (l) (cex-hole-aware-shuffle (append l (rest l1)) l2 h-list)) (all-unrolls (first l1) 1)))) (display "\n")
+;;      (reduce append (map (lambda (l) (cex-hole-aware-shuffle (append l (rest l1)) l2 h-list)) (all-unrolls (first l1) 2)))]
+;;       ;; (cex-hole-aware-shuffle (append (unroll-loop (first l1) 0) (rest l1)) l2 h-list))]
+
+;;     ;;   (cex-hole-aware-shuffle (append (unroll-loop  (first l1) 3) (rest l1)) l2 h-list)]
+;;     [(Single-branch? (first l1))
+;;      ;; (display "single-branch: ")
+;;      ;; (display (Single-branch-branch (first l1))) (display "\n")
+;;      (append
+;;       (list (list (Assume-simulation (Single-branch-condition (first l1)))))
+;;       (cex-hole-aware-shuffle (append (list (Assume-simulation (lambda (e) (not ((Single-branch-condition (first l1)) e))))) (rest l1)) l2 h-list))]
+;;       ;; (cex-hole-aware-shuffle (append (Single-branch-branch (first l1)) (rest l1)) l2 h-list)
+;;       ;; (cex-hole-aware-shuffle (rest l1) l2 h-list))]
+;;     [(Branch? (first l1)) ;; TODO - There are no assume statements.
+;;      (append
+;;        (cex-hole-aware-shuffle (append (list (Assume-simulation (Branch-condition (first l1)))) (Branch-branch1 (first l1)) (rest l1)) l2 h-list)
+;;        (cex-hole-aware-shuffle (append (list (Assume-simulation (lambda (e) (not ((Branch-condition (first l1)) e))))) (Branch-branch2 (first l1)) (rest l1)) l2 h-list))]
+;;     [(Branch? (first l2))
+;;      (append
+;;       (cex-hole-aware-shuffle l1 (append (Branch-branch1 (first l2)) (rest l2)) h-list)
+;;       (cex-hole-aware-shuffle l1 (append (Branch-branch2 (first l2)) (rest l2)) h-list))]
+
+
+;;     [(Meta-branch? (first l1))
+;;      ;; (display "SHUFFLING META BRANCH:\n")
+;;      ;; (display "BRANCH1: ") (      (cex-hole-aware-shuffle (append (list (Assume-meta (Meta-branch-condition (first l1)))) (Meta-branch-branch1 (first l1)) (rest l1)) l2 h-list)) (display "\n")
+;;      ;; (display "BRANCH2: ") (display      (cex-hole-aware-shuffle (append (list (Assume-meta (lambda (e) (not ((Meta-branch-condition (first l1)) e))))) (Meta-branch-branch2 (first l1)) (rest l1)) l2 h-list)) (display "\n") 
+;;           ;; (display "Meta branching: ") (display "first - ")(display ((Meta-branch-condition (first l1)) `())) (display "... second - ") (display ((lambda (e) (not ((Meta-branch-condition (first l1)) e))) `())) (display "\n")
+;;      (append (cex-hole-aware-shuffle (append (list (Assume-meta (Meta-branch-condition (first l1)))) (Meta-branch-branch1 (first l1)) (rest l1)) l2 h-list)
+;;      (cex-hole-aware-shuffle (append (list (Assume-meta (lambda (e) (not ((Meta-branch-condition (first l1)) e))))) (Meta-branch-branch2 (first l1)) (rest l1)) l2 h-list))]
+;;     ;; [(atomic? (first l1))
+;;     ;;  (map (append-item (first l1)) (cex-hole-aware-shuffle (rest l1) l2 h-list))]
+;;     ;; [(atomic? (first l2))
+;;     ;;  (map (append-item (first l2)) (cex-hole-aware-shuffle l1 (rest l2) h-list))]
+;;     [(happens-before h-list (first l1) (first l2)) ;; (display "happens before (first l1) (first l2)\n")
+;;      (map (append-item (first l1)) (cex-hole-aware-shuffle (rest l1) l2 h-list))]
+;;     [(happens-before h-list (first l2) (first l1)) ;; (display "happens before (first l2) (first l1)\n")
+;;      (map (append-item (first l2)) (cex-hole-aware-shuffle l1 (rest l2) h-list))]
+;;     [else ;; (display "no happens before-")
+;;           (let ([all-shuffles2 (map (append-item (first l2)) (cex-hole-aware-shuffle l1 (rest l2) h-list))]
+;;                 [all-shuffles1 (map (append-item (first l1)) (cex-hole-aware-shuffle (rest l1) l2 h-list))])
+;;             ;; (display "all-shuffles: " ) (display (append all-shuffles1 all-shuffles2)) (display "\n")
+;;             (append all-shuffles1 all-shuffles2))]))
+
+
+
+
 
 
 (define (history-aware-shuffles l1 l2 h-list)
@@ -1679,6 +1749,94 @@
 
 
 
+
+
+
+
+(define (fix-holes-with-announcement sketch holes)
+  (define-struct Hole-result (sym-vars instr-list looking?))
+  ;; TODO - does not handle case of hole between branch and rest of program
+  (define (plug-hole-with-announcement instr-list hole looking?)
+    (define-symbolic* choice integer?)
+
+
+
+      (cond
+        [(empty? instr-list)
+         (Hole-result `() instr-list #f)]
+        [(Branch? (first instr-list))
+         (let ([recursive-result (plug-hole-with-announcement (rest instr-list) hole looking?)])
+           (let ([condition (Branch-condition (first instr-list))]
+                 [branch1 (Branch-branch1 (first instr-list))]
+                 [branch2 (Branch-branch2 (first instr-list))])
+             
+             (let ([branch1-result (plug-hole-with-announcement branch1 hole (Hole-result-looking? recursive-result))]
+                   [branch2-result (plug-hole-with-announcement branch2 hole (Hole-result-looking? recursive-result))])
+             
+               (Hole-result
+                (append (Hole-result-sym-vars branch1-result) (Hole-result-sym-vars branch2-result) (Hole-result-sym-vars recursive-result))
+              
+              
+              (append
+               (list (Branch condition
+                             (Hole-result-instr-list branch1-result)
+                             (Hole-result-instr-list branch2-result)))
+              (Hole-result-instr-list recursive-result))
+              
+              (or (Hole-result-looking? branch1-result) (Hole-result-looking? branch2-result))))))]
+        [(Instruction? (first instr-list))
+         (let ([recursive-result (plug-hole-with-announcement (rest instr-list) hole looking?)])
+           (cond
+             [(and (or looking? (Hole-result-looking? recursive-result))
+                   (is-rw-call? (first instr-list)))
+              (display (Instruction-inner-id (first instr-list))) (display "\n")
+              (Hole-result 
+               (append (list choice) (Hole-result-sym-vars recursive-result))
+               
+               (append
+                (list
+                 (Meta-branch (lambda (e) (= choice 1))
+                              (list
+                               (Make-announcement (first instr-list))
+                               (first instr-list))
+                              (list (first instr-list))))
+                (Hole-result-instr-list recursive-result))
+               #f)]
+            
+             
+           [(equal? (Instruction-inner-id (first instr-list)) (Hole-method1 hole))
+            (Hole-result (Hole-result-sym-vars recursive-result)
+                         (append (list (first instr-list)) (Hole-result-instr-list recursive-result))
+                         #t)]
+           [else
+            (Hole-result
+             (Hole-result-sym-vars recursive-result)
+             (append (list (first instr-list)) (Hole-result-instr-list recursive-result))
+             looking?)]))]))
+
+       
+          
+          
+
+       
+                
+                        
+         
+      
+
+
+  
+  (cond
+    [(empty? holes) (Tuple `() sketch)]
+    [else
+     (let ([repair-sketch-tuple (plug-hole-with-announcement (Method-instr-list sketch) (first holes) #f)])
+       (let ([new-symbols (Hole-result-sym-vars repair-sketch-tuple)] [new-sketch (Hole-result-instr-list repair-sketch-tuple)]) 
+         (let ([recurse-result (fix-holes-with-announcement (Method (Method-id sketch) new-sketch) (rest holes))])
+           (Tuple (append new-symbols (Tuple-a recurse-result)) (Tuple-b recurse-result)))))]))
+         
+
+
+(fix-holes-with-announcement concurrent-sketch (list (Hole 104 0 103)))
 ;; (cex-guided-repair-cycle test-announcements-client test-announcements-sketch test-announcements-history)
 ;; (cex-guided-repair-cycle concurrent-client (add-optimistic concurrent-sketch) concurrent-history)
 
@@ -1741,5 +1899,6 @@
     
   (let ([proc-lists (all-clients-up-to (get-all-enabled-operations all-shared-vars) depth)])
     (map transform-to-client (filter (lambda (x) (not (empty? x))) proc-lists))))
+
 
 
