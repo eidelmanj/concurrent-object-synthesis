@@ -17,7 +17,8 @@
  (struct-out Continue)
  (struct-out Empty)
  (struct-out Meta-information)
- (struct-out Sketch-placeholder))
+ (struct-out Sketch-placeholder)
+ (struct-out Thread-Op))
 
 
 
@@ -72,3 +73,8 @@
   (cond
     [(Assume-meta? a) (Assume-meta-condition a)]
     [(Assume-simulation? a) (Assume-simulation-condition a)]))
+
+;; A representation of an operation in a trace.
+;;  tid: a symbol identifying a particular thread.
+;;  mid: a symbol identifying a particular operation within a thread.
+(struct Thread-Op (tid mid) #:transparent)
