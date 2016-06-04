@@ -4,7 +4,8 @@
                   make-hash hash-ref! hash-values hash->list
                   symbol->string string->symbol
                   dropf-right
-                  set set-add)
+                  set set-add
+                  for/list)
          rosette/lib/match
          (only-in "../program_representation/simulator-structures.rkt"
                   Thread-Op Thread-Op-tid))
@@ -51,7 +52,7 @@
                         [literals (list)])
                (match trace
                  ; Remove the extra #f literals, just in case it speeds up the solver.
-                 ['() (filter-map identity literals)]
+                 ['() (remove* '(#f) literals)]
                  [`(,op . ,tail)
                   (loop
                    (set-add completed (op->symbol op))
@@ -69,7 +70,7 @@
     ; If we start with the smallest possible solutions and work our way up,
     ; we don't have to worry about the minimality of our solutions, since ruling
     ; out an already-observed solution also rules out all supersets of it.
-    (define solution (optimize #:minimize (list (count false? (hash-values vars)))
+    (define solution (optimize #:minimize `(,(count false? (hash-values vars)))
                                #:guarantee #t))
     (cond
       [(unsat? solution) covers]
@@ -77,9 +78,9 @@
              ; In each future solution, at least one of the variables set to false
              ; in this solution should take on a different value.
              ; (i.e. give me a different solution next time.)
-             (apply ||
-                    (map car (filter (compose false? cdr)
-                                     (hash->list (model solution))))))
+             (apply || (for/list ([(var value) (model solution)]
+                                  #:unless value)
+                         var)))
             ; Look for the next solution.
             (loop (cons (evaluate (hash->list vars) solution) covers))])))
 
