@@ -51,7 +51,8 @@ To this (Racket struct) - (Method "test"
                                    null)))
     ((arg-node v next) (append (list v) (translate next)))
     ((arg-add-node v next) (append (list v) (translate next)))
-    ((arg-decl id) id)))
+    ((arg-decl id) id))
+    ((decl-node tp v) (cons tp v)))
 
 #|
 (find-method name)

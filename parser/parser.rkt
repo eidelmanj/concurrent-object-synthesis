@@ -47,7 +47,7 @@
 (define-syntax-rule (tostring a) (format "~a" a))
 
 (define-tokens a (NUM VAR TYPE))
-(define-empty-tokens b (~ \. \, NULL RETURN SHARED GETTERS SETTERS ELSE  \; = + - EQUAL EOF LET IN IF \( \) \{ \} ))
+(define-empty-tokens b (~ \. \, NULL RETURN SHARED GETTERS SETTERS ELSE  STRUCT \; = + - EQUAL EOF LET IN IF \( \) \{ \} ))
 
 (define-lex-trans number
   (syntax-rules ()
@@ -64,7 +64,7 @@
   (number10 (number digit10))
   (identifier-characters (re-or (char-range "A" "z")
                                 "?" "!" ":" "$" "%" "^" "&"))
-  (basic-types (re-or "int" "bool" "Node" "Integer"))
+  (basic-types (re-or "int" "bool" "Node" "Integer" "int*" "bool*" "struct"))
   (identifier (re-+ identifier-characters)))
 
 (define simple-math-lexer
@@ -89,7 +89,7 @@
    ("shared" (token-SHARED))
    ("getters" (token-GETTERS))
    ("setters" (token-SETTERS))
-   
+   ("struct" (token-STRUCT))
    ((re-+ basic-types) (token-TYPE lexeme))
    ((re-+ number10) (token-NUM (string->number lexeme)))
    (identifier      (token-VAR lexeme))
@@ -121,6 +121,7 @@
 (define-struct arg-decl (id))
 (define-struct arg-node (v next))
 (define-struct arg-add-node (v next))
+(define-struct struct-node (nm members))
 (define-struct single-var (v))
 
 (define-struct return-node (v))
@@ -189,12 +190,14 @@
                ((RETURN VAR \;) (make-return-node $2))
                ((single-line-if ) (make-if-stmt (make-if-root $1)))
                ((TYPE VAR \;) (make-decl-node $1 $2))
+               ((TYPE VAR \{ field-members \} \;) (make-struct-node $2 $4))
                ((if-else) (make-if-stmt (make-if-root $1))))
-    
+
+    (field-members (() make-empty-node)
+                   ((TYPE VAR \; field-members) (make-decl-node $1 $2)))
+
     (object-access ((VAR) (make-single-var $1))
                    ((function-call) (function-call-root $1)))
-    
-    
     
     (method-declaration ((TYPE VAR \( var-list \) \{ program \} ) (make-method-node $1 $2 $4 $7) ))
     
