@@ -47,7 +47,7 @@
 (define-syntax-rule (tostring a) (format "~a" a))
 
 (define-tokens a (NUM VAR TYPE))
-(define-empty-tokens b (~ \. \, NULL RETURN SHARED GETTERS SETTERS ELSE  \; = + - EQUAL EOF LET IN IF \( \) \{ \} ))
+(define-empty-tokens b (~ \. \, NULL RETURN SHARED GETTERS SETTERS ELSE  STRUCT \; = + - EQUAL EOF LET IN IF \( \) \{ \} ))
 
 (define-lex-trans number
   (syntax-rules ()
@@ -64,7 +64,7 @@
   (number10 (number digit10))
   (identifier-characters (re-or (char-range "A" "z")
                                 "?" "!" ":" "$" "%" "^" "&"))
-  (basic-types (re-or "int" "bool" "Node" "Integer"))
+  (basic-types (re-or "int" "bool" "Node" "Integer" "int*" "bool*" "struct"))
   (identifier (re-+ identifier-characters)))
 
 (define simple-math-lexer
@@ -89,7 +89,7 @@
    ("shared" (token-SHARED))
    ("getters" (token-GETTERS))
    ("setters" (token-SETTERS))
-   
+   ("struct" (token-STRUCT))
    ((re-+ basic-types) (token-TYPE lexeme))
    ((re-+ number10) (token-NUM (string->number lexeme)))
    (identifier      (token-VAR lexeme))
@@ -121,6 +121,7 @@
 (define-struct arg-decl (id))
 (define-struct arg-node (v next))
 (define-struct arg-add-node (v next))
+(define-struct struct-node (nm members))
 (define-struct single-var (v))
 
 (define-struct return-node (v))
@@ -130,7 +131,7 @@
 (define-struct assign-obj (v1 v2 o id-num type) #:transparent)
 
 ;; Start node
-(define-struct start-node (u p) #:transparent)
+(define-struct start-node (p) #:transparent)
 
 ;; Manually provided information
 (define-struct user-input-node (s g p))
@@ -160,11 +161,11 @@
    (grammar
     
     
-    (start ((\{ user-input \} program) (make-start-node $2 $4)))
+    (start ((program) (make-start-node $1)))
     
     ;; User-given information about program
-    (user-input ((SHARED \{ arg-list \} GETTERS \{ arg-list \} SETTERS \{ arg-list \})
-                 (make-user-input-node $3 $7 $11)))
+;;    (user-input ((SHARED \{ arg-list \} GETTERS \{ arg-list \} SETTERS \{ arg-list \})
+;;                 (make-user-input-node $3 $7 $11)))
     
     
     
@@ -175,7 +176,8 @@
          ((exp + exp) (make-arith-exp + $1 $3))
          ((exp - exp) (make-arith-exp - $1 $3))
          ((exp EQUAL exp) (make-arith-exp "equal" $1 $3))
-         ((VAR = exp) (make-assign-exp $1 $3)))
+         ((VAR = exp \;) (make-assign-exp $1 $3))
+         ((function-call) (make-function-call-root $1)))
     
     (single-line-if ((IF \( exp \) \{ program \} ) (make-if-node $3 $6 (make-empty-node))))
     ;;(single-line-if ((IF \( exp \) statement) (make-if-node $3 $5 (make-empty-node))))
@@ -184,16 +186,18 @@
                ((method-declaration) (make-method-root $1))
                ((function-call \;) (make-function-call-root $1))
                ((VAR \. object-access \;) (make-object-access $1 $3))
-               ((VAR = VAR \. object-access \;) (new-assign-obj $1 $3 $5))
+               ;((VAR = VAR \. object-access \;) (new-assign-obj $1 $3 $5))
                ((RETURN VAR \;) (make-return-node $2))
                ((single-line-if ) (make-if-stmt (make-if-root $1)))
                ((TYPE VAR \;) (make-decl-node $1 $2))
+               ((TYPE VAR \{ field-members \} \;) (make-struct-node $2 $4))
                ((if-else) (make-if-stmt (make-if-root $1))))
-    
+
+    (field-members (() make-empty-node)
+                   ((TYPE VAR \; field-members) (make-decl-node $1 $2)))
+
     (object-access ((VAR) (make-single-var $1))
                    ((function-call) (function-call-root $1)))
-    
-    
     
     (method-declaration ((TYPE VAR \( var-list \) \{ program \} ) (make-method-node $1 $2 $4 $7) ))
     
@@ -225,7 +229,7 @@
 (define (pp parsed-exp)
   (match parsed-exp
     
-    ((start-node u p) (pp p))
+    ((start-node p) (pp p))
     ((program-node stmt next) (string-append (pp stmt)  "\n" (pp next)))
     ((empty-node) "")
     ((expr e) (pp e))

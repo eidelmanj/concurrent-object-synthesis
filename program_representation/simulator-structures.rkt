@@ -18,6 +18,7 @@
  (struct-out Continue)
  (struct-out Empty)
  (struct-out Meta-information)
+
  (struct-out Hole)
  (struct-out Lock)
  (struct-out Unlock)
@@ -38,7 +39,11 @@
  (struct-out Operation)
  (struct-out Interval)
  (struct-out Info)
- (struct-out Sketch-placeholder))
+
+
+ (struct-out Sketch-placeholder)
+ (struct-out Thread-Op))
+
 
 
 
@@ -100,9 +105,13 @@
 ;; is-method - always true
 ;; atomic - always false
 ;; inner-id - line number? Unique number doesn't matter
+;; rw? - #t, if rw? is #f, then instruction is empty
+;; meta - meta information object
 (define-struct Empty ())
 (define-struct Meta-information (obj method arg1 arg2 arg3))
-
+;; obj - shared data structure name
+;; method - name of the method from concurr lib
+;; arg1/2/3 - the arguments of the function call
 
 ;; (define-struct Assume (condition))
 (define-struct Assume-meta (condition))
@@ -127,3 +136,8 @@
   (cond
     [(Assume-meta? a) (Assume-meta-condition a)]
     [(Assume-simulation? a) (Assume-simulation-condition a)]))
+
+;; A representation of an operation in a trace.
+;;  tid: a symbol identifying a particular thread.
+;;  mid: a symbol identifying a particular operation within a thread.
+(struct Thread-Op (tid mid) #:transparent)
