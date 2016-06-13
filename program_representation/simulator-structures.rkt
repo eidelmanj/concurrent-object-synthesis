@@ -18,7 +18,8 @@
  (struct-out Continue)
  (struct-out Empty)
  (struct-out Meta-information)
-
+ (struct-out Meta-addition)
+ (struct-out Tuple)
  (struct-out Hole)
  (struct-out Lock)
  (struct-out Unlock)
@@ -39,8 +40,10 @@
  (struct-out Operation)
  (struct-out Interval)
  (struct-out Info)
-
-
+ (struct-out Repeat-meta)
+ (struct-out CAS)
+ (struct-out Mystery-const)
+ (struct-out Assume-not-meta)
  (struct-out Sketch-placeholder)
  (struct-out Thread-Op))
 
@@ -55,11 +58,17 @@
 
 
 
-
+(struct Tuple (a b) #:transparent)
 (define-struct Set-pointer (id type offset val instr-id))
 
 (define-struct Run-method (method args ret ))
-(define-struct Lock (id instr-id))
+(define-struct Lock (id instr-id) #:transparent)
+
+
+(struct Repeat-meta (instr-list))
+(struct Meta-addition (instr-list))
+(struct CAS (v1 v2 new-val ret))
+(struct Mystery-const ())
 
 (define-struct Create-var (id type instr-id))
 (define-struct Set-var (id assignment instr-id))
@@ -84,7 +93,7 @@
 (define-struct Client-pre (instr-list))
 
 ;; Data structure for method
-(define-struct Method (id instr-list))
+(define-struct Method (id args instr-list))
 ;; id - name of method
 ;; instr-list - for now just list of Instruction structures
 
@@ -115,6 +124,7 @@
 
 ;; (define-struct Assume (condition))
 (define-struct Assume-meta (condition))
+(define-struct Assume-not-meta (condition))
 (define-struct Assume-simulation (condition))
 
 (define-struct Continue ())
