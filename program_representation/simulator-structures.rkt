@@ -96,10 +96,12 @@
 ;; Extra constructors allowing the thread-id field to be set.
 ;; The names are kind of confusing, but they can be used in place of the regular
 ;;  constructors anywhere, so it doesn't really matter.
-(define (Run-Method method args ret [thread-id null])
-  (define rm (Run-method method args ret))
-  (unless (null? thread-id) (set-C-Instruction-thread-id! rm thread-id))
-  rm)
+(define-syntax-rule (define-tid-constructor constructor-id struct-id args ...)
+  (define (constructor-id args ... [thread-id null])
+    (define inst (struct-id args ...))
+    (unless (null? thread-id) (set-C-Instruction-thread-id! inst thread-id))
+    inst))
+(define-tid-constructor Run-Method Run-method method args ret)
 
 
 
