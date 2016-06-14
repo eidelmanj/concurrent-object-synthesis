@@ -21,6 +21,8 @@
  (struct-out Single-branch)
  (struct-out Loop)
  (struct-out Branch)
+ ; Extra constructors for instruction structs
+ Run-Method
 
  (struct-out Meta-branch)
  ;; (struct-out Assume)
