@@ -1,27 +1,183 @@
 #lang racket 
 (require "../program_representation/simulator-structures.rkt")
+
 (require racket/string)
 
 (provide
  to-string-instr
+ print-non-sketch-simulation
+ retrieve-code
  instr-list-to-sketch)
 
-(define (to-string-instr instr)
+
+
+(define (retrieve-code library id)
+  (let ([lib-matches (filter (lambda (m) (equal? (Method-id m) id)) library)])
+    (Method-instr-list (first lib-matches))))
+
+
+(define num-sim-loops (void))
+(set! num-sim-loops 0)
+
+
+(define (new-sim-loop-name)
+  (set! num-sim-loops (+ num-sim-loops 1))
+  (string-append "loop" (~v num-sim-loops)))
+
+
+
+(define num-arg-lists (void))
+(set! num-arg-lists 0)
+(define (new-arg-list-id)
+  (set! num-arg-lists (+ 1 num-arg-lists))
+  (string-append "arg-list" (~v num-arg-lists)))
+
+(define (print-non-sketch-simulation instr-list library arg-store ret-store)
+  (cond
+    [(empty? instr-list) ""]
+    [else
+     (let ([elem (first instr-list)])
+       (cond
+         [(Loop? elem)
+          (let ([loop-name (new-sim-loop-name)])
+            (string-append
+             "(define (" loop-name " cond )\n"
+             "(if cond\n"
+             "(begin\n"
+             (print-non-sketch-simulation (Loop-instr-list elem) library arg-store ret-store)
+             "(" loop-name " cond))\n"
+             "(begin)))\n"
+             "(" loop-name " " (to-string-instr (Loop-condition elem) arg-store) ")\n"
+             (print-non-sketch-simulation (rest instr-list) library arg-store ret-store)
+             ))]
+
+
+         [(Single-branch? elem)
+          (string-append
+           "(if " (to-string-instr (Single-branch-condition elem) arg-store ) "\n"
+           "(begin\n"
+           (print-non-sketch-simulation (Single-branch-branch elem) library arg-store ret-store)
+           ")\n"
+           "(begin))"
+           (print-non-sketch-simulation (rest instr-list) library arg-store ret-store)
+           )]
+
+         [(Branch? elem)
+          (string-append
+           "(if " (to-string-instr (Branch-condition elem) arg-store) "\n"
+           "(begin\n"
+           (print-non-sketch-simulation (Branch-branch1 elem) library arg-store ret-store)
+           ")\n"
+           "(begin\n"
+           (print-non-sketch-simulation (Branch-branch2 elem) library arg-store ret-store)
+           "))"
+           (print-non-sketch-simulation (rest instr-list) library arg-store ret-store)
+           )]
+
+
+         [(Run-method? elem)
+          (let ([args-list (new-arg-list-id)])
+            (string-append
+             "(define " args-list " (void))\n"
+             "(set! " args-list " " (to-string-instr (Run-method-args elem) arg-store) ")\n"
+             "(begin\n"
+             (print-non-sketch-simulation (retrieve-code library (Run-method-method elem)) library args-list (Run-method-ret elem))
+             ")\n"
+             (print-non-sketch-simulation (rest instr-list) library args-list ret-store)
+             ))]
+           
+          
+          
+
+         
+         [(Create-var? elem)
+          ;; (display "create-var-id: ") (display (Create-var-id elem)) (display "\n")
+          (string-append
+           "(define " (Create-var-id elem) " (void))\n"
+           (print-non-sketch-simulation (rest instr-list) library arg-store ret-store))]
+
+
+         [(Lock? elem)
+          (string-append "(if (not (has-lock current-thread " (~v (Lock-id elem)) " ))\n"
+                         "#f\n"
+                         "(begin \n (get-lock current-thread " (~v (Lock-id elem)) ")\n"
+                         (print-non-sketch-simulation (rest instr-list) library arg-store ret-store)
+                         "))")]
+
+         [(Unlock? elem)
+          (string-append "(release-lock current-thread " (~v (Unlock-id elem)) ")\n"
+                         (print-non-sketch-simulation (rest instr-list) library arg-store ret-store))]
+
+         [(Set-var? elem)
+          ;; "todo\n"]
+          ;; (display "found set var\n")
+          (string-append
+           "(set! " (Set-var-id elem) " " (to-string-instr (Set-var-assignment elem) arg-store) ")\n"
+           (print-non-sketch-simulation (rest instr-list) library arg-store ret-store))]
+
+
+
+         [(Set-pointer? elem)
+          (string-append
+           "(set-" (Set-pointer-type elem) "-" (Set-pointer-offset elem) "! " (Set-pointer-id elem) " "  (to-string-instr (Set-pointer-val elem) arg-store) ")\n"
+           (print-non-sketch-simulation (rest instr-list) library arg-store ret-store))]
+
+
+         [(CAS? elem)
+          (string-append
+
+           "(if (not (equal? " (to-string-instr (CAS-v1 elem) arg-store) " " (to-string-instr (CAS-v2 elem) arg-store) "))\n"
+           "(begin\n "
+           "(set! " (to-string-instr (CAS-v1 elem) arg-store) " " (to-string-instr (CAS-new-val elem) arg-store) ")\n"
+           "(set! " (CAS-ret elem) " 1))"
+           "(begin\n "
+           "(set! " (CAS-ret elem) " 0)))\n"
+
+           (print-non-sketch-simulation (rest instr-list) library arg-store ret-store))]
+           
+
+         [(Continue? elem)
+          (let ([where-to (find-continue-sublist (rest instr-list) (Continue-to-where elem))])
+            ;; (display (Continue-to-where elem)) (display "\n")
+            (print-non-sketch-simulation `() library arg-store ret-store))]
+
+
+         [(Return? elem)
+          (string-append
+           "(set! " ret-store " " (to-string-instr (Return-val elem) arg-store) ")\n"
+           (print-non-sketch-simulation (rest instr-list) library arg-store ret-store))]
+                         
+
+
+         [else
+          ;; (display "todo case\n")
+          (string-append
+           ;; "TODO\n"
+           ";;TODO:"
+           (~v (first instr-list)) "\n"
+           (print-non-sketch-simulation (rest instr-list) library arg-store ret-store))]))]))
+  
+
+
+
+(define (to-string-instr instr arg-store)
   ;; (display "to-string: ") (display instr) (display "\n")
   (cond
     [(Dereference? instr)
      (string-append
       "("(Dereference-type instr) "-" (Dereference-offset instr) " " (Dereference-id instr) ")")]
     [(Equal? instr)
-     (string-append "(equal? " (to-string-instr (Equal-expr1 instr)) " " (to-string-instr (Equal-expr2 instr)) ")")]
+     (string-append "(equal? " (to-string-instr (Equal-expr1 instr) arg-store) " " (to-string-instr (Equal-expr2 instr) arg-store) ")")]
     [(Or? instr)
-     (string-append "(or " (to-string-instr (Or-expr1 instr)) " " (to-string-instr (Or-expr2 instr)) ")")]
+     (string-append "(or " (to-string-instr (Or-expr1 instr) arg-store) " " (to-string-instr (Or-expr2 instr) arg-store) ")")]
     [(Not? instr)
-     (string-append "(not " (to-string-instr (Not-expr instr)) ")")]
+     (string-append "(not " (to-string-instr (Not-expr instr) arg-store) ")")]
     [(And? instr)
-     (string-append "(and " (to-string-instr (And-expr1 instr)) " " (to-string-instr (And-expr2 instr)) ")")]
+     (string-append "(and " (to-string-instr (And-expr1 instr) arg-store) " " (to-string-instr (And-expr2 instr) arg-store) ")")]
     [(Get-var? instr)
      (string-append (Get-var-id instr))]
+    [(Get-argument? instr)
+     (string-append "(list-ref " arg-store " " (~v (Get-argument-id instr)) ")")]
 
 
 
@@ -42,17 +198,17 @@
     [else
      (append instr-list (list-multiply instr-list (- num 1)))]))
 
-(define (sketch-unroll-repeat instr-list meta-var depth)
+(define (sketch-unroll-repeat instr-list meta-var depth arg-store)
   (cond
     [(equal? depth 0) (string-append "[(equal? " meta-var " 0) (begin)]\n")]
     [else
      (string-append
-      "[(equal? " meta-var " " (~v depth) ") (begin \n" (instr-list-to-sketch (list-multiply instr-list depth)) ")]\n"
-      (sketch-unroll-repeat instr-list meta-var (- depth 1)))]))
+      "[(equal? " meta-var " " (~v depth) ") (begin \n" (instr-list-to-sketch (list-multiply instr-list depth) arg-store) ")]\n"
+      (sketch-unroll-repeat instr-list meta-var (- depth 1) arg-store))]))
      
       
 
-(define (instr-list-to-sketch instr-list)
+(define (instr-list-to-sketch instr-list arg-store)
   ;; (display "to-sketch: ")(display (first instr-list))(display "\n")
   (cond
     [(empty? instr-list) ""]
@@ -63,14 +219,14 @@
           ;; (display "create-var-id: ") (display (Create-var-id elem)) (display "\n")
           (string-append
            "(define " (Create-var-id elem) " (void))\n"
-           (instr-list-to-sketch (rest instr-list)))]
+           (instr-list-to-sketch (rest instr-list) arg-store))]
 
 
          [(Lock? elem)
           (string-append "(if (not (has-lock current-thread " (~v (Lock-id elem)) " ))\n"
                          "#f"
                          "(begin \n"
-                         (instr-list-to-sketch (rest instr-list))
+                         (instr-list-to-sketch (rest instr-list) arg-store)
                          "))")]
 
 
@@ -78,58 +234,58 @@
           ;; "todo\n"]
           ;; (display "found set var\n")
           (string-append
-           "(set! " (Set-var-id elem) " " (to-string-instr (Set-var-assignment elem)) ")\n"
-           (instr-list-to-sketch (rest instr-list)))]
+           "(set! " (Set-var-id elem) " " (to-string-instr (Set-var-assignment elem) arg-store) ")\n"
+           (instr-list-to-sketch (rest instr-list) arg-store))]
 
          [(Assume-simulation? elem)
           (string-append
-           "(if " (to-string-instr (Assume-simulation-condition elem)) "\n #f\n (begin \n"
-           (instr-list-to-sketch (rest instr-list)) ""
+           "(if " (to-string-instr (Assume-simulation-condition elem) arg-store) "\n #f\n (begin \n"
+           (instr-list-to-sketch (rest instr-list) arg-store) ""
            "))\n")]
 
          [(Assume-loop? elem)
           (string-append
-           "(if " (to-string-instr (Assume-loop-condition elem)) "\n #f\n (begin \n"
-           (instr-list-to-sketch (rest instr-list)) ""
+           "(if " (to-string-instr (Assume-loop-condition elem) arg-store) "\n #f\n (begin \n"
+           (instr-list-to-sketch (rest instr-list) arg-store) ""
            "))\n")]
 
 
          [(Set-pointer? elem)
           (string-append
-           "(set-" (Set-pointer-type elem) "-" (Set-pointer-offset elem) "! " (Set-pointer-id elem) " "  (to-string-instr (Set-pointer-val elem)) ")\n"
-           (instr-list-to-sketch (rest instr-list)))]
+           "(set-" (Set-pointer-type elem) "-" (Set-pointer-offset elem) "! " (Set-pointer-id elem) " "  (to-string-instr (Set-pointer-val elem) arg-store) ")\n"
+           (instr-list-to-sketch (rest instr-list) arg-store))]
 
          [(Assume-meta? elem)
           (string-append
            "(if (not meta-var)\n #f (begin  \n"
-           (instr-list-to-sketch (rest instr-list)) "))\n")]
+           (instr-list-to-sketch (rest instr-list) arg-store) "))\n")]
 
          [(Repeat-meta? elem)
           (string-append
            "(cond "
-           (sketch-unroll-repeat (Repeat-meta-instr-list elem) "meta-count" 3)
+           (sketch-unroll-repeat (Repeat-meta-instr-list elem) "meta-count" 3 arg-store)
            ")"
            
-           (instr-list-to-sketch (rest instr-list)))]
+           (instr-list-to-sketch (rest instr-list) arg-store))]
 
 
          [(CAS? elem)
           (string-append
 
-           "(if (not (equal? " (to-string-instr (CAS-v1 elem)) " " (to-string-instr (CAS-v2 elem)) "))\n"
+           "(if (not (equal? " (to-string-instr (CAS-v1 elem) arg-store) " " (to-string-instr (CAS-v2 elem) arg-store) "))\n"
            "(begin\n "
-           "(set! " (to-string-instr (CAS-v1 elem)) " " (to-string-instr (CAS-new-val elem)) ")\n"
+           "(set! " (to-string-instr (CAS-v1 elem) arg-store) " " (to-string-instr (CAS-new-val elem) arg-store) ")\n"
            "(set! " (CAS-ret elem) " 1))"
            "(begin\n "
            "(set! " (CAS-ret elem) " 0)))\n"
 
-           (instr-list-to-sketch (rest instr-list)))]
+           (instr-list-to-sketch (rest instr-list) arg-store))]
            
 
          [(Continue? elem)
           (let ([where-to (find-continue-sublist (rest instr-list) (Continue-to-where elem))])
             ;; (display (Continue-to-where elem)) (display "\n")
-            (instr-list-to-sketch where-to))]
+            (instr-list-to-sketch where-to arg-store))]
 
 
 
@@ -139,7 +295,7 @@
            ;; "TODO\n"
            ";;TODO:"
            (~v (first instr-list)) "\n"
-           (instr-list-to-sketch (rest instr-list)))]))]))
+           (instr-list-to-sketch (rest instr-list) arg-store))]))]))
            
 
 
