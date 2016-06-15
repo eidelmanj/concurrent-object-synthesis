@@ -5,10 +5,26 @@
  (struct-out Method)
  (struct-out Thread-list)
  (struct-out Instruction)
- (struct-out Branch)
- (struct-out Meta-branch)
+
+ ; C Instructions
+ (struct-out C-Instruction)
+ (struct-out Repeat-meta)
+ (struct-out Meta-addition)
+ (struct-out CAS)
+ (struct-out Create-var)
+ (struct-out Set-var)
+ (struct-out Lock)
+ (struct-out Unlock)
+ (struct-out Return)
+ (struct-out Get-argument)
+ (struct-out Run-method)
  (struct-out Single-branch)
  (struct-out Loop)
+ (struct-out Branch)
+ ; Extra constructors for instruction structs
+ Run-Method
+
+ (struct-out Meta-branch)
  ;; (struct-out Assume)
  Assume?
  Assume-condition
@@ -19,30 +35,20 @@
  (struct-out Continue)
  (struct-out Empty)
  (struct-out Meta-information)
- (struct-out Meta-addition)
  (struct-out Tuple)
  (struct-out Hole)
- (struct-out Lock)
- (struct-out Unlock)
- (struct-out Create-var)
  (struct-out Get-var)
- (struct-out Return)
  (struct-out Dereference)
  (struct-out Equal)
  (struct-out Not)
  (struct-out Or)
- (struct-out Set-var)
- (struct-out Run-method)
  (struct-out Set-pointer)
  (struct-out And)
- (struct-out Get-argument)
  (struct-out Arguments)
  (struct-out History)
  (struct-out Operation)
  (struct-out Interval)
  (struct-out Info)
- (struct-out Repeat-meta)
- (struct-out CAS)
  (struct-out Mystery-const)
  (struct-out Assume-not-meta)
  (struct-out Sketch-placeholder)
@@ -62,27 +68,48 @@
 (struct Tuple (a b) #:transparent)
 (define-struct Set-pointer (id type offset val instr-id))
 
-(define-struct Run-method (method args ret ))
-(define-struct Lock (id instr-id) #:transparent)
-
-
-(struct Repeat-meta (instr-list))
-(struct Meta-addition (instr-list))
-(struct CAS (v1 v2 new-val ret))
 (struct Mystery-const ())
 
-(define-struct Create-var (id type instr-id))
-(define-struct Set-var (id assignment instr-id))
-(define-struct Unlock (id instr-id))
-(define-struct Get-var (id))
-(define-struct Return (val instr-id))
+#| C INSTRUCTION STRUCTS |#
+
+;; Parent struct for all the C instructions.
+;; Racket doesn't let you actually specify a value for an optional field,
+;;  so it has to be mutable and set using a separate constructor if you want
+;;  something other than the default.
+(struct C-Instruction ([thread-id #:auto #:mutable]) #:auto-value null)
+
+;; Specific C instruction structures.
+(struct Repeat-meta C-Instruction (instr-list))
+(struct Meta-addition C-Instruction (instr-list))
+(struct CAS C-Instruction (v1 v2 new-val ret))
+(struct Create-var C-Instruction (id type instr-id))
+(struct Set-var C-Instruction (id assignment instr-id))
+(struct Lock C-Instruction (id instr-id) #:transparent)
+(struct Unlock C-Instruction (id instr-id))
+(struct Return C-Instruction (val instr-id))
+(struct Get-argument C-Instruction (id))
+(struct Run-method C-Instruction (method args ret))
+(struct Single-branch C-Instruction (condition branch))
+(struct Loop C-Instruction (condition instr-list))
+(struct Branch C-Instruction (condition branch1 branch2))
+
+;; Extra constructors allowing the thread-id field to be set.
+;; The names are kind of confusing, but they can be used in place of the regular
+;;  constructors anywhere, so it doesn't really matter.
+(define (Run-Method method args ret [thread-id null])
+  (define rm (Run-method method args ret))
+  (unless (null? thread-id) (set-C-Instruction-thread-id! rm thread-id))
+  rm)
+
+
+
 (define-struct Dereference (id type offset))
 (define-struct Equal (expr1 expr2))
 (define-struct Not (expr))
 (define-struct Or (expr1 expr2))
 (define-struct And (expr1 expr2))
-(define-struct Get-argument (id))
 (define-struct Arguments (arg-list))
+(define-struct Get-var(id))
 
 
 
@@ -129,12 +156,12 @@
 (define-struct Assume-simulation (condition))
 (define-struct Assume-loop (condition to-where))
 
+
 (define-struct Continue (to-where))
 (define-struct Branch (condition branch1 branch2))
-(define-struct Meta-branch (condition branch1 branch2))
 
-(define-struct Single-branch ( condition branch))
-(define-struct Loop ( condition instr-list))
+
+(define-struct Meta-branch (condition branch1 branch2))
 
 
 
