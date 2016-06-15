@@ -12,6 +12,7 @@
  ;; (struct-out Assume)
  Assume?
  Assume-condition
+ (struct-out Assume-loop)
  (struct-out Assume-meta)
  (struct-out None)
  (struct-out Assume-simulation)
@@ -126,8 +127,9 @@
 (define-struct Assume-meta (condition))
 (define-struct Assume-not-meta (condition))
 (define-struct Assume-simulation (condition))
+(define-struct Assume-loop (condition to-where))
 
-(define-struct Continue ())
+(define-struct Continue (to-where))
 (define-struct Branch (condition branch1 branch2))
 (define-struct Meta-branch (condition branch1 branch2))
 
