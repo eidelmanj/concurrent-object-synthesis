@@ -3,6 +3,7 @@
 (require "../program_representation/simulator-structures.rkt")
 (require racket/string)
 (require "to-sketch.rkt")
+
  
 (define counter (void))
 (set! counter 0)
@@ -20,9 +21,6 @@
   (lambda (l2)
     (append (list i) l2)))
 
-(define (retrieve-code library id)
-  (let ([lib-matches (filter (lambda (m) (equal? (Method-id m) id)) library)])
-    (Method-instr-list (first lib-matches))))
 
 
 
@@ -318,10 +316,10 @@
       [(empty? instr-list) `()]
       [else
        (match (first instr-list)
-         [(Set-var id assignment instr-id)
+         [(Set-var thread-id id assignment instr-id)
           (append (list (Tuple id (get-type assignment)))
                   (collect-all-assignments (rest instr-list)))]
-         [(Loop condition loop-instr-list)
+         [(Loop thread-id condition loop-instr-list)
           (append (collect-all-assignments loop-instr-list) (collect-all-assignments (rest instr-list)))]
          [_
           `(collect-all-assignments (rest instr-list))])]))
@@ -331,7 +329,7 @@
     (cond
       [(empty? instr-list) `()]
       [(match (first instr-list)
-         [(Set-var id assignment instr-id)
+         [(Set-var thread-id id assignment instr-id)
           (if (Dereference? assignment)
               (append
                (list (Meta-addition (respond-to-announcements (Dereference-id assignment) (Dereference-type assignment))))
@@ -339,7 +337,7 @@
               (append (list (first instr-list)) (announcement-sketch (rest instr-list))))]
 
 
-         [(Loop condition loop-instr-list)
+         [(Loop thread-id condition loop-instr-list)
           (let ([in-loop-assignments (collect-all-assignments loop-instr-list)])
             (display in-loop-assignments) (display "\n")
             (append
@@ -507,13 +505,13 @@
 
 (define (Get-instr-id x)
   (match x
-    [(Lock id instr-id) instr-id]
-    [(Create-var id type instr-id) instr-id]
-    [(Unlock id instr-id) instr-id]
-    [(Return val instr-id) instr-id]
+    [(Lock thread-id id instr-id) instr-id]
+    [(Create-var thread-id id type instr-id) instr-id]
+    [(Unlock thread-id id instr-id) instr-id]
+    [(Return thread-id val instr-id) instr-id]
     [(Set-pointer id type offset val instr-id) instr-id]
-    [(Set-var id assignment instr-id) instr-id]
-    [(Info t-id instr-id) instr-id]
+    [(Set-var thread-id id assignment instr-id) instr-id]
+    [(Info  t-id instr-id) instr-id]
     [_
      (None)]))
 
@@ -628,8 +626,8 @@
 
 ;; (first (thread-runs thread3 library 0))
 
-
-(display (instr-list-to-sketch (first (thread-runs thread3 library 0))))
+;; (display (print-non-sketch-simulation (list (Run-method "get" (list 1 "test" ) "ret")) library (list 1 2 3)  "default"))
+(display (instr-list-to-sketch (first (thread-runs thread3 library 0)) "args"))
 
 ;; (second (thread-runs thread1 library 0))
 ;; (map Get-instr-id (second (thread-runs thread1 library 0)))
