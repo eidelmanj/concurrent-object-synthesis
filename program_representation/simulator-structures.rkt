@@ -160,7 +160,6 @@
 
 
 (define-struct Continue (to-where))
-(define-struct Branch (condition branch1 branch2))
 
 
 (define-struct Meta-branch (condition branch1 branch2))
