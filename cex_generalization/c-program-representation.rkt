@@ -4,6 +4,7 @@
 (require racket/string)
 (require "to-sketch.rkt")
 
+(provide interleaving-to-sketch create-announcement-version)
  
 (define counter (void))
 (set! counter 0)
