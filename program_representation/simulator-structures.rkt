@@ -126,7 +126,7 @@
 (define-struct Client-pre (instr-list))
 
 ;; Data structure for method
-(define-struct Method (id args instr-list))
+(define-struct Method (id args ret-type instr-list))
 ;; id - name of method
 ;; instr-list - for now just list of Instruction structures
 

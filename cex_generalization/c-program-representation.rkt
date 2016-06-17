@@ -404,7 +404,8 @@
    (Method
     "get"
     ;; (add-ids add-method-id
-    2
+    (list "Node" "int")
+    "int"
     (create-announcement-version 
      (list
       (Lock 1(None))
@@ -427,7 +428,8 @@
     (Method
      "contains"
 
-     2
+     (list "Node" "int")
+     "int"
      ;; (add-ids add-method-id
       (list
        (Create-var "val" "int"(None))
@@ -438,7 +440,8 @@
     
    (Method
     "remove"
-    2
+    (list "Node" "int")
+    "int"
     ;; (add-ids add-method-id
      (list
       (Lock 1(None))
@@ -479,7 +482,8 @@
    (Method
     "extension"
     ;; (add-ids add-method-id
-    2
+    (list "Node" "int")
+    "int"
      (list
       (Create-var "val" "int"(None))
       (Create-var "found" "int"(None))
