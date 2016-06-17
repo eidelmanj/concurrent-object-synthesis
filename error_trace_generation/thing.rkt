@@ -48,10 +48,9 @@
 ; #t is just a placeholder non-null value for the thread id to distinguish it from the mut.
 (define (non-commutative-ops method-call library pointers)
   (define m-args
-    (make-hash
-     (map cons
-          (Method-args (Run-method-method method-call))  ; argument type
-          (Run-method-args method-call))))               ; argument value
+    (map cons
+         (Method-args (Run-method-method method-call))  ; argument type
+         (Run-method-args method-call)))                ; argument value
   
   ; Compute the possible non-commutative arguments of each type.
   (define args-of-type
@@ -60,9 +59,9 @@
             (cons type
                   (if (member type primitive-types)
                       (cons (random-value-of-type type)
-                            (for/list ([(t v) m-args]
-                                       #:when (equal? t type))
-                              v))
+                            (for/list ([arg m-args] ; pairs of (type . val)
+                                       #:when (equal? (car arg) type))
+                              (cdr arg)))
                       (hash-ref pointers type))))
           (append primitive-types (hash-keys pointers)))))
   
