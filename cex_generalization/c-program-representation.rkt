@@ -81,7 +81,7 @@
       [(Repeat-meta? (first loop))
        ;; (display "going into repeat meta\n")
        (append
-        (list (Repeat-meta (give-ids-to-instr-list (Repeat-meta-instr-list (first loop)) loop-id)))
+        (list (Repeat-meta (give-ids-to-instr-list (Repeat-meta-instr-list (first loop)) loop-id) (Repeat-meta-which-var (first loop))))
         (give-ids-to-instr-list (rest loop) loop-id))]
 
       [(Single-branch? (first loop))
@@ -92,7 +92,7 @@
 
       [(Meta-addition? (first loop))
        (append
-        (list (Meta-addition (give-ids-to-instr-list (Meta-addition-instr-list (first loop)) loop-id)))
+        (list (Meta-addition (give-ids-to-instr-list (Meta-addition-instr-list (first loop)) loop-id) (Meta-addition-which-var (first loop))))
         (give-ids-to-instr-list (rest loop) loop-id))]
                      
       [else
@@ -115,10 +115,6 @@
   (let ([loop-with-ids (Loop (Loop-condition loop) (give-ids-to-instr-list (Loop-instr-list loop) loop-id))])
     (all-unrolls-helper loop-with-ids depth)))
 
-(define (reduce func list)
-  (if (null? (cdr list))
-      (car list)
-      (func (car list) (reduce func (cdr list)))))
 
 
 (define thread1
@@ -218,16 +214,19 @@
         (map (append-item (Assume-simulation (Single-branch-condition (first instr-list)))) (unroll-thread-runs (append (Single-branch-branch (first instr-list)) (rest instr-list)) to-return))
         (map (append-item (Assume-simulation (Not (Single-branch-condition (first instr-list))))) (unroll-thread-runs (rest instr-list) to-return)))]
 
-      [(Run-method? (first instr-list)) ;; (display "run method\n")
-       (define arg-var-name (string-append "new-var" (~v (freshvar))))
-       (map (append-list
-             (list
-              (add-new-line-id (Create-var arg-var-name "int" (None) ) (None))
-              (add-new-line-id (Set-var arg-var-name (Run-method-args (first instr-list)) (None)) (None))))
+      ;; [(Run-method? (first instr-list)) ;; (display "run method\n")
+      ;;  (define arg-var-name (string-append "new-var" (~v (freshvar))))
+      ;;  (define new-ctx-switch (Context-switch))
+      ;;  (set-C-Instruction-thread-id! new-ctx-switch (C-Instruction-thread-id (first instr-list))) 
+      ;;  (map (append-list
+      ;;        (list
+      ;;         new-ctx-switch
+      ;;         (add-new-line-id (Create-var arg-var-name "int" (None) ) (None))
+      ;;         (add-new-line-id (Set-var arg-var-name (Run-method-args (first instr-list)) (None)) (None))))
 
 
-            (all-combinations (unroll-thread-runs (retrieve-code library (Run-method-method (first instr-list))) (Run-method-ret (first instr-list)))
-                              (unroll-thread-runs (rest instr-list) to-return)))]
+      ;;       (all-combinations (unroll-thread-runs (retrieve-code library (Run-method-method (first instr-list))) (Run-method-ret (first instr-list)))
+      ;;                         (unroll-thread-runs (rest instr-list) to-return)))]
 
 
 
@@ -247,10 +246,10 @@
        ;; (display "unrolls: ") (display (all-unrolls (first instr-list) 2 (new-loop-id))) (display "\n")
        ;; (exit)
        
-       (reduce append (map (lambda (l)  (unroll-thread-runs (append l (rest instr-list)) to-return)) (all-unrolls (first instr-list) 2 (new-loop-id))))]
+       (reduce append (map (lambda (l)  (unroll-thread-runs (append l (rest instr-list)) to-return)) (all-unrolls (first instr-list) 1 (new-loop-id))))]
 
       [(Repeat-meta? (first instr-list))
-       (reduce append (map (lambda (l) (map (append-item (Repeat-meta l)) (unroll-thread-runs (rest instr-list) to-return)))
+       (reduce append (map (lambda (l) (map (append-item (Repeat-meta l (Repeat-meta-which-var (first instr-list)))) (unroll-thread-runs (rest instr-list) to-return)))
 
 
                                 (unroll-thread-runs (Repeat-meta-instr-list (first instr-list)) to-return)))]
@@ -270,7 +269,6 @@
 
   (let ([instr-list (Thread-list-instr-list t)])
     (unroll-thread-runs instr-list "")))
-
 
 
 
@@ -332,17 +330,17 @@
          [(Set-var thread-id id assignment instr-id)
           (if (Dereference? assignment)
               (append
-               (list (Meta-addition (respond-to-announcements (Dereference-id assignment) (Dereference-type assignment))))
+               (list (Meta-addition (respond-to-announcements (Dereference-id assignment) (Dereference-type assignment)) (new-meta-var)))
                (announcement-sketch (rest instr-list)))
               (append (list (first instr-list)) (announcement-sketch (rest instr-list))))]
 
 
          [(Loop thread-id condition loop-instr-list)
           (let ([in-loop-assignments (collect-all-assignments loop-instr-list)])
-            (display in-loop-assignments) (display "\n")
+            ;; (display in-loop-assignments) (display "\n")
             (append
              (list (first instr-list))
-             (map (lambda (t)  (Meta-addition (respond-to-announcements (Tuple-a t) (Tuple-b t))))
+             (map (lambda (t)  (Meta-addition (respond-to-announcements (Tuple-a t) (Tuple-b t)) (new-meta-var)))
                   in-loop-assignments)
              (announcement-sketch (rest instr-list))))]
           
@@ -353,44 +351,51 @@
 
 
   
-  (list
-   (Create-var "loop-break" "int" (None))
-   (Set-var "loop-break" #f (None))
-   (Loop (Not (Get-var "loop-break"))
-         (announcement-sketch instr-list))))
-          
+
+   ;; (Create-var "loop-break" "int" (None))
+   ;; (Set-var "loop-break" #f (None))
+   ;; (Loop (Not (Get-var "loop-break"))
+   (announcement-sketch instr-list))
+
 
 
 (define (respond-to-announcements node-of-interest type)
   (list
-   (Create-var "bits" "int" (None))
-   (Set-var "bits" (Dereference node-of-interest type "bits") (None))
 
-   (Repeat-meta
-    (list
-     (Single-branch (Equal (Get-var "choice") (Mystery-const))
+   (Single-branch (Not (Is-none? (Get-var node-of-interest)))
+                  (list
+                   (Create-var "bits" "int" (None))
 
+
+                   (Set-var "bits" (Dereference node-of-interest type "bits") (None))
+                   
+                   
+                   (Repeat-meta
                     (list
-                     (Single-branch (Equal (Get-var "bits") (Mystery-const))
-                                    (list
-                                     (Continue (None))))
+                     (Meta-addition
+                      
+                      (list
+                       ;; ;; (Single-branch (Equal (Get-var "bits") (Mystery-const))
+                       ;; ;;                (list
+                       ;; ;;                 (Continue (None))))
+                       
+                       (Create-var "new-bits" "int" (None))
+                       (Create-var "checkCAS" "int" (None))
+                       (Set-var "new-bits" (new-meta-var) (None))
+                       
+                       (CAS (Dereference node-of-interest type "bits") (Get-var "bits") (Get-var "new-bits") "checkCAS")
+                       
+                       (Single-branch (Not (Get-var "checkCAS"))
+                                      (list
+                                       (Continue (None)))))
+                      
+                      ;; (Set-var "loop-break" #t (None)))
+                      
                      
-                     (Create-var "new-bits" "int" (None))
-                     (Create-var "checkCAS" "int" (None))
-                     (Set-var "new-bits" (Mystery-const) (None))
-                     
-                     (CAS (Dereference node-of-interest type "bits") (Get-var "bits") (Get-var "new-bits") "checkCAS")
-                     
-                     (Single-branch (Not (Get-var "checkCAS"))
-                                    (list
-                                     (Continue (None))))
-                     
-                     (Set-var "loop-break" #t (None)))
-                     
-                    
+                      (new-meta-var))
                                     
              
-     )))))
+                     ) (new-meta-var))))))
 
 
 (define library
@@ -405,11 +410,11 @@
       (Lock 1(None))
       (Create-var "cur" "Node" (None))
       (Set-var "cur" (Get-argument 0)(None))
-      (Loop  (And (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))) (Not (Equal (Get-var "cur") 0)))
+      (Loop  (And (Not (Is-none? (Get-var "cur"))) (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))) )
             (list
-             (Set-var "cur" (Dereference "cur" "Node" "next")(None))))
+             (Set-var "cur" (Dereference "cur" "Node" "next") (None))))
       (Single-branch
-        (Equal (Get-var "cur") 0)
+        (Is-none? (Get-var "cur"))
        (list
         (Unlock 1(None))
         (Return 0(None))))
@@ -620,14 +625,147 @@
     (Run-method "get" (list 1 "test") "ret" ))))
 
 
+
+(define test
+  (Thread-list
+   (list
+    ;; (Create-var "ret1" "int" (None))
+    (Create-var "ret2" "int" (None))
+    (Create-var "ret3" "int" (None))    
+    (Run-Method "get" (list (Get-var "shared") 1 0) "ret3" 0)
+    (Run-Method "contains" (list (Get-var "shared") 1) "ret2" 1)
+    (Run-Method "get" (list (Get-var "shared") 1) "ret1" 0)
+    (Run-Method "get" (list (Get-var "shared") 1) "ret1" 0)
+    (Run-Method "get" (list (Get-var "shared") 1) "ret1" 0)
+    (Run-Method "get" (list (Get-var "shared") 1) "ret1" 0))))
+
+
+
+(define (collect-meta-vars interleaving library)
+  (list (Tuple "meta-var3" "integer?") (Tuple "meta-var4" "integer?") (Tuple "meta-var1" "integer?") (Tuple "meta-var2" "boolean?")))
+
+(define (interleaving-to-sketch interleaving variables-of-interest library)
+  (define count-branches (void))
+  (set! count-branches 0)
+  
+
+
+  (define (remove-global-declarations str l)
+    (cond
+      [(empty? l) str]
+      [else
+       (remove-global-declarations (string-replace str (first l) "\n") (rest l))]))
+
+
+  (define prelude
+"
+#lang rosette
+(define current-thread (void))
+
+(define method-exit (void))
+(set! method-exit #f)
+
+
+(define lock-list (void))
+(set! lock-list (list))
+
+
+
+(define (has-lock t-id lock)
+  (cond
+    [(> lock (- (length lock-list) 1))
+     (set! lock-list (append lock-list (list t-id)))
+     #t]
+    [else
+     (or (> 0 (list-ref lock-list lock)) (equal? t-id (list-ref lock-list lock)))]))
+
+
+
+(define (replace-lock lock t-id)
+  (cond
+    [(equal? lock 0)
+     (append (list t-id) (rest lock-list))]
+    [else
+     (append (list (first lock-list)) (replace-lock (- lock 1) t-id))]))
+
+(define (get-lock t-id lock)
+  (set! lock-list (replace-lock lock t-id)))
+
+(define (release-lock t-id lock)
+  (set! lock-list (replace-lock lock -1)))
+
+
+(struct Node (next key val bits) #:mutable)
+
+(define shared (void))
+(struct None ())
+(set! shared (Node  (None)(None) (None) (None)))
+
+
+
+(define pick-trace 1)
+")
+
+  
+  (let ([all-runs (thread-runs interleaving library 0)]
+        [meta-vars (collect-meta-vars interleaving library)])
+
+
+
+    ;; (display (length all-runs)) (display "\n")
+
+
+(string-append
+   prelude
+  (reduce string-append (map (lambda (v) (string-append "(define " v " (void))\n")) variables-of-interest))
+
+  (remove-global-declarations
+
+
+ 
+   (string-append
+
+    ;; All symbolic variables which will be referenced in the possible traces 
+    (reduce string-append
+            (map (lambda (v) (string-append "(define-symbolic " (Tuple-a v) " " (Tuple-b v) ")\n"))
+                 meta-vars))
+    
+
+    "(cond\n"
+    
+    (reduce string-append
+            (map (lambda (l) (set! count-branches (+ count-branches 1)) (string-append "[(equal? pick-trace " (~v count-branches) ") (begin\n" (instr-list-to-sketch l library `()) ")]\n"))
+                 all-runs))
+    
+    ")\n")
+   
+   (map (lambda (v) (string-append "(define " v " (void))")) variables-of-interest))
+
+
+  "(list " (reduce string-append (map (lambda (v) (string-append "(cons \"" v "\" " v ") ")) variables-of-interest)) ")")))
+
+    
+
+    
+
+
+
+
+
+
 ;; (first (thread-runs thread3 library 0))
 ;; (to-string-instr (Set-var-assignment (second (first (thread-runs thread3 library 0)))))
 
 
 ;; (first (thread-runs thread3 library 0))
 
-;; (display (print-non-sketch-simulation (list (Run-method "get" (list 1 "test" ) "ret")) library (list 1 2 3)  "default"))
-(display (instr-list-to-sketch (first (thread-runs thread3 library 0)) "args"))
+;; (display (print-non-sketch-simulation (list (Run-method "get" (list 1 "test" ) "aret")) library (list 1 2 3)  "default"))
+
+;; (display (instr-list-to-sketch (first (thread-runs test library 0)) library "args"))
+
+(display (interleaving-to-sketch test (list "ret1" "ret2" "ret3") library))
+;; (length (thread-runs test library 0)
+;; (first (thread-runs test library 0))
 
 ;; (second (thread-runs thread1 library 0))
 ;; (map Get-instr-id (second (thread-runs thread1 library 0)))
