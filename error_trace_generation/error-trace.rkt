@@ -20,7 +20,7 @@
 ;  pair of library calls in the mut when searching for linearizability errors.
 (define bound (make-parameter 2))
 
-(define (in-mut instr) (compose null? C-Instruction-thread-id))
+(define in-mut (compose null? C-Instruction-thread-id))
 
 (define (linearizable? mut variables pointers library)
   ; Simulate each possible interleaving of mut with the instructions of client.
