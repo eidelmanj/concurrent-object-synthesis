@@ -21,6 +21,7 @@
  (struct-out Single-branch)
  (struct-out Loop)
  (struct-out Branch)
+ (struct-out Context-switch)
  ; Extra constructors for instruction structs
  Run-Method
 
@@ -52,6 +53,7 @@
  (struct-out Mystery-const)
  (struct-out Assume-not-meta)
  (struct-out Sketch-placeholder)
+ (struct-out Is-none?)
  (struct-out Thread-Op))
 
 
@@ -76,11 +78,11 @@
 ;; Racket doesn't let you actually specify a value for an optional field,
 ;;  so it has to be mutable and set using a separate constructor if you want
 ;;  something other than the default.
-(struct C-Instruction ([thread-id #:auto #:mutable]) #:auto-value null)
+(struct C-Instruction ([thread-id #:auto #:mutable]) #:transparent #:auto-value null)
 
 ;; Specific C instruction structures.
-(struct Repeat-meta C-Instruction (instr-list))
-(struct Meta-addition C-Instruction (instr-list))
+(struct Repeat-meta C-Instruction (instr-list which-var))
+(struct Meta-addition C-Instruction (instr-list which-var))
 (struct CAS C-Instruction (v1 v2 new-val ret))
 (struct Create-var C-Instruction (id type instr-id))
 (struct Set-var C-Instruction (id assignment instr-id))
@@ -92,6 +94,7 @@
 (struct Single-branch C-Instruction (condition branch))
 (struct Loop C-Instruction (condition instr-list))
 (struct Branch C-Instruction (condition branch1 branch2))
+(struct Context-switch C-Instruction () #:transparent)
 
 ;; Extra constructors allowing the thread-id field to be set.
 ;; The names are kind of confusing, but they can be used in place of the regular
@@ -110,7 +113,7 @@
 (define-struct And (expr1 expr2))
 (define-struct Arguments (arg-list))
 (define-struct Get-var(id))
-
+(struct Is-none? (val))
 
 
 (struct None ())
@@ -158,7 +161,7 @@
 
 
 (define-struct Continue (to-where))
-(define-struct Branch (condition branch1 branch2))
+;; (define-struct Branch (condition branch1 branch2))
 
 
 (define-struct Meta-branch (condition branch1 branch2))
