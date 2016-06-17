@@ -219,8 +219,14 @@
   ;; (display "to-string: ") (display instr) (display "\n")
   (cond
     [(Dereference? instr)
-     (string-append
-      "("(Dereference-type instr) "-" (Dereference-offset instr) " " (Dereference-id instr) ")")]
+     (cond
+       [(Dereference? (Dereference-id instr))
+        (string-append
+         "("(Dereference-type instr) "-" (Dereference-offset instr) " " (to-string-instr (Get-var (to-string-instr (Dereference-id instr) arg-store)) arg-store) ")")]
+        [else
+
+         (string-append
+          "("(Dereference-type instr) "-" (Dereference-offset instr) " "  (Dereference-id instr) ")")])]
     [(Equal? instr)
      (string-append "(equal? " (to-string-instr (Equal-expr1 instr) arg-store) " " (to-string-instr (Equal-expr2 instr) arg-store) ")")]
     [(Or? instr)

@@ -636,12 +636,14 @@
     ;; (Create-var "ret1" "int" (None))
     (Create-var "ret2" "int" (None))
     (Create-var "ret3" "int" (None))    
-    (Run-Method "get" (list (Get-var "shared") 1 0) "ret3" 0)
+    (Run-Method "get" (list (Get-var "shared") 1 ) "ret3" 0)
     (Run-Method "contains" (list (Get-var "shared") 1) "ret2" 1)
-    (Run-Method "get" (list (Get-var "shared") 1) "ret1" 0)
-    (Run-Method "get" (list (Get-var "shared") 1) "ret1" 0)
-    (Run-Method "get" (list (Get-var "shared") 1) "ret1" 0)
-    (Run-Method "get" (list (Get-var "shared") 1) "ret1" 0))))
+    (Run-Method "remove" (list (Get-var "shared") 1) "ret1" 0))))
+  
+
+
+
+
 
 
 
