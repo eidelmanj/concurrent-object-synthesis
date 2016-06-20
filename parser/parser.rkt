@@ -7,6 +7,9 @@
          test-parse
          lex-this
          simple-math-lexer
+         var-node
+         var-add-node
+         var-decl
          arg-node
          arg-decl
          arg-add-node
@@ -31,6 +34,7 @@
          decl-node
          method-root
          method-node
+         struct-node
          empty-node
          tostring)
 (require racket/match)
@@ -64,7 +68,7 @@
   (number10 (number digit10))
   (identifier-characters (re-or (char-range "A" "z")
                                 "?" "!" ":" "$" "%" "^" "&"))
-  (basic-types (re-or "int" "bool" "Node" "Integer" "int*" "bool*" "struct"))
+  (basic-types (re-or "int" "bool" "char" "Node" "Integer" "int*" "bool*" "struct"))
   (identifier (re-+ identifier-characters)))
 
 (define simple-math-lexer
@@ -106,8 +110,8 @@
 (define-struct program-node (stmt next) #:transparent)
 (define-struct expr (e))
 (define-struct empty-node ())
-(define-struct if-node (e p1 p2) )
-(define-struct if-root (c))
+(define-struct if-node (c p1 p2) )
+(define-struct if-root (e))
 (define-struct expr-stmt (e))
 (define-struct if-stmt (c))
 (define-struct method-node (tp nm vlist p) )
@@ -190,7 +194,7 @@
                ((RETURN VAR \;) (make-return-node $2))
                ((single-line-if ) (make-if-stmt (make-if-root $1)))
                ((TYPE VAR \;) (make-decl-node $1 $2))
-               ((TYPE VAR \{ field-members \} \;) (make-struct-node $2 $4))
+               ((STRUCT VAR \{ field-members \} \;) (make-struct-node $2 $4))
                ((if-else) (make-if-stmt (make-if-root $1))))
 
     (field-members (() make-empty-node)
