@@ -6,6 +6,29 @@
 (provide pick-at-most-n
          splitf-at-after-index)
 
+; A helper function for pick-at-most-n.
+; prev is a list of lists of length i - 1 containing elements from L.
+; The helper constructs lists of length i by adding each element of L to the front
+;  of each list contained in prev.
+; The lists of at most n elements are the lists of elements of length i for i from
+; 0 to n, inclusive.
+(define (pick-at-most-n-helper L n i prev accumulator)
+  (cond
+    ; Add each element of L to the front of each list in prev
+    [(<= i n) (define i-sets (apply append
+                                    (map (λ (e)
+                                           (map (curry cons e) prev))
+                                         L)))
+              (pick-at-most-n-helper L n (add1 i) i-sets (append accumulator i-sets))]
+    [else accumulator]))
+
+; Return a list of all lists of length at most n containing elements from L.
+; Note that these are NOT sublists of L: the same element can appear in a
+;  result list multiple times.
+(define (pick-at-most-n L n)
+  ; Initial values for prev and accumulator are the list of all lists of length 0
+  (pick-at-most-n-helper L n 1 '(()) '(())))
+
 (module+ test
   (require rackunit
            (only-in racket/set set))
@@ -22,8 +45,15 @@
                            (1) (2)
                            (1 1) (1 2) (2 1) (2 2)
                            (1 1 1) (1 1 2) (1 2 1) (1 2 2)
-                           (2 1 1) (2 1 2) (2 2 1) (2 2 2)))
-  
+                           (2 1 1) (2 1 2) (2 2 1) (2 2 2))))
+
+; Split list L at the first item satisfying p that occurs with an index not less than i.
+(define (splitf-at-after-index L p i)
+  (let*-values ([(before-i after-i) (split-at L i)]
+                [(before-p after-p) (splitf-at after-i (negate p))])
+    (values (append before-i before-p) after-p)))
+
+(module+ test
   (define-syntax-rule (check-equal?/values actual expected ...)
     (check-equal? (call-with-values (λ () actual) list) (list expected ...)))
   
@@ -43,32 +73,3 @@
                        '() '(1 3 5 7 2 4 6 8))
   (check-equal?/values (splitf-at-after-index '(1 3 5 7 2 4 6 8) negative? 0)
                        '(1 3 5 7 2 4 6 8) '()))
-
-; A helper function for pick-at-most-n.
-; prev is a list of lists of length i - 1 containing elements from L.
-; The helper constructs lists of length i by adding each element of L to the front
-;  of each list contained in prev.
-; The lists of at most n elements are the lists of elements of length i for i from
-; 0 to n, inclusive.
-(define (pick-at-most-n-helper L n i prev accumulator)
-  (cond
-    ; Add each element of L to the front of each list in prev
-    [(<= i n) (define i-sets (apply append
-                                    (map (λ (e)
-                                           (map (curry cons e) prev))
-                                         L)))
-              (pick-at-most-n-helper L n (add1 i) i-sets (append i-sets accumulator))]
-    [else accumulator]))
-
-; Return a list of all lists of length at most n containing elements from L.
-; Note that these are NOT sublists of L: the same element can appear in a
-;  result list multiple times.
-(define (pick-at-most-n L n)
-  ; Initial values for prev and accumulator are the list of all lists of length 0
-  (pick-at-most-n-helper L n 1 '(()) '(())))
-
-; Split list L at the first item satisfying p that occurs with an index not less than i.
-(define (splitf-at-after-index L p i)
-  (let*-values ([(before-i after-i) (split-at L i)]
-                [(before-p after-p) (splitf-at after-i (negate p))])
-    (values (append before-i before-p) after-p)))
