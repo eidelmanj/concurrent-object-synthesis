@@ -34,6 +34,7 @@ To this (Racket struct) - (Method "test"
 (define (translate parsed-exp)
   (match parsed-exp
     ((empty-node) null)
+    ((null-node) null)
     ((start-node p) (translate p))
     ((program-node stmt next) (append (list (translate stmt)) (translate next)))
     ((method-root m) (translate m))
@@ -51,11 +52,13 @@ To this (Racket struct) - (Method "test"
                                          null))
     ; TODO: create a struct in simulator-structures
     ((struct-node nm members) (Create-var nm "struct" 0))
+    
     ((if-stmt c) (translate c))
     ((if-root e) (translate e))
     ((if-node c p1 p2) (if (empty? (translate p2))
                            (Single-branch c (translate p1))
                            (Branch c (translate p1) (translate p2))))
+    
     ((var-node v next) (cons (translate v) (translate next)))
     ((var-add-node v next) (cons (translate v) (translate next)))
     ; TODO: change instr-id arg to a counter
@@ -64,6 +67,10 @@ To this (Racket struct) - (Method "test"
     ((arg-add-node v next) (append (list v) (translate next)))
     ((arg-decl id) id)
     ((decl-node tp v) (cons tp (list v)))
+
+    ((assign-exp var exp) (Set-var var (translate exp) 0))
+    ((num-exp n) n)
+    
     ))
 
 #|

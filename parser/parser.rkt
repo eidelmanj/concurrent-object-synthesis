@@ -7,6 +7,7 @@
          test-parse
          lex-this
          simple-math-lexer
+         num-exp
          var-node
          var-add-node
          var-decl
@@ -36,6 +37,7 @@
          method-node
          struct-node
          empty-node
+         null-node
          tostring)
 (require racket/match)
 
@@ -51,7 +53,7 @@
 (define-syntax-rule (tostring a) (format "~a" a))
 
 (define-tokens a (NUM VAR TYPE))
-(define-empty-tokens b (~ \. \, NULL RETURN SHARED GETTERS SETTERS ELSE  STRUCT \; = + - EQUAL EOF LET IN IF \( \) \{ \} ))
+(define-empty-tokens b (~ \. \, NULL RETURN SHARED GETTERS SETTERS ELSE  STRUCT LOOP WHILE FOR DO \; = + - EQUAL EOF LET IN IF \( \) \{ \} ))
 
 (define-lex-trans number
   (syntax-rules ()
@@ -69,7 +71,8 @@
   (identifier-characters (re-or (char-range "A" "z")
                                 "?" "!" ":" "$" "%" "^" "&"))
   (basic-types (re-or "int" "bool" "char" "Node" "Integer" "int*" "bool*" "struct"))
-  (identifier (re-+ identifier-characters)))
+  (identifier (re-+ identifier-characters))
+  (loop (re-or "while" "for")))
 
 (define simple-math-lexer
   (lexer
@@ -94,9 +97,13 @@
    ("getters" (token-GETTERS))
    ("setters" (token-SETTERS))
    ("struct" (token-STRUCT))
+   ("do" (token-DO))
+   ("while" (token-WHILE))
+   ("for" (token-FOR))
    ((re-+ basic-types) (token-TYPE lexeme))
    ((re-+ number10) (token-NUM (string->number lexeme)))
    (identifier      (token-VAR lexeme))
+   (loop (token-LOOP))
    ;; recursively calls the lexer which effectively skips whitespace
    (whitespace (simple-math-lexer input-port))
    ((eof) (token-EOF))))
@@ -125,8 +132,13 @@
 (define-struct arg-decl (id))
 (define-struct arg-node (v next))
 (define-struct arg-add-node (v next))
-(define-struct struct-node (nm members))
+(define-struct struct-declaration-node (nm members))
+(define-struct struct-declaration-root (n))
 (define-struct single-var (v))
+(define-struct loop-root (l))
+(define-struct while-node (exp body))
+(define-struct for-node (exps body))
+(define-struct for-exp (init con incr))
 
 (define-struct return-node (v))
 (define-struct null-node ())
@@ -194,8 +206,14 @@
                ((RETURN VAR \;) (make-return-node $2))
                ((single-line-if ) (make-if-stmt (make-if-root $1)))
                ((TYPE VAR \;) (make-decl-node $1 $2))
-               ((STRUCT VAR \{ field-members \} \;) (make-struct-node $2 $4))
-               ((if-else) (make-if-stmt (make-if-root $1))))
+               (struct-declaration) (make-struct-declaration-root $1))
+               ((if-else) (make-if-stmt (make-if-root $1)))
+               ((while) (make-loop-root $1))
+               ((for) (make-loop-root $1)))
+
+    (while (WHILE \( exp \) \{ program \}) (make-while-node $3 $6))
+    (for (FOR \( for-exp \) \{ program \}) (make-for-node $3 $6))
+    (for-exp (exp \; exp \; exp \;) (make-for-exp $1 $3 $5))
 
     (field-members (() make-empty-node)
                    ((TYPE VAR \; field-members) (make-decl-node $1 $2)))
@@ -219,7 +237,9 @@
     (arg-list (() (make-empty-node))
               ((VAR add-arg) (make-arg-node (make-arg-decl $1) $2)))
     
-    
+    (struct-declaration (STRUCT VAR \{ field-members \} \;) 
+      (make-struct-declaration-node $2 $4))
+
     ;; function calls
     (function-call ((VAR \( arg-list \)) (function-call-node $1 $3)))
     
