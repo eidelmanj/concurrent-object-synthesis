@@ -59,6 +59,9 @@
  (struct-out Assume-not-meta)
  (struct-out Sketch-placeholder)
  (struct-out Is-none?)
+ (struct-out Structure)
+ (struct-out Field)
+
  (struct-out Thread-Op))
 
 
@@ -104,6 +107,8 @@
 (struct Branch C-Instruction (condition branch1 branch2))
 (struct Context-switch C-Instruction () #:transparent)
 
+
+
 ;; Extra constructors allowing the thread-id field to be set.
 ;; The names are kind of confusing, but they can be used in place of the regular
 ;;  constructors anywhere, so it doesn't really matter.
@@ -125,6 +130,8 @@
 (define-struct Arguments (arg-list))
 (define-struct Get-var(id))
 (struct Is-none? (val))
+(struct Structure (fields))
+(struct Field (name type))
 
 
 (struct None ())
