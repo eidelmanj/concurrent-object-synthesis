@@ -51,7 +51,7 @@ To this (Racket struct) - (Method "test"
                                          #t
                                          null))
     ; TODO: create a struct in simulator-structures
-    ((struct-node nm members) (Create-var nm "struct" 0))
+    ((struct-declaration-node nm members) (Create-var nm "struct" 0))
     
     ((if-stmt c) (translate c))
     ((if-root e) (translate e))
@@ -62,7 +62,7 @@ To this (Racket struct) - (Method "test"
     ((var-node v next) (cons (translate v) (translate next)))
     ((var-add-node v next) (cons (translate v) (translate next)))
     ; TODO: change instr-id arg to a counter
-    ((var-decl tp id) (Create-var id tp 0))
+    ((var-decl tp id) tp)
     ((arg-node v next) (append (list v) (translate next)))
     ((arg-add-node v next) (append (list v) (translate next)))
     ((arg-decl id) id)
@@ -70,7 +70,9 @@ To this (Racket struct) - (Method "test"
 
     ((assign-exp var exp) (Set-var var (translate exp) 0))
     ((num-exp n) n)
-    
+    ((loop-root loop) (translate loop))
+    ((while-node exp body) (Loop (translate exp) (translate body)))
+    ((for-node init condition incr body) ())
     ))
 
 #|

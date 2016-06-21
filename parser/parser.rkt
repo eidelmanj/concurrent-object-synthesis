@@ -35,7 +35,9 @@
          decl-node
          method-root
          method-node
-         struct-node
+         struct-declaration-node
+         struct-declaration-root
+         loop-root
          empty-node
          null-node
          tostring)
@@ -135,10 +137,9 @@
 (define-struct struct-declaration-node (nm members))
 (define-struct struct-declaration-root (n))
 (define-struct single-var (v))
-(define-struct loop-root (l))
+(define-struct loop-root (loop))
 (define-struct while-node (exp body))
-(define-struct for-node (exps body))
-(define-struct for-exp (init con incr))
+(define-struct for-node (init condition incr body))
 
 (define-struct return-node (v))
 (define-struct null-node ())
@@ -198,6 +199,7 @@
     (single-line-if ((IF \( exp \) \{ program \} ) (make-if-node $3 $6 (make-empty-node))))
     ;;(single-line-if ((IF \( exp \) statement) (make-if-node $3 $5 (make-empty-node))))
     (if-else ((IF \( exp \) \{ program \} ELSE \{ program \} ) (make-if-node $3 $6 $10)))
+    
     (statement ((exp \;) (make-expr-stmt (make-expr $1)))
                ((method-declaration) (make-method-root $1))
                ((function-call \;) (make-function-call-root $1))
@@ -206,14 +208,13 @@
                ((RETURN VAR \;) (make-return-node $2))
                ((single-line-if ) (make-if-stmt (make-if-root $1)))
                ((TYPE VAR \;) (make-decl-node $1 $2))
-               (struct-declaration) (make-struct-declaration-root $1))
+               ((struct-declaration) (make-struct-declaration-root $1))
                ((if-else) (make-if-stmt (make-if-root $1)))
                ((while) (make-loop-root $1))
                ((for) (make-loop-root $1)))
 
-    (while (WHILE \( exp \) \{ program \}) (make-while-node $3 $6))
-    (for (FOR \( for-exp \) \{ program \}) (make-for-node $3 $6))
-    (for-exp (exp \; exp \; exp \;) (make-for-exp $1 $3 $5))
+    (while ((WHILE \( exp \) \{ program \}) (make-while-node $3 $6)))
+    (for ((FOR \( exp \; exp \; exp \; \) \{ program \}) (make-for-node $3 $5 $7 $11)))
 
     (field-members (() make-empty-node)
                    ((TYPE VAR \; field-members) (make-decl-node $1 $2)))
@@ -237,8 +238,8 @@
     (arg-list (() (make-empty-node))
               ((VAR add-arg) (make-arg-node (make-arg-decl $1) $2)))
     
-    (struct-declaration (STRUCT VAR \{ field-members \} \;) 
-      (make-struct-declaration-node $2 $4))
+    (struct-declaration ((STRUCT VAR \{ field-members \} \;) 
+      (make-struct-declaration-node $2 $4)))
 
     ;; function calls
     (function-call ((VAR \( arg-list \)) (function-call-node $1 $3)))
