@@ -70,9 +70,11 @@ To this (Racket struct) - (Method "test"
 
     ((assign-exp var exp) (Set-var var (translate exp) 0))
     ((num-exp n) n)
+    ((var-exp i) i)
     ((loop-root loop) (translate loop))
     ((while-node exp body) (Loop (translate exp) (translate body)))
-    ((for-node init condition incr body) ())
+    ((for-node init condition incr body)
+     (Loop (translate condition) (append (list init condition) (translate body))))
     ))
 
 #|

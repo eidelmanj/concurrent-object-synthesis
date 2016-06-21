@@ -38,6 +38,8 @@
          struct-declaration-node
          struct-declaration-root
          loop-root
+         while-node
+         for-node
          empty-node
          null-node
          tostring)
@@ -55,7 +57,7 @@
 (define-syntax-rule (tostring a) (format "~a" a))
 
 (define-tokens a (NUM VAR TYPE))
-(define-empty-tokens b (~ \. \, NULL RETURN SHARED GETTERS SETTERS ELSE  STRUCT LOOP WHILE FOR DO \; = + - EQUAL EOF LET IN IF \( \) \{ \} ))
+(define-empty-tokens b (~ \. \, NULL RETURN SHARED GETTERS SETTERS ELSE  STRUCT LOOP WHILE FOR DO \; = + -  < > AND OR NOT EQUAL EOF LET IN IF \( \) \{ \} ))
 
 (define-lex-trans number
   (syntax-rules ()
@@ -82,6 +84,11 @@
    ("-" (token--))
    ("+" (token-+))
    ("==" (token-EQUAL))
+   ("<" (token-<))
+   (">" (token->))
+   ("&&" (token-AND))
+   ("||" (token-OR))
+   ("!" (token-NOT))
    ("let" (token-LET))
    ("in" (token-IN))
    (";" (token-\;))
@@ -140,7 +147,9 @@
 (define-struct loop-root (loop))
 (define-struct while-node (exp body))
 (define-struct for-node (init condition incr body))
-
+(define-struct comparison-exp (op expr1 expr2))
+(define-struct bin-bool-exp (op expr1 expr2))
+(define-struct un-bool-exp (op expr1))
 (define-struct return-node (v))
 (define-struct null-node ())
 ;; Structure for object accesses ie x.get()
@@ -193,14 +202,22 @@
          ((exp + exp) (make-arith-exp + $1 $3))
          ((exp - exp) (make-arith-exp - $1 $3))
          ((exp EQUAL exp) (make-arith-exp "equal" $1 $3))
-         ((VAR = exp \;) (make-assign-exp $1 $3))
+         ((exp < exp) (make-comparison-exp < $1 $3))
+         ((exp < = exp) (make-comparison-exp <= $1 $4))
+         ((exp > exp) (make-comparison-exp > $1 $3))
+         ((exp > = exp) (make-comparison-exp >= $1 $4))
+         ((exp AND exp) (make-bin-bool-exp "and" $1 $3))
+         ((exp OR exp) (make-bin-bool-exp "or" $1 $3))
+         ((NOT exp) (make-un-bool-exp "not" $2))
+         
          ((function-call) (make-function-call-root $1)))
     
     (single-line-if ((IF \( exp \) \{ program \} ) (make-if-node $3 $6 (make-empty-node))))
     ;;(single-line-if ((IF \( exp \) statement) (make-if-node $3 $5 (make-empty-node))))
     (if-else ((IF \( exp \) \{ program \} ELSE \{ program \} ) (make-if-node $3 $6 $10)))
     
-    (statement ((exp \;) (make-expr-stmt (make-expr $1)))
+    (statement 
+                ((VAR = exp \;) (make-assign-exp $1 $3))
                ((method-declaration) (make-method-root $1))
                ((function-call \;) (make-function-call-root $1))
                ((VAR \. object-access \;) (make-object-access $1 $3))
