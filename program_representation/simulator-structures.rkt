@@ -1,5 +1,5 @@
-#lang rosette/safe
-
+#lang racket
+(require racket/match)
 (provide
  (struct-out Client-pre)
  (struct-out Method)
@@ -20,12 +20,14 @@
  (struct-out Run-method)
  (struct-out Single-branch)
  (struct-out Loop)
+ (struct-out Maybe-loop)
  (struct-out Branch)
  (struct-out Context-switch)
  ; Extra constructors for instruction structs
  Run-Method
-
+ Get-instr-id
  (struct-out Meta-branch)
+ (struct-out Meta-single-branch)
  ;; (struct-out Assume)
  Assume?
  Assume-condition
@@ -43,6 +45,7 @@
  (struct-out Equal)
  (struct-out Not)
  (struct-out Or)
+ (struct-out New-struct)
  (struct-out Set-pointer)
  (struct-out And)
  (struct-out Arguments)
@@ -93,6 +96,7 @@
 (struct Run-method C-Instruction (method args ret))
 (struct Single-branch C-Instruction (condition branch))
 (struct Loop C-Instruction (condition instr-list))
+(struct Maybe-loop C-Instruction (condition instr-list))
 (struct Branch C-Instruction (condition branch1 branch2))
 (struct Context-switch C-Instruction () #:transparent)
 
@@ -107,6 +111,7 @@
 (define-tid-constructor Run-Method Run-method method args ret)
 
 
+(struct New-struct (type arg-list))
 
 (define-struct Dereference (id type offset))
 (define-struct Equal (expr1 expr2))
@@ -169,6 +174,7 @@
 
 
 (define-struct Meta-branch (condition branch1 branch2))
+(define-struct Meta-single-branch (condition branch))
 
 
 
@@ -187,3 +193,16 @@
 ;;  tid: a symbol identifying a particular thread.
 ;;  mid: a symbol identifying a particular operation within a thread.
 (struct Thread-Op (tid mid) #:transparent)
+
+
+(define (Get-instr-id x)
+  (match x
+    [(Lock thread-id id instr-id) instr-id]
+    [(Create-var thread-id id type instr-id) instr-id]
+    [(Unlock thread-id id instr-id) instr-id]
+    [(Return thread-id val instr-id) instr-id]
+    [(Set-pointer id type offset val instr-id) instr-id]
+    [(Set-var thread-id id assignment instr-id) instr-id]
+    [(Info  t-id instr-id) instr-id]
+    [_
+     (None)]))
