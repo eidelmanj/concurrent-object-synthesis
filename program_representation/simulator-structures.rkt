@@ -19,8 +19,10 @@
  (struct-out Get-argument)
  (struct-out Run-method)
  (struct-out Single-branch)
+
  (struct-out Loop)
  (struct-out Maybe-loop)
+
  (struct-out Branch)
  (struct-out Context-switch)
  ; Extra constructors for instruction structs
@@ -95,8 +97,10 @@
 (struct Get-argument C-Instruction (id))
 (struct Run-method C-Instruction (method args ret))
 (struct Single-branch C-Instruction (condition branch))
+
 (struct Loop C-Instruction (condition instr-list))
 (struct Maybe-loop C-Instruction (condition instr-list))
+
 (struct Branch C-Instruction (condition branch1 branch2))
 (struct Context-switch C-Instruction () #:transparent)
 

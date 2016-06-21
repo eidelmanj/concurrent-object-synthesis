@@ -5,6 +5,7 @@
 (require "to-sketch.rkt")
 (require "metasketcher.rkt")
 
+(provide interleaving-to-sketch create-announcement-version)
  
 (define counter (void))
 (set! counter 0)
