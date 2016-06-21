@@ -117,6 +117,7 @@
           (let ([args-list (new-arg-list-id)])
             (string-append
              "(set! current-thread " (~v (C-Instruction-thread-id elem)) ")\n"
+             "(set! method-exit #f)\n"
              "(define " args-list " (void))\n"
              "(set! " args-list " " (to-string-instr (Run-method-args elem) arg-store) ")\n"
              "(begin\n"
@@ -240,9 +241,16 @@
     [(Get-argument? instr)
      (string-append "(list-ref " arg-store " " (~v (Get-argument-id instr)) ")")]
 
+
+    [(New-struct? instr)
+     (string-append "(" (New-struct-type instr) " " (reduce string-append (map (lambda (v) (string-append " " (to-string-instr v arg-store))) (New-struct-arg-list  instr))) ")")]
+
     [(list? instr)
      (string-append "(list " (reduce (lambda (a b) (string-append a " " b)) (map (lambda (i) (to-string-instr i arg-store)) instr)) ")")]
 
+
+    [(None? instr)
+     (string-append "(None)")]
     [(Is-none?? instr)
      (string-append "(None? " (to-string-instr (Is-none?-val instr) arg-store) ")")]
 
@@ -320,6 +328,7 @@
           (let ([args-list (new-arg-list-id)])
             (string-append
              "(set! current-thread " (~v (C-Instruction-thread-id elem)) ")\n"
+             "(set! method-exit #f)\n"
              "(define " args-list " (void))\n"
              "(set! " args-list " " (to-string-instr (Run-method-args elem) arg-store) ")\n"
              "(begin\n"

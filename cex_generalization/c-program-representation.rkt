@@ -3,6 +3,7 @@
 (require "../program_representation/simulator-structures.rkt")
 (require racket/string)
 (require "to-sketch.rkt")
+(require "metasketcher.rkt")
 
 (provide interleaving-to-sketch create-announcement-version)
  
@@ -401,7 +402,36 @@
 
 (define library
   (list
-   
+
+   (Method
+    "push"
+    (list "Node" "int" "int")
+    "int"
+    (list
+     (Lock 1 (None))
+     (Create-var "cur" "Node" (None))
+     (Create-var "prev" "Node" (None))
+     (Set-var "cur" (Get-argument 0) (None))
+     (Set-var "prev" (Get-argument 0) (None))
+     (Loop (And (Not (Is-none? (Get-var "cur"))) (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))))
+           (list
+            (Set-var "prev" (Get-var "cur") (None))
+            (Set-var "cur" (Dereference "cur" "Node" "next") (None))))
+     (Single-branch
+      (Is-none? (Get-var "cur"))
+      (list
+       (Set-pointer "prev" "Node" "next" (New-struct "Node" (list (None) (Get-argument 1) (Get-argument 2) (None))) (None))
+       (Unlock 1 (None))
+       (Return (Get-argument 2) (None))))
+
+     (Set-pointer "cur" "Node" "val" (Get-argument 2) (None))
+     (Unlock 1 (None))
+     (Return (Get-argument 2) (None))
+
+     ))
+     
+
+
    (Method
     "get"
     ;; (add-ids add-method-id
@@ -461,7 +491,9 @@
       (Set-var "oldVal" (Dereference "cur" "Node" "val")(None))
       (Set-var "prevNode" (Get-argument 0)(None))
      
-      (Loop  (And (Not (Equal (Dereference (Dereference "cur" "Node" "next") "Node" "key") (Get-argument 1))) (Not (Equal (Get-var "cur") 0)))
+      (Loop  (And (Not (Is-none? (Get-var "cur"))) (Not (Equal (Dereference (Dereference "cur" "Node" "next") "Node" "key") (Get-argument 1))))
+
+             ;; (And (Not (Equal (Dereference (Dereference "cur" "Node" "next") "Node" "key") (Get-argument 1))) (Not (Equal (Get-var "cur") 0)))
             (list
              (Set-var "oldVal" (Dereference "cur" "Node" "val")(None))
              (Set-var "prevNode" (Get-var "cur")(None))           
@@ -513,17 +545,6 @@
     [_ (None)]))
 
 
-(define (Get-instr-id x)
-  (match x
-    [(Lock thread-id id instr-id) instr-id]
-    [(Create-var thread-id id type instr-id) instr-id]
-    [(Unlock thread-id id instr-id) instr-id]
-    [(Return thread-id val instr-id) instr-id]
-    [(Set-pointer id type offset val instr-id) instr-id]
-    [(Set-var thread-id id assignment instr-id) instr-id]
-    [(Info  t-id instr-id) instr-id]
-    [_
-     (None)]))
 
 
 ;; (define (Get-info x)
@@ -636,15 +657,40 @@
    (list
     ;; (Create-var "ret1" "int" (None))
     (Create-var "ret2" "int" (None))
-    (Create-var "ret3" "int" (None))    
-    (Run-Method "get" (list (Get-var "shared") 1 ) "ret3" 0)
-    (Run-Method "contains" (list (Get-var "shared") 1) "ret2" 1)
+    (Create-var "ret3" "int" (None))
+    (Run-Method "push" (list (Get-var "shared") 1 5) "ret1" 0)
+    (Run-Method "push" (list (Get-var "shared") 2 5) "ret1" 0)
+    (Run-Method "push" (list (Get-var "shared") 3 7) "ret1" 0)
+    (Run-Method "get" (list (Get-var "shared") 2 ) "ret3" 0)
+    ;; (Run-Method "contains" (list (Get-var "shared") 1) "ret2" 1)
     (Run-Method "remove" (list (Get-var "shared") 1) "ret1" 0))))
   
 
 
 
 
+
+
+;;; Aliya's test 
+(define aliya-test
+  (Thread-list
+   (list
+    (Create-var "val" "int" (None))
+    (Set-var "val" "int" (None))
+    (Set-var "val" 0 (None))
+    (Run-Method "contains" (list (Get-argument 0) (Get-argument 1)) "found")
+    (Assume-simulation (Not (Equal (Get-var "found") 0))))))
+
+    
+    ;; (#(struct:Create-var () val int #<None>)
+    ;;  #(struct:Create-var () found int #<None>)
+    ;;  #(struct:Set-var () val 0 #<None>)
+    ;;  #(struct:Run-method () contains (#(struct:Get-argument () 0) #(struct:Get-argument () 1)) found)
+    ;;  #(struct:Run-method #t get (#<Get-var> 15) g87121)
+    ;;  #(struct:Run-method #t get (#<Get-var> 15) g87121)
+    ;;  #(struct:Single-branch () #<Equal> (#(struct:Run-method () get (#(struct:Get-argument () 0) #(struct:Get-argument () 1)) val)
+    ;;                                      #(struct:Run-method () get (#(struct:Get-argument () 0) #(struct:Get-argument () 1)) )))
+    ;;  #(struct:Return () #<Get-var> #<None>))
 
 
 
@@ -706,7 +752,7 @@
 
 (define shared (void))
 (struct None ())
-(set! shared (Node  (None)(None) (None) (None)))
+(set! shared (Node  (None) \"test\" \"val\" (None)))
 
 
 
@@ -771,6 +817,9 @@
 ;; (display (instr-list-to-sketch (first (thread-runs test library 0)) library "args"))
 
 (display (interleaving-to-sketch test (list "ret1" "ret2" "ret3") library))
+
+
+
 ;; (length (thread-runs test library 0)
 ;; (first (thread-runs test library 0))
 
