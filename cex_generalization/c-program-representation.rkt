@@ -449,7 +449,7 @@
         (Is-none? (Get-var "cur"))
        (list
         (Unlock 1(None))
-        (Return 0(None))))
+        (Return (None)(None))))
       (Unlock 1(None))
       (Return (Dereference "cur" "Node" "val")(None)))
      ;; 0))
@@ -466,7 +466,7 @@
       (list
        (Create-var "val" "int"(None))
        (Run-method "get" (list (Get-argument 0) (Get-argument 1)) "val") ;; Run method "get" with arguments "key"
-       (Return (Get-var "val") (None)))
+       (Return (Not (Is-none? (Get-var "val"))) (None)))
       ;; 1))
      )
     
@@ -483,10 +483,10 @@
       
       (Set-var "cur" (Get-argument 0)(None))
       (Single-branch 
-                     (Is-none?? (Get-var "cur"))
+                     (Is-none? (Get-var "cur"))
                      (list
                       (Unlock 1(None))
-                      (Return 0(None))))
+                      (Return (None) (None))))
       
       
       (Set-var "oldVal" (Dereference "cur" "Node" "val")(None))
@@ -503,7 +503,7 @@
        (Is-none? (Get-var "cur"))
        (list
         (Unlock 1(None))
-        (Return 0(None))))
+        (Return (None) (None))))
       
 
       (Set-var "oldVal" (Dereference "cur" "Node" "val")(None))
@@ -520,15 +520,15 @@
     (list "Node" "int")
     "int"
      (list
-      (Create-var "val" "int"(None))
-      (Create-var "found" "int"(None))
-      (Set-var "val" 0(None))
+      (Create-var "val" "int" (None))
+      (Create-var "found" "int" (None))
+      (Set-var "val" (None) (None))
       (Run-method "contains" (list (Get-argument 0) (Get-argument 1)) "found")
       (Single-branch 
-                     (Equal (Get-var "None") 0)
-                     (list
-                      (Run-method "get" (list (Get-argument 0) (Get-argument 1)) "val")
-                      (Run-method "remove" (list (Get-argument 0) (Get-argument 1)) "")))
+       (Get-var "found") 
+       (list
+        (Run-method "get" (list (Get-argument 0) (Get-argument 1)) "val")
+        (Run-method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway")))
       (Return (Get-var "val")(None)))
     )))
      
@@ -683,9 +683,46 @@
     (Set-var "val" 0 (None))
     (Run-Method "contains" (list (Get-argument 0) (Get-argument 1)) "found" 0)
     (Assume-simulation (Not (Equal (Get-var "found") 0)))
+
+    
     (Run-Method "get" (list (Get-argument 0) (Get-argument 1)) "val" 0)
     (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "ret2" 1)
     (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0)
+    (Set-var "ret1" (Get-var "val") (None)))))
+
+
+
+(define mooly-sketch-test
+  (Thread-list
+   (list
+    (Run-Method "push" (list (Get-argument 0) 1 5) "throwaway" 0)
+    (Create-var "val" "int" (None))
+    (Create-var "found" "int" (None))
+    (Set-var "val" 0 (None))
+    (Run-Method "contains" (list (Get-argument 0) (Get-argument 1)) "found" 0)
+    (Assume-simulation (Not (Equal (Get-var "found") 0)))
+
+    (Meta-branch 0
+                 (list
+                  (Run-Method "get" (list (Get-argument 0) (Get-argument 1)) "val" 0)
+                  (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "ret2" 1)
+                  (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0))
+                 (list
+                  (Create-var "loop-break" "int" (None))
+                  (Set-var "loop-break" #f (None))))
+                  ;; (Maybe-loop (Not (Get-var "loop-break"))
+                  ;;             (list
+                  ;;              (Run-Method "get" (list (Get-argument 0) (Get-argument 1)) "val" 0)
+                  ;;              (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0))
+                  ;;             (list
+                  ;;              (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "ret2" 1))
+
+                              
+
+                              
+                        
+
+                 
     (Set-var "ret1" (Get-var "val") (None)))))
 
     
