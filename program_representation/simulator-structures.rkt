@@ -67,7 +67,7 @@
  (struct-out Is-none?)
  (struct-out Structure)
  (struct-out Field)
-
+ (struct-out Binding-list)
  (struct-out Thread-Op))
 
 
@@ -85,6 +85,10 @@
 (define-struct Set-pointer (id type offset val instr-id))
 
 (struct Mystery-const ())
+
+
+(struct Binding-list (parent id-list))
+
 
 #| C INSTRUCTION STRUCTS |#
 

@@ -437,7 +437,7 @@
     ;; (add-ids add-method-id
     (list "Node" "int")
     "int"
-    (create-announcement-version 
+    ;; (create-announcement-version 
      (list
       (Lock 1(None))
       (Create-var "cur" "Node" (None))
@@ -453,7 +453,8 @@
       (Unlock 1(None))
       (Return (Dereference "cur" "Node" "val")(None)))
      ;; 0))
-    ))
+    ;; ))
+     )
     
     
     (Method
@@ -465,7 +466,7 @@
       (list
        (Create-var "val" "int"(None))
        (Run-method "get" (list (Get-argument 0) (Get-argument 1)) "val") ;; Run method "get" with arguments "key"
-       (Return (Equal (Get-var "val") 0)(None)))
+       (Return (Get-var "val") (None)))
       ;; 1))
      )
     
@@ -482,7 +483,7 @@
       
       (Set-var "cur" (Get-argument 0)(None))
       (Single-branch 
-                     (Equal (Get-var "cur") 0)
+                     (Is-none?? (Get-var "cur"))
                      (list
                       (Unlock 1(None))
                       (Return 0(None))))
@@ -491,7 +492,7 @@
       (Set-var "oldVal" (Dereference "cur" "Node" "val")(None))
       (Set-var "prevNode" (Get-argument 0)(None))
      
-      (Loop  (And (Not (Is-none? (Get-var "cur"))) (Not (Equal (Dereference (Dereference "cur" "Node" "next") "Node" "key") (Get-argument 1))))
+      (Loop  (And (Not (Is-none? (Get-var "cur"))) (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))))
 
              ;; (And (Not (Equal (Dereference (Dereference "cur" "Node" "next") "Node" "key") (Get-argument 1))) (Not (Equal (Get-var "cur") 0)))
             (list
@@ -499,11 +500,12 @@
              (Set-var "prevNode" (Get-var "cur")(None))           
              (Set-var "cur" (Dereference "cur" "Node" "next")(None))))
       (Single-branch 
-                     (Equal (Get-var "cur") 0)
-                     (list
-                      (Unlock 1(None))
-                      (Return 0(None))))
+       (Is-none? (Get-var "cur"))
+       (list
+        (Unlock 1(None))
+        (Return 0(None))))
       
+
       (Set-var "oldVal" (Dereference "cur" "Node" "val")(None))
       (Set-pointer "prevNode" "Node" "next" (Dereference "cur" "Node" "next")(None))
       (Unlock 1(None))
@@ -671,15 +673,20 @@
 
 
 
-;;; Aliya's test 
-(define aliya-test
+;;; Mooly's error
+(define mooly-test
   (Thread-list
    (list
+    (Run-Method "push" (list (Get-argument 0) 1 5) "throwaway" 0)
     (Create-var "val" "int" (None))
-    (Set-var "val" "int" (None))
+    (Create-var "found" "int" (None))
     (Set-var "val" 0 (None))
-    (Run-Method "contains" (list (Get-argument 0) (Get-argument 1)) "found")
-    (Assume-simulation (Not (Equal (Get-var "found") 0))))))
+    (Run-Method "contains" (list (Get-argument 0) (Get-argument 1)) "found" 0)
+    (Assume-simulation (Not (Equal (Get-var "found") 0)))
+    (Run-Method "get" (list (Get-argument 0) (Get-argument 1)) "val" 0)
+    (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "ret2" 1)
+    (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0)
+    (Set-var "ret1" (Get-var "val") (None)))))
 
     
     ;; (#(struct:Create-var () val int #<None>)
@@ -752,8 +759,11 @@
 
 (define shared (void))
 (struct None ())
-(set! shared (Node  (None) \"test\" \"val\" (None)))
+(set! shared (Node  (None) \"test\" \"testval\" (None)))
 
+
+(define first-args (void))
+(set! first-args (list shared 1))
 
 
 (define pick-trace 1)
@@ -761,13 +771,15 @@
 
   
   (let ([all-runs (thread-runs interleaving library 0)]
-        [meta-vars (collect-meta-vars interleaving library)])
+        [meta-vars (collect-meta-vars interleaving library)]
+[new-scope (new-scope-num)])
 
 
 
-    ;; (display (length all-runs)) (display "\n")
 
+;; (display (length all-runs)) (display "\n")
 
+(add-binding-parent new-scope 0)
 (string-append
    prelude
   (reduce string-append (map (lambda (v) (string-append "(define " v " (void))\n")) variables-of-interest))
@@ -787,7 +799,7 @@
     "(cond\n"
     
     (reduce string-append
-            (map (lambda (l) (set! count-branches (+ count-branches 1)) (string-append "[(equal? pick-trace " (~v count-branches) ") (begin\n" (instr-list-to-sketch l library `()) ")]\n"))
+            (map (lambda (l) (set! count-branches (+ count-branches 1)) (string-append "[(equal? pick-trace " (~v count-branches) ") (begin\n" (instr-list-to-sketch l library "first-args" new-scope 0) ")]\n"))
                  all-runs))
     
     ")\n")
@@ -816,7 +828,7 @@
 
 ;; (display (instr-list-to-sketch (first (thread-runs test library 0)) library "args"))
 
-(display (interleaving-to-sketch test (list "ret1" "ret2" "ret3") library))
+(displayln (interleaving-to-sketch aliya-test (list "ret10" "ret20" "ret30" "throwaway0") library))
 
 
 
