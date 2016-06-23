@@ -82,7 +82,7 @@
 
 
 (struct Tuple (a b) #:transparent)
-(define-struct Set-pointer (id type offset val instr-id))
+
 
 (struct Mystery-const ())
 
@@ -96,17 +96,18 @@
 ;; Racket doesn't let you actually specify a value for an optional field,
 ;;  so it has to be mutable and set using a separate constructor if you want
 ;;  something other than the default.
-(struct C-Instruction ([thread-id #:auto #:mutable]) #:transparent #:auto-value null)
+(struct C-Instruction ([thread-id #:auto #:mutable] [instr-id #:auto #:mutable]) #:transparent #:auto-value null)
 
 ;; Specific C instruction structures.
+(struct Set-pointer C-Instruction (id type offset val ))
 (struct Repeat-meta C-Instruction (instr-list which-var))
 (struct Meta-addition C-Instruction (instr-list which-var))
 (struct CAS C-Instruction (v1 v2 new-val ret))
-(struct Create-var C-Instruction (id type instr-id))
-(struct Set-var C-Instruction (id assignment instr-id))
-(struct Lock C-Instruction (id instr-id) #:transparent)
-(struct Unlock C-Instruction (id instr-id))
-(struct Return C-Instruction (val instr-id))
+(struct Create-var C-Instruction (id type))
+(struct Set-var C-Instruction (id assignment))
+(struct Lock C-Instruction (id) #:transparent)
+(struct Unlock C-Instruction (id))
+(struct Return C-Instruction (val))
 (struct Get-argument C-Instruction (id))
 (struct Run-method C-Instruction (method args ret))
 (struct Single-branch C-Instruction (condition branch))
@@ -223,13 +224,14 @@
 
 
 (define (Get-instr-id x)
-  (match x
-    [(Lock thread-id id instr-id) instr-id]
-    [(Create-var thread-id id type instr-id) instr-id]
-    [(Unlock thread-id id instr-id) instr-id]
-    [(Return thread-id val instr-id) instr-id]
-    [(Set-pointer id type offset val instr-id) instr-id]
-    [(Set-var thread-id id assignment instr-id) instr-id]
-    [(Info  t-id instr-id) instr-id]
-    [_
-     (None)]))
+  (C-Instruction-instr-id x))
+  ;; (match x
+  ;;   [(Lock thread-id id instr-id) instr-id]
+  ;;   [(Create-var thread-id id type instr-id) instr-id]
+  ;;   [(Unlock thread-id id instr-id) instr-id]
+  ;;   [(Return thread-id val instr-id) instr-id]
+  ;;   [(Set-pointer id type offset val instr-id) instr-id]
+  ;;   [(Set-var thread-id id assignment instr-id) instr-id]
+  ;;   [(Info  t-id instr-id) instr-id]
+  ;;   [_
+  ;;    (None)]))

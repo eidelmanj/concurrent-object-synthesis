@@ -77,30 +77,30 @@
   (define (give-ids-to-instr-list loop loop-id)
     ;; (display "assigning ids\n")
     ;; (display loop) (display "\n")
-    
-    (cond
-      [(empty? loop) `()]
-      [(Repeat-meta? (first loop))
-       ;; (display "going into repeat meta\n")
-       (append
-        (list (Repeat-meta (give-ids-to-instr-list (Repeat-meta-instr-list (first loop)) loop-id) (Repeat-meta-which-var (first loop))))
-        (give-ids-to-instr-list (rest loop) loop-id))]
+    loop)
+    ;; (cond
+    ;;   [(empty? loop) `()]
+    ;;   [(Repeat-meta? (first loop))
+    ;;    ;; (display "going into repeat meta\n")
+    ;;    (append
+    ;;     (list (Repeat-meta (give-ids-to-instr-list (Repeat-meta-instr-list (first loop)) loop-id) (Repeat-meta-which-var (first loop))))
+    ;;     (give-ids-to-instr-list (rest loop) loop-id))]
 
-      [(Single-branch? (first loop))
-       ;; (display "going into single branch\n")
-       (append
-        (list (Single-branch (Single-branch-condition (first loop)) (give-ids-to-instr-list (Single-branch-branch (first loop)) loop-id)))
-        (give-ids-to-instr-list (rest loop) loop-id))]
+    ;;   [(Single-branch? (first loop))
+    ;;    ;; (display "going into single branch\n")
+    ;;    (append
+    ;;     (list (Single-branch (Single-branch-condition (first loop)) (give-ids-to-instr-list (Single-branch-branch (first loop)) loop-id)))
+    ;;     (give-ids-to-instr-list (rest loop) loop-id))]
 
-      [(Meta-addition? (first loop))
-       (append
-        (list (Meta-addition (give-ids-to-instr-list (Meta-addition-instr-list (first loop)) loop-id) (Meta-addition-which-var (first loop))))
-        (give-ids-to-instr-list (rest loop) loop-id))]
+    ;;   [(Meta-addition? (first loop))
+    ;;    (append
+    ;;     (list (Meta-addition (give-ids-to-instr-list (Meta-addition-instr-list (first loop)) loop-id) (Meta-addition-which-var (first loop))))
+    ;;     (give-ids-to-instr-list (rest loop) loop-id))]
                      
-      [else
-       (append
-        (list (add-new-line-id (first loop) loop-id))
-        (give-ids-to-instr-list (rest loop) loop-id))]))
+    ;;   [else
+    ;;    (append
+    ;;     (list (add-new-line-id (first loop) loop-id))
+    ;;     (give-ids-to-instr-list (rest loop) loop-id))]))
 
                          
 
@@ -134,43 +134,43 @@
        
   
 (define line-ids (void))
-(define (add-new-line-id line loop-id)
-  ;; (display "try adding line id to: ")(display loop-id) (display "\n")
-
-  (cond
-    [(Set-pointer? line)
-     (if (None? (Set-pointer-instr-id line))
-         (Set-pointer (Set-pointer-id line) (Set-pointer-type line) (Set-pointer-offset line) (Set-pointer-val line) (new-line-id))
-         line)]
+;; (define (add-new-line-id line loop-id)
+;;   ;; (display "try adding line id to: ")(display loop-id) (display "\n")
+;;   (
+  ;; (cond
+  ;;   [(Set-pointer? line)
+  ;;    (if (None? (Set-pointer-instr-id line))
+  ;;        (Set-pointer (Set-pointer-id line) (Set-pointer-type line) (Set-pointer-offset line) (Set-pointer-val line) (new-line-id))
+  ;;        line)]
      
-    [(Lock? line)
-     (if (None? (Lock-instr-id line))
-         (Lock (Lock-id line) (new-line-id))
-         line)]
-    [(Create-var? line)
-     (if (None? (Create-var-instr-id line))
-         (Create-var (Create-var-id line) (Create-var-type line) (new-line-id))
-         line)]
+  ;;   [(Lock? line)
+  ;;    (if (None? (Lock-instr-id line))
+  ;;        (Lock (Lock-id line) (new-line-id))
+  ;;        line)]
+  ;;   [(Create-var? line)
+  ;;    (if (None? (Create-var-instr-id line))
+  ;;        (Create-var (Create-var-id line) (Create-var-type line) (new-line-id))
+  ;;        line)]
 
     
-    [(Set-var? line)
-     (if (None? (Set-var-instr-id line))
-         (Set-var (Set-var-id line) (Set-var-assignment line) (new-line-id))
-         line)]
+  ;;   [(Set-var? line)
+  ;;    (if (None? (Set-var-instr-id line))
+  ;;        (Set-var (Set-var-id line) (Set-var-assignment line) (new-line-id))
+  ;;        line)]
 
-    [(Unlock? line)
-     (if  (None? (Unlock-instr-id line))
-         (Unlock (Unlock-id line) (new-line-id))
-         line)]
+  ;;   [(Unlock? line)
+  ;;    (if  (None? (Unlock-instr-id line))
+  ;;        (Unlock (Unlock-id line) (new-line-id))
+  ;;        line)]
 
-    [(Continue? line)
-     ;; (display "found a continue...\n")
-     ;; (display "adding id ") (display loop-id) (display "\n")
-     (if (and (not (None? loop-id)) (None? (Continue-to-where line)))
-         (Continue loop-id)
-         line)]
-    [else
-     line]))
+  ;;   [(Continue? line)
+  ;;    ;; (display "found a continue...\n")
+  ;;    ;; (display "adding id ") (display loop-id) (display "\n")
+  ;;    (if (and (not (None? loop-id)) (None? (Continue-to-where line)))
+  ;;        (Continue loop-id)
+  ;;        line)]
+  ;;   [else
+  ;;    line]))
 (define (new-line-id)
   (set! line-ids (+ line-ids 1))
   line-ids)
@@ -260,7 +260,7 @@
       [else ;; (display "else\n")
             ;; (display (unroll-thread-runs (rest instr-list))) (display "\n")
        ;; (display (Get-instr-id (add-new-line-id (first instr-list)))) (display "\n")
-       (map (append-item (add-new-line-id (first instr-list) (None))) (unroll-thread-runs (rest instr-list) to-return))]))
+       (map (append-item  (first instr-list)) (unroll-thread-runs (rest instr-list) to-return))]))
   
   
   
@@ -316,10 +316,10 @@
       [(empty? instr-list) `()]
       [else
        (match (first instr-list)
-         [(Set-var thread-id id assignment instr-id)
+         [(Set-var thread-id instr-id id assignment)
           (append (list (Tuple id (get-type assignment)))
                   (collect-all-assignments (rest instr-list)))]
-         [(Loop thread-id condition loop-instr-list)
+         [(Loop thread-id instr-id condition loop-instr-list)
           (append (collect-all-assignments loop-instr-list) (collect-all-assignments (rest instr-list)))]
          [_
           `(collect-all-assignments (rest instr-list))])]))
@@ -337,7 +337,7 @@
               (append (list (first instr-list)) (announcement-sketch (rest instr-list))))]
 
 
-         [(Loop thread-id condition loop-instr-list)
+         [(Loop thread-id instr-id condition loop-instr-list)
           (let ([in-loop-assignments (collect-all-assignments loop-instr-list)])
             ;; (display in-loop-assignments) (display "\n")
             (append
@@ -369,7 +369,7 @@
                    (Create-var "bits" "int" (None))
 
 
-                   (Set-var "bits" (Dereference node-of-interest type "bits") (None))
+                   (Set-var "bits" (Dereference node-of-interest type "bits"))
                    
                    
                    (Repeat-meta
@@ -408,25 +408,25 @@
     (list "Node" "int" "int")
     "int"
     (list
-     (Lock 1 (None))
-     (Create-var "cur" "Node" (None))
-     (Create-var "prev" "Node" (None))
-     (Set-var "cur" (Get-argument 0) (None))
-     (Set-var "prev" (Get-argument 0) (None))
+     (Lock 1 )
+     (Create-var "cur" "Node" )
+     (Create-var "prev" "Node" )
+     (Set-var "cur" (Get-argument 0) )
+     (Set-var "prev" (Get-argument 0) )
      (Loop (And (Not (Is-none? (Get-var "cur"))) (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))))
            (list
-            (Set-var "prev" (Get-var "cur") (None))
-            (Set-var "cur" (Dereference "cur" "Node" "next") (None))))
+            (Set-var "prev" (Get-var "cur") )
+            (Set-var "cur" (Dereference "cur" "Node" "next") )))
      (Single-branch
       (Is-none? (Get-var "cur"))
       (list
-       (Set-pointer "prev" "Node" "next" (New-struct "Node" (list (None) (Get-argument 1) (Get-argument 2) (None))) (None))
-       (Unlock 1 (None))
-       (Return (Get-argument 2) (None))))
+       (Set-pointer "prev" "Node" "next" (New-struct "Node" (list (None) (Get-argument 1) (Get-argument 2) (None) )) )
+       (Unlock 1 )
+       (Return (Get-argument 2) )))
 
-     (Set-pointer "cur" "Node" "val" (Get-argument 2) (None))
-     (Unlock 1 (None))
-     (Return (Get-argument 2) (None))
+     (Set-pointer "cur" "Node" "val" (Get-argument 2) )
+     (Unlock 1 )
+     (Return (Get-argument 2) )
 
      ))
      
@@ -439,19 +439,19 @@
     "int"
     ;; (create-announcement-version 
      (list
-      (Lock 1(None))
-      (Create-var "cur" "Node" (None))
-      (Set-var "cur" (Get-argument 0)(None))
+      (Lock 1)
+      (Create-var "cur" "Node" )
+      (Set-var "cur" (Get-argument 0))
       (Loop  (And (Not (Is-none? (Get-var "cur"))) (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))) )
             (list
-             (Set-var "cur" (Dereference "cur" "Node" "next") (None))))
+             (Set-var "cur" (Dereference "cur" "Node" "next") )))
       (Single-branch
         (Is-none? (Get-var "cur"))
        (list
-        (Unlock 1(None))
-        (Return (None)(None))))
-      (Unlock 1(None))
-      (Return (Dereference "cur" "Node" "val")(None)))
+        (Unlock 1)
+        (Return (None))))
+      (Unlock 1)
+      (Return (Dereference "cur" "Node" "val")))
      ;; 0))
     ;; ))
      )
@@ -464,9 +464,9 @@
      "int"
      ;; (add-ids add-method-id
       (list
-       (Create-var "val" "int"(None))
+       (Create-var "val" "int")
        (Run-method "get" (list (Get-argument 0) (Get-argument 1)) "val") ;; Run method "get" with arguments "key"
-       (Return (Not (Is-none? (Get-var "val"))) (None)))
+       (Return (Not (Is-none? (Get-var "val"))) ))
       ;; 1))
      )
     
@@ -476,40 +476,40 @@
     "int"
     ;; (add-ids add-method-id
      (list
-      (Lock 1(None))
-      (Create-var "cur" "Node"(None))
-      (Create-var "prevNode" "Node"(None))
-      (Create-var "oldVal" "Node"(None))
+      (Lock 1)
+      (Create-var "cur" "Node")
+      (Create-var "prevNode" "Node")
+      (Create-var "oldVal" "Node")
       
-      (Set-var "cur" (Get-argument 0)(None))
+      (Set-var "cur" (Get-argument 0))
       (Single-branch 
                      (Is-none? (Get-var "cur"))
                      (list
-                      (Unlock 1(None))
-                      (Return (None) (None))))
+                      (Unlock 1)
+                      (Return  (None))))
       
       
-      (Set-var "oldVal" (Dereference "cur" "Node" "val")(None))
-      (Set-var "prevNode" (Get-argument 0)(None))
+      (Set-var "oldVal" (Dereference "cur" "Node" "val"))
+      (Set-var "prevNode" (Get-argument 0))
      
       (Loop  (And (Not (Is-none? (Get-var "cur"))) (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))))
 
              ;; (And (Not (Equal (Dereference (Dereference "cur" "Node" "next") "Node" "key") (Get-argument 1))) (Not (Equal (Get-var "cur") 0)))
             (list
-             (Set-var "oldVal" (Dereference "cur" "Node" "val")(None))
-             (Set-var "prevNode" (Get-var "cur")(None))           
-             (Set-var "cur" (Dereference "cur" "Node" "next")(None))))
+             (Set-var "oldVal" (Dereference "cur" "Node" "val"))
+             (Set-var "prevNode" (Get-var "cur"))           
+             (Set-var "cur" (Dereference "cur" "Node" "next"))))
       (Single-branch 
        (Is-none? (Get-var "cur"))
        (list
-        (Unlock 1(None))
-        (Return (None) (None))))
+        (Unlock 1)
+        (Return  (None))))
       
 
-      (Set-var "oldVal" (Dereference "cur" "Node" "val")(None))
-      (Set-pointer "prevNode" "Node" "next" (Dereference "cur" "Node" "next")(None))
-      (Unlock 1(None))
-      (Return (Get-var "oldVal")(None)))
+      (Set-var "oldVal" (Dereference "cur" "Node" "val"))
+      (Set-pointer "prevNode" "Node" "next" (Dereference "cur" "Node" "next"))
+      (Unlock 1)
+      (Return (Get-var "oldVal")))
      ;; 2))
     )
 
@@ -520,16 +520,16 @@
     (list "Node" "int")
     "int"
      (list
-      (Create-var "val" "int" (None))
-      (Create-var "found" "int" (None))
-      (Set-var "val" (None) (None))
+      (Create-var "val" "int" )
+      (Create-var "found" "int" )
+      (Set-var "val" (None) )
       (Run-method "contains" (list (Get-argument 0) (Get-argument 1)) "found")
       (Single-branch 
        (Get-var "found") 
        (list
         (Run-method "get" (list (Get-argument 0) (Get-argument 1)) "val")
         (Run-method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway")))
-      (Return (Get-var "val")(None)))
+      (Return (Get-var "val")))
     )))
      
      ;; 3))))
@@ -658,11 +658,11 @@
   (Thread-list
    (list
     ;; (Create-var "ret1" "int" (None))
-    (Create-var "ret2" "int" (None))
-    (Create-var "ret3" "int" (None))
-    (Run-Method "push" (list (Get-var "shared") 1 5) "ret1" 0)
-    (Run-Method "push" (list (Get-var "shared") 2 5) "ret1" 0)
-    (Run-Method "push" (list (Get-var "shared") 3 7) "ret1" 0)
+    (Create-var "ret2" "int" )
+    (Create-var "ret3" "int" )
+    (Run-Method "push" (list (Get-var "shared") 1 5) "ret1" 0 )
+    (Run-Method "push" (list (Get-var "shared") 2 5) "ret1" 0 )
+    (Run-Method "push" (list (Get-var "shared") 3 7) "ret1" 0 )
     (Run-Method "get" (list (Get-var "shared") 2 ) "ret3" 0)
     ;; (Run-Method "contains" (list (Get-var "shared") 1) "ret2" 1)
     (Run-Method "remove" (list (Get-var "shared") 1) "ret1" 0))))
@@ -678,9 +678,9 @@
   (Thread-list
    (list
     (Run-Method "push" (list (Get-argument 0) 1 5) "throwaway" 0)
-    (Create-var "val" "int" (None))
-    (Create-var "found" "int" (None))
-    (Set-var "val" 0 (None))
+    (Create-var "val" "int" )
+    (Create-var "found" "int" )
+    (Set-var "val" 0 )
     (Run-Method "contains" (list (Get-argument 0) (Get-argument 1)) "found" 0)
     (Assume-simulation (Not (Equal (Get-var "found") 0)))
 
@@ -688,7 +688,7 @@
     (Run-Method "get" (list (Get-argument 0) (Get-argument 1)) "val" 0)
     (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "ret2" 1)
     (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0)
-    (Set-var "ret1" (Get-var "val") (None)))))
+    (Set-var "ret1" (Get-var "val") ))))
 
 
 
@@ -696,9 +696,9 @@
   (Thread-list
    (list
     (Run-Method "push" (list (Get-argument 0) 1 5) "throwaway" 0)
-    (Create-var "val" "int" (None))
-    (Create-var "found" "int" (None))
-    (Set-var "val" 0 (None))
+    (Create-var "val" "int" )
+    (Create-var "found" "int" )
+    (Set-var "val" 0 )
     (Run-Method "contains" (list (Get-argument 0) (Get-argument 1)) "found" 0)
     (Assume-simulation (Not (Equal (Get-var "found") 0)))
 
@@ -708,8 +708,8 @@
                   (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "ret2" 1)
                   (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0))
                  (list
-                  (Create-var "loop-break" "int" (None))
-                  (Set-var "loop-break" #f (None))))
+                  (Create-var "loop-break" "int" )
+                  (Set-var "loop-break" #f )))
                   ;; (Maybe-loop (Not (Get-var "loop-break"))
                   ;;             (list
                   ;;              (Run-Method "get" (list (Get-argument 0) (Get-argument 1)) "val" 0)
@@ -723,7 +723,7 @@
                         
 
                  
-    (Set-var "ret1" (Get-var "val") (None)))))
+    (Set-var "ret1" (Get-var "val") ))))
 
     
     ;; (#(struct:Create-var () val int #<None>)
