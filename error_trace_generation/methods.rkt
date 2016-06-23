@@ -1,15 +1,31 @@
 #lang racket/base
 
-(require (only-in "../program_representation/simulator-structures.rkt"
-                  Method-id Method-args
-                  Run-Method Run-method Run-method-method Run-method-args Run-method-ret)
+(require "../program_representation/simulator-structures.rkt"
          (only-in racket/function curry)
          (only-in racket/list append-map cartesian-product)
          "vars.rkt"
          (only-in "utils.rkt" pick-at-most-n)
          (only-in racket/match match))
 
-(provide get-method pick-non-commutative-ops)
+(provide get-method conflicting-ops pretty-AST)
+
+(define (pretty-AST AST)
+  (for/list ([instr AST])
+    (match instr
+      [(Create-var tid id type instr-id) `(define ,id ,type)]
+      [(Set-var tid id assignment instr-id) `(set! ,id ,assignment)]
+      [(Lock tid id instr-id) `(Lock ,id)]
+      [(Unlock tid id instr-id) `(Unlock ,id)]
+      [(Return tid val instr-id) `(Return ,(pretty-AST (list val)))]
+      [(Get-argument tid id) `(Arg ,id)]
+      [(Get-var id) id]
+      [(Run-method tid method args ret) `(set! ,ret (,method . ,(pretty-AST args)))]
+      [(Single-branch tid condition branch)
+       `(when ,condition ,(pretty-AST branch))]
+      [(Loop tid condition instrs) `(while ,condition ,(pretty-AST instrs))]
+      [(Branch tid condition branch1 branch2)
+       `(if ,condition ,(pretty-AST branch1) ,(pretty-AST branch2))]
+      [_ instr])))
 
 ; Given a method name and a library, return the corresponding Method struct in library.
 (define (get-method method-name library)
@@ -65,24 +81,26 @@
    library))
 
 (module+ test
-  (non-commutative-ops
-   (Run-method "put" '(#\A 1) "test")
-   library
-   (make-hash)))
+  (pretty-AST
+   (non-commutative-ops
+    (Run-method "put" '(#\A 1) "test")
+    library
+    (make-hash))))
 
 (define (ret-update run-method ret)
   (match run-method
     [(Run-method tid method args _) (Run-Method method args ret tid)]))
 
-(define (pick-non-commutative-ops n method-call library pointers)
+(define (conflicting-ops n method-call library pointers)
   (map (λ (ops)
          (map (λ (op) (ret-update op (fresh-var)))
               ops))
        (pick-at-most-n (non-commutative-ops method-call library pointers) n)))
 
 (module+ test
-  (pick-non-commutative-ops
-   1
-   (Run-method "put" '(#\A 1) "test")
-   library
-   (make-hash)))
+  (map pretty-AST
+       (conflicting-ops
+        1
+        (Run-method "put" '(#\A 1) "test")
+        library
+        (make-hash))))
