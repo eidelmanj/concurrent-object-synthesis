@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require "../program_representation/simulator-structures.rkt"
+(require (submod "../program_representation/simulator-structures.rkt" C-structs)
          (only-in racket/function curry)
          (only-in racket/list append-map cartesian-product)
          "vars.rkt"

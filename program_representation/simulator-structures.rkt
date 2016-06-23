@@ -162,6 +162,33 @@
 (define-tid-constructor Run-Method Run-method method args ret)
 (define-tid-instr-id-constructor Run-Method-instr-id Run-method method args ret)
 
+;; Make it easy to import just the C instruction structs.
+(module* C-structs #f
+  (provide
+   (struct-out C-Instruction)
+   (struct-out Repeat-meta)
+   (struct-out Meta-addition)
+   (struct-out CAS)
+   (struct-out Create-var)
+   (struct-out Set-var)
+   (struct-out Lock)
+   (struct-out Unlock)
+   (struct-out Return)
+   (struct-out Get-argument)
+   (struct-out Run-method)
+   (struct-out Single-branch)
+
+   (struct-out Loop)
+   (struct-out Maybe-loop)
+
+   (struct-out Branch)
+   (struct-out Context-switch)
+
+   (struct-out Method)
+   (struct-out Get-var)
+
+   Run-Method))
+
 
 (struct New-struct (type arg-list))
 
