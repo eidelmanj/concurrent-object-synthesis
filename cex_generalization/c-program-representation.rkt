@@ -828,7 +828,7 @@
 
 ;; (display (instr-list-to-sketch (first (thread-runs test library 0)) library "args"))
 
-(displayln (interleaving-to-sketch aliya-test (list "ret10" "ret20" "ret30" "throwaway0") library))
+(displayln (interleaving-to-sketch mooly-test (list "ret10" "ret20" "ret30" "throwaway0") library))
 
 
 
