@@ -22,7 +22,7 @@
          function-call-root
          function-call-node
          expr-stmt
-         assign-exp
+         assign-stmt
          expr
          var-exp
          arith-exp
@@ -37,9 +37,13 @@
          method-node
          struct-declaration-node
          struct-declaration-root
+         field-node
          loop-root
          while-node
          for-node
+         comparison-exp
+         bin-bool-exp
+         un-bool-exp
          empty-node
          null-node
          tostring)
@@ -56,8 +60,8 @@
 ;; Make a tostring operator for objects
 (define-syntax-rule (tostring a) (format "~a" a))
 
-(define-tokens a (NUM VAR TYPE))
-(define-empty-tokens b (~ \. \, NULL RETURN SHARED GETTERS SETTERS ELSE  STRUCT LOOP WHILE FOR DO \; = + -  < > AND OR NOT EQUAL EOF LET IN IF \( \) \{ \} ))
+(define-tokens a (NUM VAR TYPE ADDRESS))
+(define-empty-tokens b (~ \. \, NULL RETURN SHARED GETTERS SETTERS ELSE  STRUCT LOOP WHILE FOR DO \; = + -  < > & AND OR NOT EQUAL EOF LET IN IF \( \) \{ \} ))
 
 (define-lex-trans number
   (syntax-rules ()
@@ -74,7 +78,7 @@
   (number10 (number digit10))
   (identifier-characters (re-or (char-range "A" "z")
                                 "?" "!" ":" "$" "%" "^" "&"))
-  (basic-types (re-or "int" "bool" "char" "Node" "Integer" "int*" "bool*" "struct"))
+  (basic-types (re-or "int" "char" "Node" "Integer" "pthread_mutex_t" "pthread_mutex_t*" "int*" "char*" "struct"))
   (identifier (re-+ identifier-characters))
   (loop (re-or "while" "for")))
 
@@ -112,6 +116,7 @@
    ((re-+ basic-types) (token-TYPE lexeme))
    ((re-+ number10) (token-NUM (string->number lexeme)))
    (identifier      (token-VAR lexeme))
+   ((re-: (re-? "&") basic-types) (token-ADDRESS lexeme))
    (loop (token-LOOP))
    ;; recursively calls the lexer which effectively skips whitespace
    (whitespace (simple-math-lexer input-port))
@@ -122,7 +127,7 @@
 (define-struct arith-exp (op e1 e2))
 (define-struct num-exp (n))
 (define-struct var-exp (i) #:transparent)
-(define-struct assign-exp (var exp))
+(define-struct assign-stmt (var exp))
 (define-struct program-node (stmt next) #:transparent)
 (define-struct expr (e))
 (define-struct empty-node ())
@@ -135,14 +140,15 @@
 (define-struct var-decl (tp id))
 (define-struct var-node (v next))
 (define-struct var-add-node (v next))
-(define-struct function-call-root (f))
+(define-struct function-call-root (f var))
 (define-struct function-call-expr (f))
 (define-struct function-call-node (nm args))
 (define-struct arg-decl (id))
 (define-struct arg-node (v next))
 (define-struct arg-add-node (v next))
 (define-struct struct-declaration-node (nm members))
-(define-struct struct-declaration-root (n))
+(define-struct struct-declaration-root (struct))
+(define-struct field-node (type name next))
 (define-struct single-var (v))
 (define-struct loop-root (loop))
 (define-struct while-node (exp body))
@@ -199,27 +205,28 @@
     (exp ((NUM) (num-exp $1))
          ((VAR) (var-exp $1))
          ((NULL) (null-node))
-         ((exp + exp) (make-arith-exp + $1 $3))
-         ((exp - exp) (make-arith-exp - $1 $3))
-         ((exp EQUAL exp) (make-arith-exp "equal" $1 $3))
-         ((exp < exp) (make-comparison-exp < $1 $3))
-         ((exp < = exp) (make-comparison-exp <= $1 $4))
-         ((exp > exp) (make-comparison-exp > $1 $3))
-         ((exp > = exp) (make-comparison-exp >= $1 $4))
-         ((exp AND exp) (make-bin-bool-exp "and" $1 $3))
-         ((exp OR exp) (make-bin-bool-exp "or" $1 $3))
-         ((NOT exp) (make-un-bool-exp "not" $2))
-         
-         ((function-call) (make-function-call-root $1)))
+         ((exp + exp) (make-arith-exp '+ $1 $3))
+         ((exp - exp) (make-arith-exp '- $1 $3))
+         ((exp EQUAL exp) (make-arith-exp '= $1 $3))
+         ((exp < exp) (make-comparison-exp '< $1 $3))
+         ((exp < = exp) (make-comparison-exp '<= $1 $4))
+         ((exp > exp) (make-comparison-exp ''> $1 $3))
+         ((exp > = exp) (make-comparison-exp ''>= $1 $4))
+         ((exp AND exp) (make-bin-bool-exp '&& $1 $3))
+         ((exp OR exp) (make-bin-bool-exp '|| $1 $3))
+         ((NOT exp) (make-un-bool-exp '! $2))
+         ((& VAR) (make-empty-node))
+         ((function-call) (make-function-call-expr $1)))
     
     (single-line-if ((IF \( exp \) \{ program \} ) (make-if-node $3 $6 (make-empty-node))))
     ;;(single-line-if ((IF \( exp \) statement) (make-if-node $3 $5 (make-empty-node))))
     (if-else ((IF \( exp \) \{ program \} ELSE \{ program \} ) (make-if-node $3 $6 $10)))
     
     (statement 
-                ((VAR = exp \;) (make-assign-exp $1 $3))
+               ((VAR = exp \;) (make-assign-stmt $1 $3))
+               ((VAR = function-call \;) (make-function-call-root $3 $1))
                ((method-declaration) (make-method-root $1))
-               ((function-call \;) (make-function-call-root $1))
+               ((function-call \;) (make-function-call-root $1 null))
                ((VAR \. object-access \;) (make-object-access $1 $3))
                ;((VAR = VAR \. object-access \;) (new-assign-obj $1 $3 $5))
                ((RETURN VAR \;) (make-return-node $2))
@@ -227,14 +234,14 @@
                ((TYPE VAR \;) (make-decl-node $1 $2))
                ((struct-declaration) (make-struct-declaration-root $1))
                ((if-else) (make-if-stmt (make-if-root $1)))
-               ((while) (make-loop-root $1))
-               ((for) (make-loop-root $1)))
+               ((loop) (make-loop-root $1)))
 
-    (while ((WHILE \( exp \) \{ program \}) (make-while-node $3 $6)))
-    (for ((FOR \( exp \; exp \; exp \; \) \{ program \}) (make-for-node $3 $5 $7 $11)))
+    (loop ((WHILE \( exp \) \{ program \}) (make-while-node $3 $6))
+          ((FOR \( exp \; exp \; exp \; \) \{ program \}) (make-for-node $3 $5 $7 $11))
+          ((DO \{ program \} WHILE \( exp \) \;) (make-while-node $3 $7)))
 
     (field-members (() make-empty-node)
-                   ((TYPE VAR \; field-members) (make-decl-node $1 $2)))
+                   ((TYPE VAR \; field-members) (make-field-node $1 $2 $4)))
 
     (object-access ((VAR) (make-single-var $1))
                    ((function-call) (function-call-root $1)))
@@ -250,16 +257,18 @@
     
     ;; List of arguments for function calls
     (add-arg (() (make-empty-node))
+              ((\, & VAR add-arg) (make-arg-node (make-arg-decl $3) $4))
              ((\, VAR add-arg) (make-arg-add-node (make-arg-decl $2) $3)))
     
     (arg-list (() (make-empty-node))
+              ((& VAR add-arg) (make-arg-node (make-arg-decl $2) $3))
               ((VAR add-arg) (make-arg-node (make-arg-decl $1) $2)))
     
     (struct-declaration ((STRUCT VAR \{ field-members \} \;) 
       (make-struct-declaration-node $2 $4)))
 
     ;; function calls
-    (function-call ((VAR \( arg-list \)) (function-call-node $1 $3)))
+    (function-call (( VAR \( arg-list \) ) (function-call-node $1 $3)))
     
     
     ;; Main program
@@ -294,7 +303,10 @@
     
     
     ;; Function calls
-    ((function-call-root f) (string-append (pp f) ";" ))
+    ((function-call-root func var) ((if equal? var null)
+                                      (string-append (pp func) ";")
+                                      (string-append (tostring var) " = " (pp func) ";" )))
+    
     ((function-call-node nm args) (string-append (tostring nm) "(" (pp args) ")"))
     
     ;; Argument lists for function calls
@@ -315,7 +327,7 @@
     ((arith-exp op e1 e2)
      (print (string-append (pp e1) (print op) (pp e2))))
     ((num-exp n) (tostring n))
-    ((assign-exp v e) (string-append (tostring v) "=" (tostring (pp e))))
+    ((assign-stmt v e) (string-append (tostring v) "=" (tostring (pp e))))
     ((var-exp i) (error 'pp "undefined identifier ~a" i))))
 
 (define (lex-this lexer input) (lambda () (lexer input)))
