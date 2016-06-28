@@ -1,21 +1,17 @@
 #lang racket/base
 
 (require (only-in "../program_representation/simulator-structures.rkt"
-                  Method Method-instr-list
+                  Method-instr-list
                   Run-method
                   C-Instruction
                   Single-branch Branch Loop
-                  Create-var
-                  None
-                  Thread-list)
+                  Create-var)
          "backtracking.rkt"
          "interpret.rkt"
          "linearizable.rkt"
          "methods.rkt"
-         "vars.rkt"
-         (only-in racket/hash hash-union)
          (only-in racket/match match)
-         (only-in racket/list split-at empty? first)
+         (only-in racket/list split-at empty?)
          (only-in racket/pretty pretty-display)
          (only-in racket/function curryr))
 
