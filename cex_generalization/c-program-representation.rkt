@@ -113,9 +113,18 @@
        (append
         (unroll-loop loop depth loop-id)
         (all-unrolls-helper loop (- depth 1)))]))
-  
-  (let ([loop-with-ids (Loop (Loop-condition loop) (give-ids-to-instr-list (Loop-instr-list loop) loop-id))])
-    (all-unrolls-helper loop-with-ids depth)))
+
+  (cond
+    [(Loop? loop)
+     (let ([loop-with-ids (Loop (Loop-condition loop) (give-ids-to-instr-list (Loop-instr-list loop) loop-id))])
+       (all-unrolls-helper loop-with-ids depth))]
+    [(Maybe-loop? loop)
+     (let ([loop-with-ids (Loop (Maybe-loop-condition loop) (give-ids-to-instr-list (Maybe-loop-instr-list1 loop) loop-id))])
+       (all-unrolls-helper loop-with-ids depth))]
+
+    [else
+     (displayln loop)
+     (displayln "Need loop or maybe loop. Something is wrong")]))
 
 
 
@@ -195,12 +204,55 @@
   loop-id-count)
 
 
+
+(define (interleave-lists-at-holes instr-list1 instr-list2 hole)
+  ;; (display "INTERLEAVING LIST1: ") (displayln instr-list1)
+  ;; (display "INTERLEAVING LIST2: ") (displayln instr-list2)
+  
+  (cond
+    [(empty? instr-list1) (list instr-list2)]
+    [(empty? instr-list2) (list instr-list1)]
+    [(equal? (C-Instruction-instr-id (first instr-list1)) (Hole-method1 hole))
+     (append
+      (map (append-list (list (first instr-list1) (first instr-list2))) (interleave-lists-at-holes (rest instr-list1) (rest instr-list2) hole))
+
+      (map (append-item (first instr-list1)) (interleave-lists-at-holes (rest instr-list1) instr-list2 hole)))]
+    [else
+     (map (append-item (first instr-list1)) (interleave-lists-at-holes (rest instr-list1) instr-list2 hole))]))
+
 (define (thread-runs t library t-id)
 
   (set! line-ids 0)
 
 
     
+  (define (handle-maybe-loop instr-list to-return)
+
+    (let
+        ([maybe-loop (first instr-list)]
+         [possible-loops (reduce append (map (lambda (l)  (unroll-thread-runs (append l (rest instr-list)) to-return)) (all-unrolls (first instr-list) 1 (new-loop-id))))])
+
+      (let
+          ([interleavings (reduce append
+                                  (map
+                                   (lambda (l)
+                                     ;; (displayln "one loop possibility\n")
+                                     ;; (display "answer: ") (displayln                                     (length (interleave-lists-at-holes l (Maybe-loop-instr-list2 maybe-loop) (Maybe-loop-hole maybe-loop))))
+
+                                     (interleave-lists-at-holes l (Maybe-loop-instr-list2 maybe-loop) (Maybe-loop-hole maybe-loop)))
+                                   possible-loops))])
+
+        ;; (display "INTERLEAVINGS: ") (displayln  (first interleavings))
+        
+        
+
+        
+
+      ;; (display "POSSIBLE-LOOPS: ")
+      ;; (displayln (second (interleave-lists-at-holes (first possible-loops) (Maybe-loop-instr-list2 maybe-loop) (Maybe-loop-hole maybe-loop))))
+
+      
+      interleavings)))
 
    
 
@@ -239,6 +291,32 @@
           (map (append-item (Assume-meta new-meta)) (unroll-thread-runs (append (Meta-addition-instr-list (first instr-list))
                                                                                     (rest instr-list)) to-return))
           (map (append-item (Assume-not-meta new-meta)) (unroll-thread-runs (rest instr-list) to-return))))]
+
+      [(Meta-branch? (first instr-list))
+       ;; (display "meta-branch\n")
+       ;; (displayln           (length (map (append-item (Assume-meta 0)) (unroll-thread-runs (append
+       ;;                                                                   (Meta-branch-branch1 (first instr-list))
+       ;;                                                                   (rest instr-list))
+       ;;                                                                  to-return))))
+       ;; (displayln           (length (map (append-item (Assume-not-meta 0)) (unroll-thread-runs (append
+       ;;                                                                       (Meta-branch-branch2 (first instr-list))
+       ;;                                                                       (rest instr-list))
+       ;;                                                                      to-return))))
+
+ 
+       (let ([new-meta (new-meta-var)])
+         (append
+          (map (append-item (Assume-meta new-meta)) (unroll-thread-runs (append
+                                                                         (Meta-branch-branch1 (first instr-list))
+                                                                         (rest instr-list))
+                                                                        to-return))
+          (map (append-item (Assume-not-meta new-meta)) (unroll-thread-runs (append
+                                                                             (Meta-branch-branch2 (first instr-list))
+                                                                             (rest instr-list))
+                                                                            to-return))))]
+
+
+          
        
 
       [(Loop? (first instr-list)) ;; (display "looping\n")
@@ -256,6 +334,25 @@
 
                                 (unroll-thread-runs (Repeat-meta-instr-list (first instr-list)) to-return)))]
        
+
+
+
+
+      [(Maybe-loop? (first instr-list))
+       (let
+           ([new-meta (new-meta-var)])
+         (append
+          (map (append-item (Assume-meta new-meta))
+                (handle-maybe-loop instr-list to-return))
+
+
+          (map (append-item (Assume-not-meta new-meta))
+               (unroll-thread-runs
+                (append (Maybe-loop-original-instr-list (first instr-list))
+                        (rest instr-list))
+                to-return))))]
+
+               
       
       [else ;; (display "else\n")
             ;; (display (unroll-thread-runs (rest instr-list))) (display "\n")
@@ -271,6 +368,11 @@
 
   (let ([instr-list (Thread-list-instr-list t)])
     (unroll-thread-runs instr-list "")))
+
+
+
+
+
 
 
 
@@ -709,13 +811,22 @@
                   (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0))
                  (list
                   (Create-var "loop-break" "int" )
-                  (Set-var "loop-break" #f )))
-                  ;; (Maybe-loop (Not (Get-var "loop-break"))
-                  ;;             (list
-                  ;;              (Run-Method "get" (list (Get-argument 0) (Get-argument 1)) "val" 0)
-                  ;;              (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0))
-                  ;;             (list
-                  ;;              (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "ret2" 1))
+                  (Set-var "loop-break" #f )
+                  (Maybe-loop 1 (Not (Get-var "loop-break"))
+                              (list
+                               (Run-Method-instr-id "get" (list (Get-argument 0) (Get-argument 1)) "val" 0 0)
+                               (Run-Method-instr-id "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0 1))
+                              (list
+                               (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "ret2" 1))
+
+                              (list
+                               (Run-Method "get" (list (Get-argument 0) (Get-argument 1)) "val" 0)
+                               (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "ret2" 1)
+                               (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0))
+
+
+
+                              (Hole 0 (list) 1))))
 
                               
 
@@ -723,7 +834,17 @@
                         
 
                  
-    (Set-var "ret1" (Get-var "val") ))))
+    (Set-var "ret1" (Get-var "val")))))
+
+
+
+
+
+
+
+
+
+
 
     
     ;; (#(struct:Create-var () val int #<None>)
@@ -811,6 +932,8 @@
         [meta-vars (collect-meta-vars interleaving library)]
 [new-scope (new-scope-num)])
 
+;; (display "ALL-RUNS length: ") (displayln (length all-runs))
+
 
 
 
@@ -848,37 +971,34 @@
 
     
 
+(define (list-contains l i)
+  (> (length (filter (lambda (e) (equal? e i)) l)) 0))
+
+
+;; (define (convert-trace-to-interleavings trace library broken-methods)
+
+;;   ;; Look to see if there are methods in the second trace that
+;;   ;; need to be broken up.
+;;   (let ([conversion-list (filter (lambda (t)
+;;                                      (and (equal? (C-Instruction-thread-id t) 1) (Run-method? t)
+;;                                           (list-contains broken-methods (Run-method-method t))))
+;;                                    trace)])
+
+;;     (cond
+;;       [(empty? conversion-list)
+;;        (list trace)]
+;;       [else
+;;        (let ([
     
+  
 
 
 
 
 
 
-;; (first (thread-runs thread3 library 0))
-;; (to-string-instr (Set-var-assignment (second (first (thread-runs thread3 library 0)))))
 
-
-;; (first (thread-runs thread3 library 0))
-
-;; (display (print-non-sketch-simulation (list (Run-method "get" (list 1 "test" ) "aret")) library (list 1 2 3)  "default"))
-
-;; (display (instr-list-to-sketch (first (thread-runs test library 0)) library "args"))
-
-(displayln (interleaving-to-sketch mooly-test (list "ret10" "ret20" "ret30" "throwaway0") library))
-
-
-
-;; (length (thread-runs test library 0)
-;; (first (thread-runs test library 0))
-
-;; (second (thread-runs thread1 library 0))
-;; (map Get-instr-id (second (thread-runs thread1 library 0)))
-
-
-;; (first (all-equivalent-interleavings (list (Info 0 1) (Info 0 2) (Info 0 3) (Info 0 4) (Info 0 5) (Info 0 6) (Info 0 7) (Info 0 15) (Info 0 16) ) thread1 thread2 library))
-
-
-
-
+(define sketch-output (interleaving-to-sketch mooly-sketch-test (list "ret10" "ret20" "ret30" "throwaway0") library))
+(define all-runs (thread-runs mooly-sketch-test library 0))
+;; (displayln (convert-trace-to-interleavings (first all-runs) library (list "remove")))
 
