@@ -6,6 +6,7 @@
          (only-in racket/match match)
          (only-in racket/pretty pretty-display)
          "interpret.rkt"
+         (only-in "utils.rkt" filter-hash)
          "vars.rkt")
 
 (provide linearizable?)
@@ -48,10 +49,7 @@
      (define results (interpret (append declarations instrs) vars))
      ;(displayln results) (displayln "")
      
-     (define infeasible-witnesses
-       (for/list ([(var value) results]
-                  #:when (void? value))
-         var))
+     (define infeasible-witnesses (filter-hash void? results))
      
      (cond
        [(empty? infeasible-witnesses)

@@ -4,7 +4,8 @@
          (only-in racket/list split-at splitf-at))
 
 (provide pick-at-most-n
-         splitf-at-after-index)
+         splitf-at-after-index
+         filter-hash)
 
 ; A helper function for pick-at-most-n.
 ; prev is a list of lists of length i - 1 containing elements from L.
@@ -73,3 +74,22 @@
                        '() '(1 3 5 7 2 4 6 8))
   (check-equal?/values (splitf-at-after-index '(1 3 5 7 2 4 6 8) negative? 0)
                        '(1 3 5 7 2 4 6 8) '()))
+
+(define (filter-hash pred hash)
+  (for/list ([(key value) hash]
+             #:when (pred value))
+    key))
+
+(module+ test
+  (check-equal?-no-order
+   (filter-hash odd? (make-hash '((a . 1) (b . 2) (c . 3) (d . 4))))
+   '(a c))
+  (check-equal?-no-order
+   (filter-hash even? (make-hash '((a . 1) (b . 2) (c . 3) (d . 4))))
+   '(b d))
+  (check-equal?-no-order
+   (filter-hash negative? (make-hash '((a . 1) (b . 2) (c . 3) (d . 4))))
+   '())
+  (check-equal?-no-order
+   (filter-hash positive? (make-hash '((a . 1) (b . 2) (c . 3) (d . 4))))
+   '(a b c d)))
