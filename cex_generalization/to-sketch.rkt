@@ -343,8 +343,17 @@
 
 
 
-  
 
+  
+(define (maybe-loop-to-sketch condition
+                              instr-list1
+                              instr-list2
+                              hole
+                              library
+                              arg-store
+                              scope-num
+                              parent-scop)
+  "TODO: MAYBE-LOOP\n")
 
 
 (define (instr-list-to-sketch instr-list library arg-store scope-num parent-scope)
@@ -415,7 +424,12 @@
 
          [(Assume-meta? elem)
           (string-append
-           "(if (not meta-var)\n #f (begin  \n"
+           "(if (not meta-var)" (~v Assume-meta-condition elem) "\n #f (begin  \n"
+           (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope) "))\n")]
+
+         [(Assume-not-meta? elem)
+          (string-append
+           "(if meta-var" (~v Assume-not-meta-condition elem) "\n #f\n (begin\n"
            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope) "))\n")]
 
          [(Repeat-meta? elem)
@@ -425,6 +439,24 @@
            ")"
            
            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope))]
+
+         ;; [(Meta-branch? elem)
+         ;;  (string-append
+         ;;   "(if meta-var" (~v (Meta-branch-condition elem)) "(begin\n"
+         ;;   (instr-list-to-sketch (Meta-branch-branch1 elem) library arg-store scope-num parent-scope)
+         ;;   ")\n"
+         ;;   "(begin\n" (instr-list-to-sketch (Meta-branch-branch2 elem) library arg-store scope-num parent-scope) ")\n")]
+
+         ;; [(Maybe-loop? elem)
+         ;;  (string-append
+         ;;   "(if meta-var" (~v (Maybe-loop-meta-var elem)) "(begin\n"
+         ;;   (maybe-loop-to-sketch (Maybe-loop-condition elem)
+         ;;                         (Maybe-loop-instr-list1 elem)
+         ;;                         (Maybe-loop-instr-list2 elem)
+         ;;                         (Maybe-loop-hole elem)
+         ;;                         library arg-store scope-num parent-scope)
+         ;;   ")\n (begin\n"
+         ;;   (instr-list-to-sketch (Maybe-loop-original-instr-list elem) library arg-store scope-num parent-scope) "))\n")]
 
 
          [(CAS? elem)

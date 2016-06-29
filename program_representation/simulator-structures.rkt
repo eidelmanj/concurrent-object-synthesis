@@ -27,6 +27,7 @@
  (struct-out Context-switch)
  ; Extra constructors for instruction structs
  Run-Method
+ Run-Method-instr-id
  Get-instr-id
  (struct-out Meta-branch)
  (struct-out Meta-single-branch)
@@ -114,8 +115,14 @@
 (struct Run-method C-Instruction (method args ret))
 (struct Single-branch C-Instruction (condition branch))
 
+(struct Assume-meta C-Instruction (condition))
+(struct Assume-not-meta C-Instruction (condition))
+(struct Assume-simulation C-Instruction (condition))
+(struct Assume-loop C-Instruction (condition to-where))
+
+
 (struct Loop C-Instruction (condition instr-list))
-(struct Maybe-loop C-Instruction (condition instr-list))
+(struct Maybe-loop C-Instruction (meta-var condition instr-list1 instr-list2 original-instr-list hole))
 
 (struct Branch C-Instruction (condition branch1 branch2))
 (struct Context-switch C-Instruction () #:transparent)
@@ -130,7 +137,17 @@
     (define inst (struct-id args ...))
     (unless (null? thread-id) (set-C-Instruction-thread-id! inst thread-id))
     inst))
+
+(define-syntax-rule (define-tid-instr-id-constructor constructor-id struct-id args ...)
+  (define (constructor-id args ... [thread-id null] [instr-id null])
+    (define inst (struct-id args ...))
+    (unless (null? thread-id) (set-C-Instruction-thread-id! inst thread-id))
+    (unless (null? instr-id) (set-C-Instruction-instr-id! inst instr-id))
+    inst))
+
+
 (define-tid-constructor Run-Method Run-method method args ret)
+(define-tid-instr-id-constructor Run-Method-instr-id Run-method method args ret)
 
 
 (struct New-struct (type arg-list))
@@ -193,10 +210,6 @@
 ;; arg1/2/3 - the arguments of the function call
 
 ;; (define-struct Assume (condition))
-(define-struct Assume-meta (condition))
-(define-struct Assume-not-meta (condition))
-(define-struct Assume-simulation (condition))
-(define-struct Assume-loop (condition to-where))
 
 
 (define-struct Continue (to-where))
