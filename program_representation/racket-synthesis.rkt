@@ -42,12 +42,12 @@ To this (Racket struct) - (Method "test"
     [(method-node tp nm vlist p) (make-Method
                                   (tostring nm) (translate vlist) tp (translate p))]
     [(function-call-root func var) (let ([name-args (translate func)])
-                                     (cond [(equal? name-args "pthread_mutex_lock") (Lock 0 0)]
-                                           [(equal? name-args "pthread_mutex_unlock") (Unlock 0 0)]
+                                     (cond [(equal? (car name-args) "pthread_mutex_lock") (Lock (cdr name-args))]
+                                           [(equal? (car name-args) "pthread_mutex_unlock") (Unlock (cdr name-args))]
                                            [else (Run-method (car name-args) (cdr name-args) (Get-var var))]))]
     [(function-call-node nm args) (cond
-                                    [(equal? nm "pthread_mutex_lock") nm]
-                                    [(equal? nm "pthread_mutex_unlock") nm]
+                                    [(equal? nm "pthread_mutex_lock") (cons nm (translate args))]
+                                    [(equal? nm "pthread_mutex_unlock") (cons nm (translate args))]
                                     [else (cons nm (translate args))])]
     [(struct-declaration-root struct) (translate struct)]
     [(struct-declaration-node nm fields) (Structure nm (translate fields))]
@@ -67,7 +67,7 @@ To this (Racket struct) - (Method "test"
     [(arg-decl id) id]
     [(decl-node tp v) (cons tp (list v))]
     
-    [(assign-stmt var exp) (Set-var var (translate exp) 0)]
+    [(assign-stmt var exp) (Set-var var (translate exp))]
     [(num-exp n) n]
     [(var-exp i) i]
     [(loop-root loop) (translate loop)]
@@ -76,10 +76,15 @@ To this (Racket struct) - (Method "test"
      (Loop (translate condition) (append (list init condition) (translate body)))]
     [(comparison-exp op expr1 expr2) (bin-op-struct op expr1 expr2)]
     [(bin-bool-exp op expr1 expr2) (bin-op-struct op expr2 expr2)]
+    [(arith-exp op expr1 expr2) (bin-op-struct op expr2 expr2)]
+    [(return-node v) (translate v)]
+    [(bool-const const) const]
     ))
 
 (define operators (list (cons '+ Add)
                         (cons '- Subtract)
+                        (cons '/ Divide)
+                        (cons '* Multiply)
                         (cons '= Equal)
                         (cons '< Less-than)
                         (cons '<= Less-than-equal)
@@ -93,7 +98,7 @@ To this (Racket struct) - (Method "test"
   (let ([str (filter (lambda (x)(equal? (car x) op)) operators)])
     (if (empty? str)
         null
-        ((cdr str) expr1 expr2))))
+        ((cdr (first str)) expr1 expr2))))
 
 #|
 (find-method name)

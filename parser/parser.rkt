@@ -45,6 +45,8 @@
          bin-bool-exp
          un-bool-exp
          empty-node
+         return-node
+         bool-const
          null-node
          tostring)
 (require racket/match)
@@ -61,7 +63,7 @@
 (define-syntax-rule (tostring a) (format "~a" a))
 
 (define-tokens a (NUM VAR TYPE ADDRESS))
-(define-empty-tokens b (~ \. \, NULL RETURN SHARED GETTERS SETTERS ELSE  STRUCT LOOP WHILE FOR DO \; = + -  < > & AND OR NOT EQUAL EOF LET IN IF \( \) \{ \} ))
+(define-empty-tokens b (~ \. \, NULL BOOL RETURN SHARED GETTERS SETTERS ELSE  STRUCT LOOP WHILE FOR DO \; = + -  < > & AND OR NOT EQUAL EOF LET IN IF \( \) \{ \} ))
 
 (define-lex-trans number
   (syntax-rules ()
@@ -78,7 +80,7 @@
   (number10 (number digit10))
   (identifier-characters (re-or (char-range "A" "z")
                                 "?" "!" ":" "$" "%" "^" "&"))
-  (basic-types (re-or "int" "char" "Node" "Integer" "pthread_mutex_t" "pthread_mutex_t*" "int*" "char*" "struct"))
+  (basic-types (re-or "void" "int" "char" "Node" "Integer" "pthread_mutex_t" "pthread_mutex_t*" "int*" "char*" "struct"))
   (identifier (re-+ identifier-characters))
   (loop (re-or "while" "for")))
 
@@ -87,6 +89,7 @@
    ("=" (token-=))
    ("-" (token--))
    ("+" (token-+))
+   ((re-or "true" "false") (token-BOOL))
    ("==" (token-EQUAL))
    ("<" (token-<))
    (">" (token->))
@@ -141,7 +144,6 @@
 (define-struct var-node (v next))
 (define-struct var-add-node (v next))
 (define-struct function-call-root (f var))
-(define-struct function-call-expr (f))
 (define-struct function-call-node (nm args))
 (define-struct arg-decl (id))
 (define-struct arg-node (v next))
@@ -156,6 +158,7 @@
 (define-struct comparison-exp (op expr1 expr2))
 (define-struct bin-bool-exp (op expr1 expr2))
 (define-struct un-bool-exp (op expr1))
+(define-struct bool-const (const))
 (define-struct return-node (v))
 (define-struct null-node ())
 ;; Structure for object accesses ie x.get()
@@ -202,7 +205,8 @@
     
     
     ;; The program itself
-    (exp ((NUM) (num-exp $1))
+    (exp ;((BOOL) (make-bool-const $1))
+         ((NUM) (num-exp $1))
          ((VAR) (var-exp $1))
          ((NULL) (null-node))
          ((exp + exp) (make-arith-exp '+ $1 $3))
@@ -210,26 +214,26 @@
          ((exp EQUAL exp) (make-arith-exp '= $1 $3))
          ((exp < exp) (make-comparison-exp '< $1 $3))
          ((exp < = exp) (make-comparison-exp '<= $1 $4))
-         ((exp > exp) (make-comparison-exp ''> $1 $3))
-         ((exp > = exp) (make-comparison-exp ''>= $1 $4))
+         ((exp > exp) (make-comparison-exp '> $1 $3))
+         ((exp > = exp) (make-comparison-exp '>= $1 $4))
          ((exp AND exp) (make-bin-bool-exp '&& $1 $3))
          ((exp OR exp) (make-bin-bool-exp '|| $1 $3))
          ((NOT exp) (make-un-bool-exp '! $2))
          ((& VAR) (make-empty-node))
-         ((function-call) (make-function-call-expr $1)))
+         ((function-call) (make-function-call-root $1 null)))
     
     (single-line-if ((IF \( exp \) \{ program \} ) (make-if-node $3 $6 (make-empty-node))))
     ;;(single-line-if ((IF \( exp \) statement) (make-if-node $3 $5 (make-empty-node))))
     (if-else ((IF \( exp \) \{ program \} ELSE \{ program \} ) (make-if-node $3 $6 $10)))
     
     (statement 
-               ((VAR = exp \;) (make-assign-stmt $1 $3))
                ((VAR = function-call \;) (make-function-call-root $3 $1))
+               ((VAR = exp \;) (make-assign-stmt $1 $3))
                ((method-declaration) (make-method-root $1))
                ((function-call \;) (make-function-call-root $1 null))
                ((VAR \. object-access \;) (make-object-access $1 $3))
                ;((VAR = VAR \. object-access \;) (new-assign-obj $1 $3 $5))
-               ((RETURN VAR \;) (make-return-node $2))
+               ((RETURN exp \;) (make-return-node $2))
                ((single-line-if ) (make-if-stmt (make-if-root $1)))
                ((TYPE VAR \;) (make-decl-node $1 $2))
                ((struct-declaration) (make-struct-declaration-root $1))
@@ -244,7 +248,7 @@
                    ((TYPE VAR \; field-members) (make-field-node $1 $2 $4)))
 
     (object-access ((VAR) (make-single-var $1))
-                   ((function-call) (function-call-root $1)))
+                   ((function-call) (function-call-root $1 null)))
     
     (method-declaration ((TYPE VAR \( var-list \) \{ program \} ) (make-method-node $1 $2 $4 $7) ))
     
