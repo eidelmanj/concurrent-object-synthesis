@@ -1,0 +1,25 @@
+(let*
+      ((test-program "int test(int x, int y) {int z; pthread_mutex_t lock; z = pthread_mutex_lock(&lock); return z;} void pointless_loop(){ int x; x = 0; while(x < 1000){ x = x + 1;} }")
+         (input (open-input-string test-program)))
+    (translate (simple-math-parser (lex-this simple-math-lexer input))))
+
+(let*
+      ((test-program "int negate(int var) {if(var){ return !var;}} int enemeneminemo(int bit){x = 0; while(x < 100){bit = negate(bit); x = x + 1;}} int bit_flip(int bit){ return enemeneminemo(bit);}")
+         (input (open-input-string test-program)))
+    (translate (simple-math-parser (lex-this simple-math-lexer input))))
+
+(let*
+      ((test-program "void some_prop_logic(){ int x; if(1 && 0){x = 2;} else{x = 100;}}")
+         (input (open-input-string test-program)))
+    (translate (simple-math-parser (lex-this simple-math-lexer input))))
+
+
+ERRORS
+
+(let*
+      ((test-program "struct bob {int x;};")
+         (input (open-input-string test-program)))
+    (translate (simple-math-parser (lex-this simple-math-lexer input))))
+. . match: no matching clause for #<procedure:empty-node>
+
+
