@@ -114,6 +114,20 @@ To this (Racket struct) - (Method "test"
     ["putIfAbsent" amap-putIfAbsent]
     ["contains" amap-contains]))
 
+(define (translate-to-c lst)
+  (if (empty? lst)
+      ""
+      (let ((curr-instr (first lst)))
+        (match curr-instr
+          [(Method id args ret-type instr-list)
+           (string-append ret-type " " id "(" (apply string-append args) " " (translate-to-c (rest lst)))]
+          [(Set-var id assignment) (string-append id " = " (translate-to-c assignment))]
+          [(Lock id) (string-append "pthhread_mutex_lock(&" id ")")]
+          [(Unlock id) (string-append "pthhread_mutex_unlock(&" id ")")]
+          [(Run-method method args ret) (if (equal? ret null)
+                                            (string-append method "(" (apply string-append args) ")")
+                                            (string-append var " = " method "(" (apply string-append args) ")"))]
+          []))))
 ;(let*
 ;      ((test-program "int test (int x, bool y ) {int z; z = putIfAbsent(m, key, val);}")
 ;         (input (open-input-string test-program)))
