@@ -55,8 +55,8 @@ To this (Racket struct) - (Method "test"
     [(if-stmt c) (translate c)]
     [(if-root e) (translate e)]
     [(if-node c p1 p2) (if (empty? (translate p2))
-                           (Single-branch c (translate p1))
-                           (Branch c (translate p1) (translate p2)))]
+                           (Single-branch (translate c) (translate p1))
+                           (Branch (translate c) (translate p1) (translate p2)))]
     
     [(var-node v next) (cons (translate v) (translate next))]
     [(var-add-node v next) (cons (translate v) (translate next))]
@@ -77,7 +77,7 @@ To this (Racket struct) - (Method "test"
     [(comparison-exp op expr1 expr2) (bin-op-struct op expr1 expr2)]
     [(bin-bool-exp op expr1 expr2) (bin-op-struct op expr2 expr2)]
     [(arith-exp op expr1 expr2) (bin-op-struct op expr2 expr2)]
-    [(return-node v) (translate v)]
+    [(return-node v) (Return v)]
     [(bool-const const) const]
     ))
 
@@ -127,7 +127,10 @@ To this (Racket struct) - (Method "test"
           [(Run-method method args ret) (if (equal? ret null)
                                             (string-append method "(" (apply string-append args) ")")
                                             (string-append var " = " method "(" (apply string-append args) ")"))]
-          []))))
+          [(Struct nm fields) (string-append nm "{ " (translate fields) " };")]
+          [(Field name type) (string-append type " " name "; " (translate-to-c (rest lst)))]
+          [(Single-branch c p1) (string-append "if(" (translate-to-c c) ") { " (translate-to-c p1) " }")]
+          [(Branch c p1 p2) (string-append "if(" (translate-to-c c) ")"))]))))
 ;(let*
 ;      ((test-program "int test (int x, bool y ) {int z; z = putIfAbsent(m, key, val);}")
 ;         (input (open-input-string test-program)))
