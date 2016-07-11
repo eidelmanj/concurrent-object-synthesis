@@ -78,8 +78,7 @@
  (struct-out Is-none?)
  (struct-out Structure)
  (struct-out Field)
- (struct-out Binding-list)
- (struct-out Thread-Op))
+ (struct-out Binding-list))
 
 
 
@@ -280,11 +279,6 @@
   (cond
     [(Assume-meta? a) (Assume-meta-condition a)]
     [(Assume-simulation? a) (Assume-simulation-condition a)]))
-
-;; A representation of an operation in a trace.
-;;  tid: a symbol identifying a particular thread.
-;;  mid: a symbol identifying a particular operation within a thread.
-(struct Thread-Op (tid mid) #:transparent)
 
 
 (define (Get-instr-id x)
