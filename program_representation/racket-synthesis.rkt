@@ -50,7 +50,7 @@ To this (Racket struct) - (Method "test"
                                     [(equal? nm "pthread_mutex_unlock") (cons nm (translate args))]
                                     [else (cons nm (translate args))])]
     [(struct-declaration-root struct) (translate struct)]
-    [(struct-declaration-node nm fields) (Structure nm (translate fields))]
+    [(struct-declaration-node tp nm fields) (Structure nm (translate fields))]
     [(field-node type name next) (cons (Field name type) (translate next))]
     [(if-stmt c) (translate c)]
     [(if-root e) (translate e)]
@@ -79,6 +79,7 @@ To this (Racket struct) - (Method "test"
     [(arith-exp op expr1 expr2) (bin-op-struct op expr2 expr2)]
     [(return-node v) (Return v)]
     [(bool-const const) const]
+
     ))
 
 (define operators (list (cons '+ Add)
@@ -120,17 +121,18 @@ To this (Racket struct) - (Method "test"
       (let ((curr-instr (first lst)))
         (match curr-instr
           [(Method id args ret-type instr-list)
-           (string-append ret-type " " id "(" (apply string-append args) " " (translate-to-c (rest lst)))]
+           (string-append ret-type " " id "(" (apply string-append args) ") { " (translate-to-c instr-list) "} " (translate-to-c (rest lst)))]
           [(Set-var id assignment) (string-append id " = " (translate-to-c assignment))]
-          [(Lock id) (string-append "pthhread_mutex_lock(&" id ")")]
-          [(Unlock id) (string-append "pthhread_mutex_unlock(&" id ")")]
-          [(Run-method method args ret) (if (equal? ret null)
-                                            (string-append method "(" (apply string-append args) ")")
-                                            (string-append var " = " method "(" (apply string-append args) ")"))]
-          [(Struct nm fields) (string-append nm "{ " (translate fields) " };")]
+          ;[(Lock id) (string-append "pthhread_mutex_lock(&" id ")")]
+          ;[(Unlock id) (string-append "pthhread_mutex_unlock(&" id ")")]
+          ;[(Run-method method args ret) (if (equal? ret null)
+                                           ; (string-append method "(" (apply string-append args) ")")
+                                           ; (string-append var " = " method "(" (apply string-append args) ")"))]
+          [(Structure fields) (string-append "{ " (translate fields) " };")]
           [(Field name type) (string-append type " " name "; " (translate-to-c (rest lst)))]
-          [(Single-branch c p1) (string-append "if(" (translate-to-c c) ") { " (translate-to-c p1) " }")]
-          [(Branch c p1 p2) (string-append "if(" (translate-to-c c) ")"))]))))
+          ;[(Single-branch condition branch) (string-append "if(" (translate-to-c condition) ") { " (translate-to-c branch) " }")]
+          ;[(Branch c p1 p2) (string-append "if(" (translate-to-c c) ") { " (translate-to-c p1) "else {" (translate-to-c p2) "}")]
+          ))))
 ;(let*
 ;      ((test-program "int test (int x, bool y ) {int z; z = putIfAbsent(m, key, val);}")
 ;         (input (open-input-string test-program)))

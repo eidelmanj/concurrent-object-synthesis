@@ -80,7 +80,7 @@
   (number10 (number digit10))
   (identifier-characters (re-or (char-range "A" "z")
                                 "?" "!" ":" "$" "%" "^" "&"))
-  (basic-types (re-or "void" "int" "char" "Node" "Integer" "pthread_mutex_t" "pthread_mutex_t*" "int*" "char*"))
+  (basic-types (re-or "void" "int" "char" "Node" "Integer" "pthread_mutex_t" "pthread_mutex_t*" "int*" "char*" "struct"))
   (identifier (re-+ identifier-characters))
   (loop (re-or "while" "for"))
   (truth-values (re-or "true" "false")))
@@ -149,7 +149,7 @@
 (define-struct arg-decl (id))
 (define-struct arg-node (v next))
 (define-struct arg-add-node (v next))
-(define-struct struct-declaration-node (tp nm members))
+(define-struct struct-declaration-node (tp nm fields))
 (define-struct struct-declaration-root (struct))
 (define-struct field-node (type name next))
 (define-struct single-var (v))
@@ -269,7 +269,7 @@
               ((& VAR add-arg) (make-arg-node (make-arg-decl $2) $3))
               ((VAR add-arg) (make-arg-node (make-arg-decl $1) $2)))
     
-    (struct-declaration ((STRUCT VAR \{ field-members \} \;) 
+    (struct-declaration ((TYPE VAR \{ field-members \} \;) 
       (make-struct-declaration-node $1 $2 $4)))
 
     ;; function calls
