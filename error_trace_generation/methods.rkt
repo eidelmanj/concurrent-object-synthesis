@@ -108,4 +108,4 @@
 (define (arg-types op library)
   (match op
     [(Run-method _ _ method args ret) (cons ret
-                                            (Method-ret-type(get-method method library)))]))
+                                            (Method-ret-type (get-method method library)))]))
