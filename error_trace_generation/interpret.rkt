@@ -35,11 +35,7 @@
           ; A list of parameters for Get-argument
           (define ,reserved-parameters-keyword (list . ,parameters))
           . ; Method body
-          ,(append
-            (transform-and-instrument instr-list)
-            (list
-             ; For methods that don't return anything, add an explicit return
-             '(displayln '(return))))))]))
+          ,(transform-and-instrument instr-list)))]))
 
 ; Return a function that takes a list of instructions and executes them
 ;  with the bindings associated with the functions in library.
@@ -81,11 +77,13 @@
                                   `(cons (quote ,var-name) ,var-name))
                                 vars-of-interest))))
 
-    #;#; ; for debugging
-    (for-each pretty-print library-defs)
+    #;#;#; ; for debugging
+    ;(for-each pretty-print library-defs)
     (pretty-print `(block . ,(append
                               (transform-and-instrument ast)
                               `(,var-hash))))
+    (displayln "")
+    (displayln "")
 
     (eval
      ; Use block instead of begin so variables will be defined in a new
@@ -123,7 +121,9 @@
     [(x expr) (app transform expr)]))
 
 (define (transform-and-instrument instrs)
-  (append-map (compose instrument-trace transform) instrs))
+  #;
+  (append-map (compose instrument-trace transform) instrs)
+  (map transform instrs))
 
 ; Transform an AST into a quoted S-expression.
 (define (transform instr)
@@ -399,7 +399,6 @@
                                    2 4 0)
                                   1)
                                 'ret))
-  (displayln "")
   ; Last node in the list
   (check-var-equal? ret 4
                     (Create-var 'ret 'int)
@@ -409,7 +408,6 @@
                                    2 4 0)
                                   2)
                                 'ret))
-  (displayln "")
   ; Node not in the list (early return)
   (check-var-equal? ret 0
                     (Create-var 'ret 'int)
@@ -419,7 +417,6 @@
                                    2 4 0)
                                   3)
                                 'ret))
-  (displayln "")
 
   ; push
   (check-var-equal? ret 6
@@ -432,14 +429,6 @@
                                   6)
                                 'ret))
 
-  (displayln "")
-  ; Test manually-added returns
-  (check-var-equal? ret (void)
-                    (Create-var 'ret 'int)
-                    (Method 'test '() 'int `(,(Create-var 'a 'int)))
-                    (Run-method 'test '() 'ret))
-
-  (displayln "")
   (check-var-equal? ret 0
                     (Create-var 'ret 'int)
                     (Run-method 'contains

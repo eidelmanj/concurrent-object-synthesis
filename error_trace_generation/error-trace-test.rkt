@@ -5,88 +5,48 @@
 
 (define test-library
   (list
-   #;
    (Method
     "push"
-    (list "Node" "int" "int")
-    "int"
-    (list
-     (Lock 1)
-     (Create-var "cur" "Node")
-     (Create-var "prev" "Node")
-     (Set-var "cur" (Get-argument 0))
-     (Set-var "prev" (Get-argument 0))
-     (Loop (And (Not (Is-none? (Get-var "cur")))
-                (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))))
-           (list
-            (Set-var "prev" (Get-var "cur"))
-            (Set-var "cur" (Dereference "cur" "Node" "next"))))
-     (Single-branch
-      (Is-none? (Get-var "cur"))
-      (list
-       (Set-pointer "prev" "Node" "next"
-                    (New-struct "Node" (list (None) (Get-argument 1) (Get-argument 2) (None))))
-       (Unlock 1)
-       (Return (Get-argument 2))))
-
-     (Set-pointer "cur" "Node" "val" (Get-argument 2))
-     (Unlock 1)
-     (Return (Get-argument 2))))
-
-   (Method
-    "get"
-    (list "Node" "int")
+    '("Node" "int" "int")
     "int"
     `(,(Lock 1)
       ,(Create-var "cur" "Node")
+      ,(Create-var "prev" "Node")
+      ,(Create-var 'result "int")
       ,(Set-var "cur" (Get-argument 0))
+      ,(Set-var "prev" (Get-argument 0))
+      ,(Set-var 'result 0)
       ,(Loop (And (Not (Is-none? (Get-var "cur")))
                   (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))))
-             `(,(Set-var "cur" (Dereference "cur" "Node" "next"))))
-      ,(Single-branch (Is-none? (Get-var "cur"))
-                      `(,(Unlock 1) ,(Return 0)))
+             `(,(Set-var "prev" (Get-var "cur"))
+               ,(Set-var "cur" (Dereference "cur" "Node" "next"))))
+      ,(Single-branch
+        (Is-none? (Get-var "cur"))
+        `(,(Set-pointer "prev" "Node" "next"
+                        (New-struct "Node" `(,(None)
+                                             ,(Get-argument 1)
+                                             ,(Get-argument 2)
+                                             ,(None))))
+          ,(Unlock 1)
+          ,(Return 'result)))
+      ,(Set-var 'result (Dereference 'cur 'Node 'val))
+      ,(Set-pointer "cur" "Node" "val" (Get-argument 2))
       ,(Unlock 1)
-      ,(Return (Dereference "cur" "Node" "val"))))
-
-   (Method
-    "contains"
-    (list "Node" "int")
-    "int"
-    `(,(Create-var "valu" "int")
-      ,(Run-method "get" `(,(Get-argument 0) ,(Get-argument 1)) "valu")
-      ,(Return (Equal (Get-var "valu") 0))))
+      ,(Return 'result)))
 
    (Method
     "extension"
-    (list "Node" "int")
+    '("Node" "int")
     "int"
-    `(,(Create-var "val" "int")
-      ,(Create-var "found" "int")
-      ,(Set-var "val" 0)
-      ,(Run-method "contains" `(,(Get-argument 0) ,(Get-argument 1)) "found")
-      ,(Single-branch (Equal (Get-var "found") 0)
-                      `(,(Run-method "get" `(,(Get-argument 0) ,(Get-argument 1)) "val")
-                        ,(Run-method "get" `(,(Get-argument 0) 25) "test")))
-      ,(Return (Get-var "val"))))))
+    (list
+     (Create-var 'val1 "int")
+     (Create-var 'val2 "int")
+     (Run-method "push" `(,(Get-argument 0) 1 10) 'val1)
+     (Run-method "push" `(,(Get-argument 0) 1 20) 'val2)
+     (Return (Add (Get-var 'val1) (Get-var 'val2)))))))
 
 (bound 1)
 (error-traces
  test-library
  "extension"
- (make-hash `(("Node" . ((Node
-                          (Node
-                           (Node
-                            (Node
-                             (Node
-                              (Node
-                               (Node
-                                (Node
-                                 (Node (None) 8 8 0)
-                                 7 7 0)
-                                6 6 0)
-                               5 5 0)
-                              4 4 0)
-                             3 3 0)
-                            2 2 0)
-                           1 1 0)
-                          0 0 0))))))
+ (make-hash `(("Node" . (,(Get-var "shared"))))))

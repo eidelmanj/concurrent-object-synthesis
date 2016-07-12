@@ -106,20 +106,21 @@
   (define lib (remove mut library))
   (define interpreter (make-interpreter lib))
   (define g (instrumenter (Method-instr-list mut) lib pointers))
-
+  
   (define traces '())
-
+  
   ; why does this work?
   (prompt
    (for ([(trace vars client) (in-producer g stop-value?)])
-     (set! traces (append traces (list trace)))
-
-     #;#;#;#;
-     (pretty-display (pretty-AST trace))
-     (displayln vars)
-     (pretty-display (pretty-AST client))
-     (displayln "")
-     (unless (linearizable? trace mut client vars pointers lib interpreter) (fail)))
+     ;(pretty-display (map transform trace))
+     ; Three possible results: the trace is linearizable, the trace is not
+     ;  linearizable, or we couldn't come up with arguments to make the trace
+     ;  feasible.
+     (define result (linearizable? trace mut client vars pointers lib interpreter))
+     (unless (equal? result #t)
+       (when (equal? result #f)
+         (set! traces (append traces (list trace))))
+       (fail)))
    (when (has-next?) (next)))
 
   (for-each
