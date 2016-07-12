@@ -12,18 +12,18 @@
 (define (pretty-AST AST)
   (for/list ([instr AST])
     (match instr
-      [(Create-var tid id type instr-id) `(define ,id ,type)]
-      [(Set-var tid id assignment instr-id) `(set! ,id ,assignment)]
-      [(Lock tid id instr-id) `(Lock ,id)]
-      [(Unlock tid id instr-id) `(Unlock ,id)]
-      [(Return tid val instr-id) `(Return ,(pretty-AST (list val)))]
-      [(Get-argument tid id) `(Arg ,id)]
+      [(Create-var _ _ type id) `(define ,id ,type)]
+      [(Set-var _ _ id assignment) `(set! ,id ,assignment)]
+      [(Lock _ _ id) `(Lock ,id)]
+      [(Unlock _ _ id) `(Unlock ,id)]
+      [(Return _ _ val) `(return . ,(pretty-AST (list val)))]
+      [(Get-argument _ _ id) `(Arg ,id)]
       [(Get-var id) id]
-      [(Run-method tid method args ret) `(set! ,ret (,method . ,(pretty-AST args)))]
-      [(Single-branch tid condition branch)
-       `(when ,condition ,(pretty-AST branch))]
-      [(Loop tid condition instrs) `(while ,condition ,(pretty-AST instrs))]
-      [(Branch tid condition branch1 branch2)
+      [(Run-method _ _ method args ret) `(set! ,ret (,method . ,(pretty-AST args)))]
+      [(Single-branch _ _ condition branch)
+       (append '(when) (pretty-AST (list condition)) (pretty-AST branch))]
+      [(Loop _ _ condition instrs) `(while ,condition ,(pretty-AST instrs))]
+      [(Branch _ _ condition branch1 branch2)
        `(if ,condition ,(pretty-AST branch1) ,(pretty-AST branch2))]
       [_ instr])))
 
@@ -89,7 +89,7 @@
 
 (define (ret-update run-method ret)
   (match run-method
-    [(Run-method tid method args _) (Run-Method method args ret tid)]))
+    [(Run-method tid _ method args _) (Run-Method method args ret tid)]))
 
 (define (conflicting-ops n method-call library pointers)
   (map (λ (ops)

@@ -7,6 +7,33 @@
 (define test-library
   (list
    (Method
+    "push"
+    (list "Node" "int" "int")
+    "int"
+    (list
+     (Lock 1)
+     (Create-var "cur" "Node")
+     (Create-var "prev" "Node")
+     (Set-var "cur" (Get-argument 0))
+     (Set-var "prev" (Get-argument 0))
+     (Loop (And (Not (Is-none? (Get-var "cur")))
+                (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))))
+           (list
+            (Set-var "prev" (Get-var "cur"))
+            (Set-var "cur" (Dereference "cur" "Node" "next"))))
+     (Single-branch
+      (Is-none? (Get-var "cur"))
+      (list
+       (Set-pointer "prev" "Node" "next"
+                    (New-struct "Node" (list (None) (Get-argument 1) (Get-argument 2) (None))))
+       (Unlock 1)
+       (Return (Get-argument 2))))
+
+     (Set-pointer "cur" "Node" "val" (Get-argument 2))
+     (Unlock 1)
+     (Return (Get-argument 2))))
+
+   (Method
     "get"
     (list "Node" "int")
     "int"
