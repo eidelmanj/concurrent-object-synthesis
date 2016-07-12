@@ -1,7 +1,8 @@
 #lang racket
 
 (require "../program_representation/simulator-structures.rkt"
-         "error-trace.rkt")
+         "error-trace.rkt"
+         (only-in "linearizable.rkt" lin-result-trace))
 
 (define test-library
   (list
@@ -46,7 +47,10 @@
      (Return (Add (Get-var 'val1) (Get-var 'val2)))))))
 
 (bound 1)
-(error-traces
- test-library
- "extension"
- (make-hash `(("Node" . (,(Get-var "shared"))))))
+(define results
+  (error-traces
+   test-library
+   "extension"
+   (make-hash `(("Node" . (,(Get-var "shared")))))))
+
+(map lin-result-trace results)

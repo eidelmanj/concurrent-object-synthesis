@@ -132,7 +132,7 @@
   (define mut (get-method method-name library))
   (define lib (remove mut library))
   (define interpreter (make-interpreter lib))
-  (define g (instrumenter (Method-instr-list mut) lib pointers))
+  (define g (instrumenter (number-lines (Method-instr-list mut)) lib pointers))
   (define arguments (for/list ([type (Method-args mut)])
                       (if (member type primitive-types)
                           (random-value-of-type type)
