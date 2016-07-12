@@ -7,7 +7,7 @@
          (only-in "utils.rkt" pick-at-most-n)
          (only-in racket/match match))
 
-(provide get-method conflicting-ops pretty-AST)
+(provide get-method conflicting-ops arg-types pretty-AST)
 
 (define (pretty-AST AST)
   (for/list ([instr AST])
@@ -34,11 +34,11 @@
 (module+ test
   (require "../program_representation/simulator-structures.rkt"
            rackunit)
-  
+
   (define library (list (Method "put" '("char" "int") "int" '())
                         (Method "get" '("char") "int" '())
                         (Method "remove" '("char") "int" '())))
-  
+
   (check-match (get-method "put" library) (Method "put" '("char" "int") "int" '()))
   (check-match (get-method "get" library) (Method "get" '("char") "int" '()))
   (check-match (get-method "remove" library) (Method "remove" '("char") "int" '()))
@@ -56,7 +56,7 @@
     (map cons
          (Method-args (get-method (Run-method-method method-call) library))  ; argument type
          (Run-method-args method-call)))                                     ; argument value
-  
+
   ; Compute the possible non-commutative arguments for each type.
   (define args-of-type
     (make-hash
@@ -69,7 +69,7 @@
                               (cdr arg)))
                       (hash-ref pointers type))))
           (append primitive-types (hash-keys pointers)))))
-  
+
   ; For each method, return all calls to method with all possible values for each argument.
   (append-map
    (λ (method)
@@ -104,3 +104,8 @@
         (Run-method "put" '(#\A 1) "test")
         library
         (make-hash))))
+
+(define (arg-types op library)
+  (match op
+    [(Run-method _ _ method args ret) (cons ret
+                                            (Method-ret-type(get-method method library)))]))
