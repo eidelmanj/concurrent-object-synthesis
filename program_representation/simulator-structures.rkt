@@ -110,18 +110,18 @@
 (struct C-Instruction ([thread-id #:auto #:mutable] [instr-id #:auto #:mutable]) #:transparent #:auto-value null)
 
 ;; Specific C instruction structures.
-(struct Set-pointer C-Instruction (id type offset val ))
+(struct Set-pointer C-Instruction (id type offset val ) #:transparent)
 (struct Repeat-meta C-Instruction (instr-list which-var))
 (struct Meta-addition C-Instruction (instr-list which-var))
-(struct CAS C-Instruction (v1 v2 new-val ret))
-(struct Create-var C-Instruction (id type))
-(struct Set-var C-Instruction (id assignment))
+(struct CAS C-Instruction (v1 v2 new-val ret) #:transparent)
+(struct Create-var C-Instruction (id type) #:transparent)
+(struct Set-var C-Instruction (id assignment) #:transparent)
 (struct Lock C-Instruction (id) #:transparent)
-(struct Unlock C-Instruction (id))
-(struct Return C-Instruction (val))
-(struct Get-argument C-Instruction (id))
-(struct Run-method C-Instruction (method args ret))
-(struct Single-branch C-Instruction (condition branch))
+(struct Unlock C-Instruction (id) #:transparent)
+(struct Return C-Instruction (val) #:transparent)
+(struct Get-argument C-Instruction (id) #:transparent)
+(struct Run-method C-Instruction (method args ret) #:transparent)
+(struct Single-branch C-Instruction (condition branch) #:transparent)
 
 (define (RW-operation o)
   (or (CAS? o) (Set-pointer? o) (Set-var? o)))
@@ -130,14 +130,14 @@
 
 (struct Assume-meta C-Instruction (condition))
 (struct Assume-not-meta C-Instruction (condition))
-(struct Assume-simulation C-Instruction (condition))
+(struct Assume-simulation C-Instruction (condition) #:transparent)
 (struct Assume-loop C-Instruction (condition to-where))
 
 
-(struct Loop C-Instruction (condition instr-list))
+(struct Loop C-Instruction (condition instr-list) #:transparent)
 (struct Maybe-loop C-Instruction (meta-var condition instr-list1 instr-list2 original-instr-list hole))
 
-(struct Branch C-Instruction (condition branch1 branch2))
+(struct Branch C-Instruction (condition branch1 branch2) #:transparent)
 (struct Context-switch C-Instruction () #:transparent)
 
 ;; Contains a trace that has an ID which we will use to fuse traces together and make sketches more
@@ -197,28 +197,29 @@
 
 (struct New-struct (type arg-list))
 
-(define-struct Dereference (id type offset))
-(define-struct Equal (expr1 expr2))
-(define-struct Not (expr))
-(define-struct Or (expr1 expr2))
-(define-struct And (expr1 expr2))
-(define-struct Arguments (arg-list))
-(define-struct Get-var(id))
-(define-struct Add (expr1 expr2))
-(define-struct Subtract (expr1 expr2))
-(define-struct Divide (expr1 expr2))
-(define-struct Multiply (expr1 expr2))
-(define-struct Less-than (expr1 expr2))
-(define-struct Less-than-equal (expr1 expr2))
-(define-struct Greater-than (expr1 expr2))
-(define-struct Greater-than-equal (expr1 expr2))
+(define-struct Dereference (id type offset) #:transparent)
+(define-struct Equal (expr1 expr2) #:transparent)
+(define-struct Not (expr) #:transparent)
+(define-struct Or (expr1 expr2) #:transparent)
+(define-struct And (expr1 expr2) #:transparent)
+(define-struct Arguments (arg-list) #:transparent)
+(define-struct Get-var(id) #:transparent)
+(define-struct Add (expr1 expr2) #:transparent)
+(define-struct Subtract (expr1 expr2) #:transparent)
+(define-struct Divide (expr1 expr2) #:transparent)
+(define-struct Multiply (expr1 expr2) #:transparent)
+(define-struct Less-than (expr1 expr2) #:transparent)
+(define-struct Less-than-equal (expr1 expr2) #:transparent)
+(define-struct Greater-than (expr1 expr2) #:transparent)
+(define-struct Greater-than-equal (expr1 expr2) #:transparent)
+(struct Is-none? (val) #:transparent)
+
 (define-struct Constant (value))
-(struct Is-none? (val))
 (struct Structure (fields))
 (struct Field (name type))
 
 
-(struct None ())
+(struct None () #:transparent)
 
 (define-struct Hole (method1 interruptor  method2))
 
@@ -226,7 +227,7 @@
 (define-struct Client-pre (instr-list))
 
 ;; Data structure for method
-(define-struct Method (id args ret-type instr-list))
+(define-struct Method (id args ret-type instr-list) #:transparent)
 ;; id - name of method
 ;; instr-list - for now just list of Instruction structures
 

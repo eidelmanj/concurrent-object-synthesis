@@ -12,7 +12,7 @@
 ; Right now, these values aren't guaranteed to be different because we use random.
 (define (random-value-of-type type)
   (match type
-    ["int" (random 20)]
+    ["int" (random 5)]
     ["char" (integer->char (random 48 123))] ; some common printable chars
     [else null]))
 

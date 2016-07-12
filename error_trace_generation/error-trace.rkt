@@ -1,7 +1,7 @@
 #lang racket/base
 
 (require (only-in "../program_representation/simulator-structures.rkt"
-                  Method-instr-list
+                  Method-args Method-instr-list
                   Run-method
                   C-Instruction
                   Single-branch Branch Loop
@@ -10,9 +10,10 @@
          "interpret.rkt"
          "linearizable.rkt"
          "methods.rkt"
+         "traces.rkt"
+         "vars.rkt"
          (only-in racket/match match)
-         (only-in racket/list split-at empty?)
-         (only-in racket/pretty pretty-display)
+         (only-in racket/list first split-at empty?)
          (only-in racket/function curryr))
 
 (provide bound error-traces)
@@ -26,6 +27,7 @@
     ['() (fail)]
     [`(,H . ,T) (-< H (one-of T))]))
 
+; Stop values for the generator.
 (define (stop-value) (values (void) (void) (void)))
 (define (stop-value? x y z) (void? x))
 
@@ -67,14 +69,43 @@
               (yield mut new-vars new-client))
             (instrument mut (add1 breakpoint) new-vars new-client)]
 
-           ; if with else: instrument both branches, then continue
-           ; NOTE: this is still wrong.
+           ; if with else: instrument a branch, then continue.
+           ;  Then come back and instrument the other branch, then continue.
            [(Branch _ _ condition b1 b2)
-            (define new-mut
-              (append before
-                      `(,(Branch condition (instrument b1 0) (instrument b2 0)))
-                      tail))
-            (instrument new-mut (add1 breakpoint))]
+            (define new-mut mut)
+            (define new-vars variables)
+            (define new-client client)
+
+            ; We have to instrument both brances separately, otherwise we'll
+            ;  end up with infeasible traces.
+            (for ([(trace vars ops)
+                   (in-producer (instrumenter b1 library pointers)
+                                stop-value?)])
+              (set! new-mut
+                    (append before
+                            `(,(Branch condition trace b2))
+                            tail))
+              (set! new-vars (append variables vars))
+              (set! new-client (append client ops))
+              (yield new-mut new-vars new-client))
+            (instrument new-mut (add1 breakpoint) new-vars new-client)
+
+            ; Done with the first branch. Now try the second one.
+            (set! new-mut mut)
+            (set! new-vars variables)
+            (set! new-client client)
+
+            (for ([(trace vars ops)
+                   (in-producer (instrumenter b2 library pointers)
+                                stop-value?)])
+              (set! new-mut
+                    (append before
+                            `(,(Branch condition b1 trace))
+                            tail))
+              (set! new-vars (append variables vars))
+              (set! new-client (append client ops))
+              (yield new-mut new-vars new-client))
+            (instrument new-mut (add1 breakpoint) new-vars new-client)]
 
            ; loop: instrument the loop body, then continue
            [(Loop _ _ condition body)
@@ -102,23 +133,25 @@
   (define lib (remove mut library))
   (define interpreter (make-interpreter lib))
   (define g (instrumenter (Method-instr-list mut) lib pointers))
-  
-  (define traces '())
-  
+  (define arguments (for/list ([type (Method-args mut)])
+                      (if (member type primitive-types)
+                          (random-value-of-type type)
+                          (first (hash-ref pointers type)))))
+
+  (define results '())
+
   ; why does this work?
   (prompt
    (for ([(trace vars client) (in-producer g stop-value?)])
-     ;(pretty-display (map transform trace))
      ; Three possible results: the trace is linearizable, the trace is not
      ;  linearizable, or we couldn't come up with arguments to make the trace
      ;  feasible.
-     (define result (linearizable? trace mut client vars pointers lib interpreter))
-     (unless (car result)
-       (set! traces (append traces (cdr result)))
+     (define result
+       (linearizable trace mut client vars pointers lib interpreter arguments))
+     (unless (lin-result-result result)
+       (unless (null? (lin-result-trace result))
+         (set! results (append results (list result))))
        (fail)))
    (when (has-next?) (next)))
 
-  (for-each
-   (λ (trace)
-     (pretty-display trace) (displayln ""))
-   traces))
+  (minimal-traces results))
