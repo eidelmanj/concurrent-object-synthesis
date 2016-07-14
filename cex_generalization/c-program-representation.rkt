@@ -2,10 +2,13 @@
 
 (require "../program_representation/simulator-structures.rkt")
 (require racket/string)
+
 (require "to-sketch.rkt")
 (require "metasketcher.rkt")
 
-(provide interleaving-to-sketch create-announcement-version)
+(provide interleaving-to-sketch
+         create-announcement-version
+         )
  
 (define counter (void))
 (set! counter 0)
@@ -13,6 +16,13 @@
   (set! counter (+ counter 1))
   counter)
 
+
+(define (unique comparison l)
+  (cond
+    [(empty? l) `()]
+    [else
+     (append (list (first l))
+             (filter (lambda (i) (not (comparison (first l) i))) (unique comparison (rest l))))]))
 
 (define (append-list l)
   (lambda (l2)
@@ -45,8 +55,8 @@
   (define (not-empty l)
     (not (empty? l)))
   (cond
-    [(equal? depth 0)  (list (list (Assume-loop (lambda (e)  ;; (display (not ((Loop-condition loop) e))) (display "\n")
-                                                  (not ((Loop-condition loop) e))) loop-id)))]
+    [(equal? depth 0)  (list (list (Assume-loop 
+                                                  (not (Loop-condition loop)) loop-id)))]
     [else
      (let ([possible-executions (possible-single-loop-executions (Loop-instr-list loop))])
        ;; (display possible-executions) (display "\n")
@@ -203,6 +213,42 @@
   (set! loop-id-count (+ loop-id-count 1))
   loop-id-count)
 
+(define (interleave-lists instr-list1 instr-list2)
+  (cond
+    [(empty? instr-list1) (list instr-list2)]
+    [(empty? instr-list2) (list instr-list1)]
+    [else
+     (append
+      (map (append-item (first instr-list1)) (interleave-lists (rest instr-list1) instr-list2))
+      (map (append-item (first instr-list2)) (interleave-lists instr-list1 (rest instr-list2))))]))
+
+
+
+
+(define (interleave-lists-marker instr-list1 instr-list2)
+  (define (helper instr-list1 instr-list2 ctx-switch-enabled found-marker)
+    (cond
+      [(empty? instr-list1) (list instr-list2)]
+      [(empty? instr-list2) (list instr-list1)]
+      [(Added-CAS-Marker? (first instr-list2))
+       (helper instr-list1 (rest instr-list2) #t #t)]
+      [(and found-marker (RW-operation (first instr-list2)))
+       (append
+        (map (append-item (first instr-list1)) (helper (rest instr-list1) instr-list2 #t #t))
+        (map (append-item (first instr-list2)) (helper instr-list1 (rest instr-list2) #t #t)))]
+      [(and found-marker (not (RW-operation (first instr-list2))))
+        (map (append-item (first instr-list2)) (helper instr-list1 (rest instr-list2) #t #t))]
+      [ctx-switch-enabled
+       (append
+        (map (append-item (first instr-list1))
+             (helper (rest instr-list1) instr-list2 #f #f))
+        (map (append-item (first instr-list2))
+             (helper instr-list1 (rest instr-list2) #f #f)))]
+      [else
+        (map (append-item (first instr-list2)) (helper instr-list1 (rest instr-list2) ctx-switch-enabled found-marker))]))
+  (helper instr-list1 instr-list2 #t #f))
+        
+        
 
 
 (define (interleave-lists-at-holes instr-list1 instr-list2 hole)
@@ -220,7 +266,7 @@
     [else
      (map (append-item (first instr-list1)) (interleave-lists-at-holes (rest instr-list1) instr-list2 hole))]))
 
-(define (thread-runs t library t-id)
+(define (thread-runs t library t-id to-return)
 
   (set! line-ids 0)
 
@@ -261,8 +307,8 @@
     (cond
       [(empty? instr-list) ;; (display "empty\n")
        (list (list))]
-      [(Return? (first instr-list)) ;; (display "return\n")
-       (list (list (Set-var to-return (Return-val (first instr-list)) (new-line-id) )))]
+      [(Return? (first instr-list)) ;; (display "return ") (displayln (~v to-return))
+       (list (list (Set-var to-return (Return-val (first instr-list)) )))]
       [(Single-branch? (first instr-list)) ;; (display "single branch\n")
        (append
         (map (append-item (Assume-simulation (Single-branch-condition (first instr-list)))) (unroll-thread-runs (append (Single-branch-branch (first instr-list)) (rest instr-list)) to-return))
@@ -367,7 +413,7 @@
 
 
   (let ([instr-list (Thread-list-instr-list t)])
-    (unroll-thread-runs instr-list "")))
+    (unroll-thread-runs instr-list to-return)))
 
 
 
@@ -601,6 +647,8 @@
              (Set-var "oldVal" (Dereference "cur" "Node" "val"))
              (Set-var "prevNode" (Get-var "cur"))           
              (Set-var "cur" (Dereference "cur" "Node" "next"))))
+
+      (Added-CAS-Marker)
       (Single-branch 
        (Is-none? (Get-var "cur"))
        (list
@@ -734,8 +782,8 @@
 
 
   
-  (let ([thread1-runs (thread-runs thread1 library 0)]
-        [thread2-runs (thread-runs thread2 library 1)])
+  (let ([thread1-runs (thread-runs thread1 library 0 "")]
+        [thread2-runs (thread-runs thread2 library 1 "")])
 
     (all-equivalent-interleavings-helper interleaving-full thread1-runs thread2-runs)))
 
@@ -745,7 +793,17 @@
 
 
    
-
+(define (transform-to-traces l)
+  (define (helper l n)
+    (cond
+      [(empty? l)
+       `()]
+      [else
+       (append
+        (list (Trace n (first l)))
+        (helper (rest l) (+ n 1)))]))
+      (helper l 0))
+     
 
 
 
@@ -859,10 +917,33 @@
 
 
 
-(define (collect-meta-vars interleaving library)
-  (list (Tuple "meta-var3" "integer?") (Tuple "meta-var4" "integer?") (Tuple "meta-var1" "integer?") (Tuple "meta-var2" "boolean?")))
+(define (collect-meta-vars interleaving-set library)
+  (define (interleaving-get-meta-vars interleaving)
 
-(define (interleaving-to-sketch interleaving variables-of-interest library)
+    (cond
+      [(empty? interleaving) `()]
+      [(Assume-meta? (first interleaving)) (append (list
+
+                                                    (Tuple
+                                                     (string-append "meta-var" (~v (Assume-meta-condition (first interleaving))))
+                                                     "boolean?"))
+                                                   (interleaving-get-meta-vars (rest interleaving)))]
+      [(Assume-not-meta? (first interleaving)) (append (list
+                                                        (Tuple
+                                                         (string-append "meta-var" (~v (Assume-not-meta-condition (first interleaving))))
+                                                         "boolean?"))
+                                                       (interleaving-get-meta-vars (rest interleaving)))]
+      [else
+       (interleaving-get-meta-vars (rest interleaving))]))
+
+  
+  ;; (list (Tuple "meta-var3" "integer?") (Tuple "meta-var4" "integer?") (Tuple "meta-var1" "integer?") (Tuple "meta-var2" "boolean?")))
+
+  (reduce append
+          (map (lambda (l) (interleaving-get-meta-vars l))
+               interleaving-set)))
+
+(define (interleaving-to-sketch interleaving variables-of-interest library hole)
   (define count-branches (void))
   (set! count-branches 0)
   
@@ -875,8 +956,8 @@
        (remove-global-declarations (string-replace str (first l) "\n") (rest l))]))
 
 
-  (define prelude
-"
+  (define prelude "
+    
 #lang rosette
 (define current-thread (void))
 
@@ -924,50 +1005,66 @@
 (set! first-args (list shared 1))
 
 
-(define pick-trace 1)
-")
+(define pick-trace 1)")
 
-  
-  (let ([all-runs (thread-runs interleaving library 0)]
-        [meta-vars (collect-meta-vars interleaving library)]
+
+
+  (let ([all-runs (reduce append (map (lambda (l) (convert-trace-to-interleavings l library (list "remove") hole)) (thread-runs interleaving library 0 "")))])
+        (let ([meta-vars (unique (lambda (fst snd) ;; (displayln (equal? (Tuple-a fst) (Tuple-a snd)))
+
+ (equal? (Tuple-a fst) (Tuple-a snd))) (collect-meta-vars all-runs library))]
 [new-scope (new-scope-num)])
 
+
+(string-append
+ prelude
+ ;; (generate-library-code library)
+ 
+ (trace-list-to-sketch (transform-to-traces all-runs) library "first-args" new-scope 0)))))
+
+
 ;; (display "ALL-RUNS length: ") (displayln (length all-runs))
+;; (display "META-VARS: ") (displayln meta-vars)
+;; (displayln (first all-runs))
+
 
 
 
 
 ;; (display (length all-runs)) (display "\n")
 
-(add-binding-parent new-scope 0)
-(string-append
-   prelude
-  (reduce string-append (map (lambda (v) (string-append "(define " v " (void))\n")) variables-of-interest))
 
-  (remove-global-declarations
+
+;;; OLD VERSION BEGINS HERE
+;; (add-binding-parent new-scope 0)
+;; (string-append
+;;    prelude
+;;   (reduce string-append (map (lambda (v) (string-append "(define " v " (void))\n")) variables-of-interest))
+
+;;   (remove-global-declarations
 
 
  
-   (string-append
+;;    (string-append
 
-    ;; All symbolic variables which will be referenced in the possible traces 
-    (reduce string-append
-            (map (lambda (v) (string-append "(define-symbolic " (Tuple-a v) " " (Tuple-b v) ")\n"))
-                 meta-vars))
+;;     ;; All symbolic variables which will be referenced in the possible traces 
+;;     (reduce string-append
+;;             (map (lambda (v) (string-append "(define-symbolic " (Tuple-a v) " " (Tuple-b v) ")\n"))
+;;                  meta-vars))
     
 
-    "(cond\n"
+;;     "(cond\n"
     
-    (reduce string-append
-            (map (lambda (l) (set! count-branches (+ count-branches 1)) (string-append "[(equal? pick-trace " (~v count-branches) ") (begin\n" (instr-list-to-sketch l library "first-args" new-scope 0) ")]\n"))
-                 all-runs))
+;;     (reduce string-append
+;;             (map (lambda (l) (set! count-branches (+ count-branches 1)) (string-append "[(equal? pick-trace " (~v count-branches) ") (begin\n" (instr-list-to-sketch l library "first-args" new-scope 0) ")]\n"))
+;;                  all-runs))
     
-    ")\n")
+;;     ")\n")
    
-   (map (lambda (v) (string-append "(define " v " (void))")) variables-of-interest))
+;;    (map (lambda (v) (string-append "(define " v " (void))")) variables-of-interest))
 
 
-  "(list " (reduce string-append (map (lambda (v) (string-append "(cons \"" v "\" " v ") ")) variables-of-interest)) ")")))
+;;   "(list " (reduce string-append (map (lambda (v) (string-append "(cons \"" v "\" " v ") ")) variables-of-interest)) ")"))))
 
     
 
@@ -975,30 +1072,76 @@
   (> (length (filter (lambda (e) (equal? e i)) l)) 0))
 
 
-;; (define (convert-trace-to-interleavings trace library broken-methods)
 
-;;   ;; Look to see if there are methods in the second trace that
-;;   ;; need to be broken up.
-;;   (let ([conversion-list (filter (lambda (t)
-;;                                      (and (equal? (C-Instruction-thread-id t) 1) (Run-method? t)
-;;                                           (list-contains broken-methods (Run-method-method t))))
-;;                                    trace)])
+(define (exists-write-in-hole instr-list hole)
+  (define (helper l looking)
+    (cond
+      [(empty? l) #f]
+      [(and looking
+            (or (Set-pointer? (first l))
+                ;; (CAS? (first l))
+                ;; (and (Set-var? (first l)) (Dereference? (Set-var-assignment (first l))))))
+                ))
+       #t]
+      [(equal? (C-Instruction-instr-id (first l)) (Hole-method1 hole))
+       (helper (rest l) #t)]
+      [(equal? (C-Instruction-instr-id (first l)) (Hole-method2 hole))
+       (helper (rest l) #f)]
+      [else
+       (helper (rest l) looking)]))
+  (helper instr-list #f))
+       
 
-;;     (cond
-;;       [(empty? conversion-list)
-;;        (list trace)]
-;;       [else
-;;        (let ([
-    
+       
+
+(define (convert-trace-to-interleavings trace library broken-methods hole)
+
+  (define (expand-as-needed t)
+    (cond
+      [(empty? t) (list (list))]
+      [(and (Run-method? (first t)) (list-contains broken-methods (Run-method-method (first t))))
+       (all-combinations (thread-runs (Thread-list (retrieve-code library (Run-method-method (first t)))) library 1 (Run-method-ret (first t))) (expand-as-needed (rest t)))]
+      [else
+       (map (append-item (first t)) (expand-as-needed (rest t)))]))
+       
   
 
+  ;; Look to see if there are methods in the second trace that
+  ;; need to be broken up.
+  (let ([conversion-list (filter (lambda (t)
+                                     (and (equal? (C-Instruction-thread-id t) 1) (Run-method? t)
+                                          (list-contains broken-methods (Run-method-method t))))
+                                   trace)])
+
+    (cond
+      [(empty? conversion-list)
+       (list trace)]
+      [else
+       (let ([thread1 (filter (lambda (t)  (not (equal? (C-Instruction-thread-id t) 1))) trace)]
+             [thread2-possibilities (expand-as-needed (filter (lambda (t) (equal? (C-Instruction-thread-id t) 1)) trace))])
+
+         ;; (display "thread1: ")
+         ;; (displayln thread1)
+         ;; (display "CONVERSION LIST: ")
+         ;; (displayln (map (lambda (thread2) (append thread1 thread2)) thread2-possibilities))
+         (reduce append (map (lambda (thread2) (filter
+                                                (lambda (i)
+                                                  (exists-write-in-hole i hole))
+
+                                                (interleave-lists-marker thread1 thread2)))
+              thread2-possibilities)))])))
+
+
+         
 
 
 
 
 
+(define sketch-output (interleaving-to-sketch mooly-sketch-test (list "ret10" "ret20" "ret30" "throwaway0") library (Hole 0 (list) 1)))
+(define all-runs (thread-runs mooly-sketch-test library 0 ""))
 
-(define sketch-output (interleaving-to-sketch mooly-sketch-test (list "ret10" "ret20" "ret30" "throwaway0") library))
-(define all-runs (thread-runs mooly-sketch-test library 0))
-;; (displayln (convert-trace-to-interleavings (first all-runs) library (list "remove")))
+;; (length (reduce append (map (lambda (l) (convert-trace-to-interleavings l library (list "remove"))) all-runs)))
+(displayln sketch-output)
+;; ;; (displayln (interleaving-to-sketch (convert-trace-to-interleavings (first all-runs) library (list "remove"))))
 
