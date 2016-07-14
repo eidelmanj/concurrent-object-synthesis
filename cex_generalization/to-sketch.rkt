@@ -11,6 +11,7 @@
  retrieve-code
  new-scope-num
  reduce
+ trace-list-to-sketch
  instr-list-to-sketch)
 
 (define (reduce func list)
@@ -274,7 +275,8 @@
         [else
 
          (string-append
-          "("(Dereference-type instr) "-" (Dereference-offset instr) " "  (Dereference-id instr) (~v (get-most-recent-binding (Dereference-id instr) scope-num parent-scope)) ")")])]
+          "("(Dereference-type instr) "-" (Dereference-offset instr) " "  (Dereference-id instr) ;; (~v (get-most-recent-binding (Dereference-id instr) scope-num parent-scope))
+          ")")])]
     [(Equal? instr)
      (string-append "(equal? " (to-string-instr (Equal-expr1 instr) arg-store scope-num parent-scope) " " (to-string-instr (Equal-expr2 instr) arg-store scope-num parent-scope) ")")]
     [(Or? instr)
@@ -284,7 +286,8 @@
     [(And? instr)
      (string-append "(and " (to-string-instr (And-expr1 instr) arg-store scope-num parent-scope) " " (to-string-instr (And-expr2 instr) arg-store scope-num parent-scope) ")")]
     [(Get-var? instr)
-     (string-append (Get-var-id instr) (~v (get-most-recent-binding (Get-var-id instr) scope-num parent-scope)))]
+     (string-append (Get-var-id instr) ;; (~v (get-most-recent-binding (Get-var-id instr) scope-num parent-scope))
+                    )]
     [(Get-argument? instr)
      (string-append "(list-ref " arg-store " " (~v (Get-argument-id instr)) ")")]
 
@@ -356,6 +359,309 @@
   "TODO: MAYBE-LOOP\n")
 
 
+(define (has-trace? t-set t)
+  (> (length (filter (lambda (t-prime) (equal? (Trace-trace-id t-prime) (Trace-trace-id t)))
+          t-set)) 0))
+
+(define (trace-ids-equal? t-set1 t-set2)
+  ;; (displayln "Checking trace equality")
+  ;; (display "answer: ") (displayln   (equal? (length (filter (lambda (t) (not (has-trace? t-set2 t))) t-set1)) 0))
+
+
+  (equal? (length (filter (lambda (t) (not (has-trace? t-set2 t))) t-set1))
+     0))
+
+(define (rest-of-traces t-list)
+  ;; (displayln "Rest-of-traces")
+  (filter (lambda (t)
+            (not (empty? (Trace-t t))))
+          
+          (map (lambda (t)
+                 ;; (displayln t)
+                 (Trace (Trace-trace-id t) (rest (Trace-t t))))
+               t-list)))
+
+
+;; Generates Sketch where we only separate traces that are actually different from each other
+;; so if two traces have a common prefix, they only diverge when they have to
+(define (trace-list-to-sketch trace-list library arg-store scope-num parent-scope)
+
+  (define (equals-any-t-id t-list)
+    ;; (displayln "equals-any-t-id")
+    (cond
+      [(empty? t-list) ""]
+      [else
+       (string-append "(equal? pick-trace " (~v (Trace-trace-id (first t-list))) ") "
+                      (equals-any-t-id (rest t-list)))]))
+
+
+
+  
+
+  ;; Assumes all traces are non-empty
+  (define (common-first-elem-trace-sets t-list)
+    ;; (displayln "common-first-elem-trace-sets")
+    (cond
+      [(empty? t-list)
+       `()]
+      [else
+       ;; (displayln "common ELSE case")
+
+       (let ([begins-with-first
+               (filter
+                (lambda (t)
+                   (equal? (object-name (first (Trace-t (first t-list))))
+                           (object-name (first (Trace-t t))))) ;; TODO need better equality check
+                t-list)]
+
+             [not-begins-with-first
+              (filter
+               (lambda (t)
+                 (not (equal? (object-name (first (Trace-t (first t-list))))
+                         (object-name (first (Trace-t t)))))) ;; TODO need better equality check
+
+
+               t-list)])
+                                                      
+
+         (append
+          (list begins-with-first)
+          (common-first-elem-trace-sets not-begins-with-first)))]))
+
+    (define (trace-list-to-sketch-recursive trace-list)
+      (let
+          ([split-traces (common-first-elem-trace-sets trace-list)])
+
+        ;; (display "SPLIT-TRACES: ")
+        ;; (displayln split-traces)
+        (cond
+          [(empty? split-traces) ;; (displayln "FOUND EMPTY")
+           ""]
+          [(equal? (length split-traces) 1)
+           ;; (displayln "Recusive case - 1 split trace ")
+           ;; (display "TRACE-FIRST: " ) (displayln (trace-list-to-sketch-recursive (rest-of-traces (first split-traces))))
+           
+           (define str (string-append
+            (single-instr-to-sketch (first (Trace-t (first (first split-traces)))) library arg-store scope-num parent-scope)
+            (trace-list-to-sketch-recursive (rest-of-traces (first split-traces)))))
+           ;; (displayln "STRING FINISHED")
+           str
+
+             ]
+          [(> (length split-traces) 1)
+           ;; (displayln "Recursive case - NOT 1")
+           (let ([max-length-split
+                  (reduce
+                   (lambda (l1 l2)
+                     (if (> (length l1) (length  l2))
+                         l1
+                         l2))
+                   split-traces)])
+             ;; (display "max-length-split: ") (displayln max-length-split)
+             ;; "")])))
+             
+             (let ([no-max-length-split-traces
+                    (filter
+                     (lambda (t-set)
+                       (not (trace-ids-equal? t-set max-length-split)))
+                     split-traces)])
+               ;; (display "no-max-length-split: ") (displayln no-max-length-split-traces)
+               ;; (display "FIRST MAX-LENGTH-SPLIT: ") (displayln (first (Trace-t (first max-length-split))))
+
+               (define str (string-append
+                "(cond \n"
+
+                (reduce
+                 string-append
+                 (map
+                  (lambda (t-set)
+                    ;; (display "(first (trace-t (first t-set)))::::")
+                    ;; (displayln (first (Trace-t (first t-set))))
+                    (string-append
+                     "[ (or " (equals-any-t-id t-set) ") " (single-instr-to-sketch (first (Trace-t (first t-set))) library arg-store scope-num parent-scope) (trace-list-to-sketch-recursive (rest-of-traces t-set)) "]\n"))
+                  no-max-length-split-traces))
+
+                "[else\n"
+                (single-instr-to-sketch (first (Trace-t (first max-length-split))) library arg-store scope-num parent-scope)
+                (trace-list-to-sketch-recursive (rest-of-traces max-length-split))"])\n"))
+
+               ;; (displayln "NOT 1 STRING FINISHED")
+
+               str
+
+
+               ))])))
+
+             
+                 
+              
+              
+             
+
+
+
+  (let
+      ([split-traces (common-first-elem-trace-sets trace-list)])
+
+    (cond
+      [(> (length split-traces) 1)
+       ;; (displayln "LENGTH > 1")
+       (string-append
+        "(cond \n"
+       (reduce
+        string-append
+        (map
+         (lambda (t-set)
+           (string-append
+            "[ (or " (equals-any-t-id t-set) ") " (single-instr-to-sketch (first (Trace-t (first t-set))) library arg-store scope-num parent-scope) (trace-list-to-sketch-recursive (rest-of-traces t-set)) "]\n"))
+         split-traces))
+
+       
+       ")\n")]
+      [(equal? (length split-traces) 1)
+       ;; (displayln "LENGTH = 1")
+       ;; (displayln (Trace-t (first (first split-traces))))
+       (single-instr-to-sketch (first (Trace-t (first (first split-traces)))) library arg-store scope-num parent-scope)]
+      [else
+       ""])))
+
+
+
+;; Translates individual instruction to sketch instruction
+(define (single-instr-to-sketch instr library arg-store scope-num parent-scope)
+  ;; (display "to-sketch: ")(display (first instr-list))(display "\n")
+  (cond
+         [(Create-var? instr)
+          ;; (display "create-var-id: ") (display (Create-var-id instr)) (display "\n")
+          ;; (new-binding (Create-var-id instr) scope-num parent-scope)
+          (string-append
+           "(define " (Create-var-id instr) ;; (~v (get-most-recent-binding (Create-var-id instr) scope-num parent-scope))
+           " (void))\n")]
+
+
+
+         [(Lock? instr)
+          (string-append "(if (not (has-lock current-thread " (~v (Lock-id instr)) " ))\n"
+                         "#f"
+                         "(begin (void))) \n")]
+                         
+                         
+
+
+
+
+         [(Run-method? instr) 
+          (let ([args-list (new-arg-list-id)]
+                [new-scope (new-scope-num)])
+            ;; (add-binding-parent new-scope scope-num)
+            (string-append
+             "(displayln \"running method: " (Run-method-method instr) "\")"
+             "(set! current-thread " (~v (C-Instruction-thread-id instr)) ")\n"
+             "(set! method-exit #f)\n"
+             "(METHOD-" (Run-method-method instr) " " (to-string-instr (Run-method-args instr) arg-store scope-num parent-scope) ")\n"
+             ;; "(define " args-list " (void))\n"
+             ;; "(set! " args-list " " (to-string-instr (Run-method-args instr) arg-store scope-num parent-scope) ")\n"
+             ;; "(begin\n"
+             ;; (print-non-sketch-simulation (retrieve-code library (Run-method-method instr)) library args-list (Run-method-ret instr) new-scope scope-num)
+             ;; ")\n"
+             ;; (print-non-sketch-simulation (rest instr-list) library args-list ret-store)
+             ))]
+
+         [(Set-var? instr)
+          ;; "todo\n"]
+          ;; (display "found set var\n")
+          (string-append
+           "(set! " (Set-var-id instr) ;; (~v (get-most-recent-binding (Set-var-id instr) scope-num parent-scope))
+           " " (to-string-instr (Set-var-assignment instr)  arg-store scope-num parent-scope) ")\n")]
+
+
+         [(Assume-simulation? instr)
+          (string-append
+           "(if (not " (to-string-instr (Assume-simulation-condition instr)  arg-store scope-num parent-scope) ")\n #f\n (begin (void)))\n")]
+
+
+         [(Assume-loop? instr)
+          (string-append
+           "(if (not " (to-string-instr (Assume-loop-condition instr) arg-store scope-num parent-scope) ")\n #f\n (begin \n"
+           "(void)))\n")]
+
+
+         [(Set-pointer? instr)
+          (string-append
+           "(set-" (Set-pointer-type instr) "-" (Set-pointer-offset instr) "! " (Set-pointer-id instr)  ;; (~v (get-most-recent-binding (Set-pointer-id instr) scope-num parent-scope))
+           " "  (to-string-instr (Set-pointer-val instr)  arg-store scope-num parent-scope) ")\n")]
+
+
+         [(Assume-meta? instr)
+          (string-append
+           "(if (not meta-var" (~v (Assume-meta-condition instr)) ")\n #f (begin  \n"
+           "(void)))\n")]
+
+         [(Assume-not-meta? instr)
+          (string-append
+           "(if meta-var" (~v (Assume-not-meta-condition instr)) "\n #f\n (begin\n"
+           "(void)))\n")]
+
+         [(Repeat-meta? instr)
+          (string-append
+           "(cond "
+           (sketch-unroll-repeat (Repeat-meta-instr-list instr) "meta-count" 3 library arg-store scope-num parent-scope)
+           ")"
+           
+           )]
+
+         ;; [(Meta-branch? instr)
+         ;;  (string-append
+         ;;   "(if meta-var" (~v (Meta-branch-condition instr)) "(begin\n"
+         ;;   (instr-list-to-sketch (Meta-branch-branch1 instr) library arg-store scope-num parent-scope)
+         ;;   ")\n"
+         ;;   "(begin\n" (instr-list-to-sketch (Meta-branch-branch2 instr) library arg-store scope-num parent-scope) ")\n")]
+
+         ;; [(Maybe-loop? instr)
+         ;;  (string-append
+         ;;   "(if meta-var" (~v (Maybe-loop-meta-var instr)) "(begin\n"
+         ;;   (maybe-loop-to-sketch (Maybe-loop-condition instr)
+         ;;                         (Maybe-loop-instr-list1 instr)
+         ;;                         (Maybe-loop-instr-list2 instr)
+         ;;                         (Maybe-loop-hole instr)
+         ;;                         library arg-store scope-num parent-scope)
+         ;;   ")\n (begin\n"
+         ;;   (instr-list-to-sketch (Maybe-loop-original-instr-list instr) library arg-store scope-num parent-scope) "))\n")]
+
+
+         [(CAS? instr)
+          (string-append
+
+           "(if  (not (equal? " (to-string-instr (CAS-v1 instr)  arg-store scope-num parent-scope) " " (to-string-instr (CAS-v2 instr) arg-store scope-num parent-scope) "))\n"
+           "(begin\n "
+           "(set! " (to-string-instr (CAS-v1 instr)  arg-store scope-num parent-scope) " " (to-string-instr (CAS-new-val instr) arg-store scope-num parent-scope) ")\n"
+           "(set! " (CAS-ret instr) ;; (~v (get-most-recent-binding (CAS-ret instr) scope-num parent-scope))
+           " 1))"
+           "(begin\n "
+           "(set! " (CAS-ret instr) ;; (~v (get-most-recent-binding (CAS-ret instr) scope-num parent-scope))
+           " 0)))\n"
+
+           )]
+           
+
+         [(Continue? instr)
+          (string-append "TODO: continue\n")]
+          ;; (let ([where-to (find-continue-sublist (rest instr-list) (Continue-to-where instr))])
+          ;;   ;; (display (Continue-to-where instr)) (display "\n")
+          ;;   (instr-list-to-sketch where-to library arg-store scope-num parent-scope))]
+
+
+
+         [else
+          ;; (display "todo case\n")
+          (string-append
+           ;; "TODO\n"
+           ";;TODO:"
+           (~v instr) "\n")]))
+
+
+
+
 (define (instr-list-to-sketch instr-list library arg-store scope-num parent-scope)
   ;; (display "to-sketch: ")(display (first instr-list))(display "\n")
   (cond
@@ -381,18 +687,20 @@
 
 
 
-         [(Run-method? elem)
+         [(Run-method? elem) 
           (let ([args-list (new-arg-list-id)]
                 [new-scope (new-scope-num)])
             (add-binding-parent new-scope scope-num)
             (string-append
+             "(displayln \"running method: " (Run-method-method elem) "\")"
              "(set! current-thread " (~v (C-Instruction-thread-id elem)) ")\n"
              "(set! method-exit #f)\n"
-             "(define " args-list " (void))\n"
-             "(set! " args-list " " (to-string-instr (Run-method-args elem) arg-store scope-num parent-scope) ")\n"
-             "(begin\n"
-             (print-non-sketch-simulation (retrieve-code library (Run-method-method elem)) library args-list (Run-method-ret elem) new-scope scope-num)
-             ")\n"
+             "(METHOD-" (Run-method-method elem) " " (to-string-instr (Run-method-args elem) arg-store scope-num parent-scope) ")\n"
+             ;; "(define " args-list " (void))\n"
+             ;; "(set! " args-list " " (to-string-instr (Run-method-args elem) arg-store scope-num parent-scope) ")\n"
+             ;; "(begin\n"
+             ;; (print-non-sketch-simulation (retrieve-code library (Run-method-method elem)) library args-list (Run-method-ret elem) new-scope scope-num)
+             ;; ")\n"
              (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope)
              ;; (print-non-sketch-simulation (rest instr-list) library args-list ret-store)
              ))]
@@ -424,12 +732,12 @@
 
          [(Assume-meta? elem)
           (string-append
-           "(if (not meta-var)" (~v Assume-meta-condition elem) "\n #f (begin  \n"
+           "(if (not meta-var" (~v (Assume-meta-condition elem)) ")\n #f (begin  \n"
            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope) "))\n")]
 
          [(Assume-not-meta? elem)
           (string-append
-           "(if meta-var" (~v Assume-not-meta-condition elem) "\n #f\n (begin\n"
+           "(if meta-var" (~v (Assume-not-meta-condition elem)) "\n #f\n (begin\n"
            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope) "))\n")]
 
          [(Repeat-meta? elem)
