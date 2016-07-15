@@ -65,20 +65,20 @@ To this (Racket struct) - (Method "test"
     [(arg-node v next) (append (list v) (translate next))]
     [(arg-add-node v next) (append (list v) (translate next))]
     [(arg-decl id) id]
-    [(decl-node tp v) (cons tp (list v))]
+    [(decl-node tp v) (Create-var v tp)]
     
     [(assign-stmt var exp) (Set-var var (translate exp))]
-    [(num-exp n) n]
+    [(num-exp n) (Constant n)]
     [(var-exp i) i]
     [(loop-root loop) (translate loop)]
     [(while-node exp body) (Loop (translate exp) (translate body))]
     [(for-node init condition incr body)
      (Loop (translate condition) (append (list init condition) (translate body)))]
-    [(comparison-exp op expr1 expr2) (bin-op-struct op expr1 expr2)]
-    [(bin-bool-exp op expr1 expr2) (bin-op-struct op expr2 expr2)]
-    [(arith-exp op expr1 expr2) (bin-op-struct op expr2 expr2)]
+    [(comparison-exp op expr1 expr2) (bin-op-struct op (translate expr1) (translate expr2))]
+    [(bin-bool-exp op expr1 expr2) (bin-op-struct op (translate expr1) (translate expr2))]
+    [(arith-exp op expr1 expr2) (bin-op-struct op (translate expr1) (translate expr2))]
     [(return-node v) (Return v)]
-    [(bool-const const) const]
+    [(bool-const const) (Constant const)]
 
     ))
 
@@ -120,18 +120,40 @@ To this (Racket struct) - (Method "test"
       ""
       (let ((curr-instr (first lst)))
         (match curr-instr
+          [(Constant val) (tostring val)]
           [(Method id args ret-type instr-list)
            (string-append ret-type " " id "(" (apply string-append args) ") { " (translate-to-c instr-list) "} " (translate-to-c (rest lst)))]
-          [(Set-var id assignment) (string-append id " = " (translate-to-c assignment))]
-          ;[(Lock id) (string-append "pthhread_mutex_lock(&" id ")")]
-          ;[(Unlock id) (string-append "pthhread_mutex_unlock(&" id ")")]
-          ;[(Run-method method args ret) (if (equal? ret null)
-                                           ; (string-append method "(" (apply string-append args) ")")
-                                           ; (string-append var " = " method "(" (apply string-append args) ")"))]
-          [(Structure fields) (string-append "{ " (translate fields) " };")]
-          [(Field name type) (string-append type " " name "; " (translate-to-c (rest lst)))]
-          ;[(Single-branch condition branch) (string-append "if(" (translate-to-c condition) ") { " (translate-to-c branch) " }")]
-          ;[(Branch c p1 p2) (string-append "if(" (translate-to-c c) ") { " (translate-to-c p1) "else {" (translate-to-c p2) "}")]
+          [(Set-var _ _ id assignment)
+           (string-append id " = " (translate-to-c (list assignment)) "; " (translate-to-c (rest lst)))]
+          [(Create-var _ _ id type)
+           (string-append type " " id "; " (translate-to-c (rest lst)))]
+          [(Lock _ _ id) (string-append "pthhread_mutex_lock(&" id "); ")]
+          [(Unlock _ _ id) (string-append "pthhread_mutex_unlock(&" id "); ")]
+          [(Run-method _ _ method args ret) (if (equal? ret null)
+                                            (string-append method "(" (apply string-append args) ")")
+                                            (string-append (translate-to-c (list ret)) " = " method "(" (apply string-append args) ")"))]
+          [(Get-var var) var]
+          [(Structure fields)
+           (string-append "{ " (translate fields) " };")]
+          [(Field name type)
+           (string-append type " " name "; " (translate-to-c (rest lst)))]
+          [(Single-branch _ _ condition branch)
+           (string-append "if(" (translate-to-c (list condition)) ") { " (translate-to-c branch) " }")]
+          [(Branch _ _ c p1 p2)
+           (string-append "if(" (translate-to-c (list c)) ") { " (translate-to-c p1) "; } else { " (translate-to-c p2) "; }")]
+          [(Loop _ _ expression body) (string-append "while(" (translate-to-c (list expression)) "){ " (translate-to-c body) " }")]
+          [(Equal expr1 expr2) (string-append (translate-to-c (list expr1)) " == " (translate-to-c (list expr2)))]
+          [(Not expr) (string-append "!" (translate-to-c (list expr)))]
+          [(Or expr1 expr2) (string-append (translate-to-c (translate-to-c (list expr1)) " == " (translate-to-c (list expr2))))]
+          [(And expr1 expr2) (string-append (translate-to-c (list expr1)) " && " (translate-to-c (list expr2)))]
+          [(Subtract expr1 expr2) (string-append (translate-to-c (list expr1)) " - " (translate-to-c (list expr2)))]
+          [(Add expr1 expr2) (string-append (translate-to-c (list expr1)) " + " (translate-to-c (list expr2)))]
+          [(Divide expr1 expr2) (string-append (translate-to-c (list expr1)) " / " (translate-to-c (list expr2)))]
+          [(Multiply expr1 expr2) (string-append (translate-to-c (list expr1)) " * " (translate-to-c (list expr2)))]
+          [(Less-than expr1 expr2) (string-append (translate-to-c (list expr1)) " < " (translate-to-c (list expr2)))]
+          [(Less-than-equal expr1 expr2) (string-append (translate-to-c (list expr1)) " <= " (translate-to-c (list expr2)))]
+          [(Greater-than expr1 expr2) (string-append (translate-to-c (list expr1)) " > " (translate-to-c (list expr2)))]
+          [(Greater-than expr1 expr2) (string-append (translate-to-c (list expr1)) " >= " (translate-to-c (list expr2)))]
           ))))
 ;(let*
 ;      ((test-program "int test (int x, bool y ) {int z; z = putIfAbsent(m, key, val);}")
