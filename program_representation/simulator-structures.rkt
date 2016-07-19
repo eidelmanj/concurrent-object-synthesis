@@ -119,7 +119,7 @@
 (struct Unlock C-Instruction (id) #:transparent)
 (struct Return C-Instruction (val) #:transparent)
 (struct Get-argument C-Instruction (id) #:transparent)
-(struct Run-method C-Instruction (method args ret) #:transparent)
+(struct Run-method C-Instruction (method args ret) #:transparent #:mutable)
 (struct Single-branch C-Instruction (condition branch) #:transparent)
 
 (define (RW-operation o)

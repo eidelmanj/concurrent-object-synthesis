@@ -1,10 +1,11 @@
 #lang racket/base
 
 (require (only-in "../program_representation/simulator-structures.rkt"
-                  Method Create-var Run-method Set-var)
+                  Method Create-var Set-var
+                  Run-method Run-method-args set-Run-method-args!)
          (only-in racket/function curryr)
-         (only-in racket/list empty? first split-at range)
-         (only-in racket/match match)
+         (only-in racket/list empty? first split-at range filter-map)
+         (only-in racket/match match match-lambda)
          "interpret.rkt"
          (only-in "utils.rkt" filter-hash)
          "vars.rkt")
@@ -12,6 +13,19 @@
 (provide linearizable (struct-out lin-result))
 
 (struct lin-result (result trace client))
+
+; args is a list of instruction structures representing arguments. pe-args is a
+;  list of the same arguments, partially evaluated.
+; Merge the two lists by keeping the values in pe-args that are of primitive
+;  types, and using their unevaluated versions for the rest.
+; NOTE: this is all super gross.
+(define (merge args pe-args)
+  (map
+   (λ (arg1 arg2)
+     (if (or (number? arg2) (char? arg2))
+         arg2
+         arg1))
+   args pe-args))
 
 (define (linearizable trace mut client variables pointers library interpret arguments)
   ; Simulate each possible interleaving of mut with the instructions of client.
@@ -33,8 +47,8 @@
                                       (Node
                                        (Node
                                         '()
-                                        2 2 0)
-                                       1 1 0)
+                                        2 4 0)
+                                       1 2 0)
                                       0 0 0))
                            (for/list ([var variables])
                              (Create-var (car var) (cdr var)))))
@@ -45,6 +59,27 @@
      (define result-trace (hash-ref results reserved-trace-keyword))
      (define compare-results (hash-remove results reserved-trace-keyword))
 
+     ; Update the client to use partially-evaluated arguments.
+     ; We need this because some of the instrumented calls use arguments
+     ;  depending on variables local to the MUT.
+     ; NOTE: This is super gross.
+     (define pe-client
+       (filter-map (match-lambda
+                     [`(,pe-args . ,op)
+                      (set-Run-method-args! op (merge (Run-method-args op) pe-args))
+                      op]
+                     [_ #f])
+                   result-trace))
+     ; Right now, client operations in the result trace are "tagged" with
+     ;  partially-evaluated versions of their arguments. Now that we've processed
+     ;  those, get rid of them.
+     ; NOTE: This is super gross.
+     (set! result-trace
+           (map (λ (op) (if (pair? op)
+                            (cdr op)
+                            op))
+                result-trace))
+
      (define infeasible-witnesses (filter-hash void? results))
 
      (cond
@@ -54,7 +89,7 @@
         (define linearizable?
           (ormap
            (λ (split-index)
-             (let-values ([(before after) (split-at client split-index)])
+             (let-values ([(before after) (split-at pe-client split-index)])
                (define this-result
                  (hash-remove
                   (interpret
@@ -72,7 +107,7 @@
                   reserved-trace-keyword))
 
                (equal? this-result compare-results)))
-           (range (add1 (length client)))))
+           (range (add1 (length pe-client)))))
 
         (lin-result linearizable? result-trace client)]
 

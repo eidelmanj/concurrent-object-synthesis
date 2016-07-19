@@ -238,7 +238,13 @@
 
     ; Logging
     [(Log instruction)
-     `(set! ,reserved-trace-keyword (cons ,instruction ,reserved-trace-keyword))]
+     `(set! ,reserved-trace-keyword
+            (cons
+             ,(match instruction
+                [(Run-method #t null id args ret) (define pe-args (map transform args))
+                                                  `(cons (list ,@pe-args) ,instruction)]
+                [_ instruction])
+             ,reserved-trace-keyword))]
 
     ; Literals
     [_ instr]))
