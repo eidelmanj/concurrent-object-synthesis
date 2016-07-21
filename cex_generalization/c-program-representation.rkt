@@ -732,6 +732,6 @@
 (define all-runs (thread-runs mooly-sketch-test library 0 ""))
 
 ;; (length (reduce append (map (lambda (l) (convert-trace-to-interleavings l library (list "remove"))) all-runs)))
-(displayln sketch-output)
+;; (displayln sketch-output)
 ;; ;; (displayln (interleaving-to-sketch (convert-trace-to-interleavings (first all-runs) library (list "remove"))))
 
