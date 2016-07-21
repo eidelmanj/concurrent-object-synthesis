@@ -1,6 +1,9 @@
 #lang racket
 
 (require "../program_representation/simulator-structures.rkt")
+(require "../utilities/utilities.rkt")
+(require "../examples/mooly-example.rkt")
+(require "../examples/mooly-library.rkt")
 (require racket/string)
 
 (require "to-sketch.rkt")
@@ -9,192 +12,17 @@
 (provide interleaving-to-sketch
          create-announcement-version
          )
- 
+
+
+(define (line-ids) (void))  
+
+;; We keep a global counter of all the new variables in the sketch that we have created so far
+;; (freshvar) gives a new program variable id
 (define counter (void))
 (set! counter 0)
 (define (freshvar)
   (set! counter (+ counter 1))
   counter)
-
-
-(define (unique comparison l)
-  (cond
-    [(empty? l) `()]
-    [else
-     (append (list (first l))
-             (filter (lambda (i) (not (comparison (first l) i))) (unique comparison (rest l))))]))
-
-(define (append-list l)
-  (lambda (l2)
-    (append l l2)))
-
-
-(define (append-item i)
-  (lambda (l2)
-    (append (list i) l2)))
-
-
-
-
-(define (all-combinations l1-set l2-set)
-
-  (cond
-    [(empty? l1-set) (list )]
-    [(empty? l2-set) (list)]
-    [else
-     (append
-      (map (append-list (first l1-set)) l2-set)
-      (all-combinations (rest l1-set) l2-set))]))
-
-
-
-
-
-(define (unroll-loop loop depth loop-id)
-  ;; (display "unrolling at depth...") (display depth) (display "\n")
-  (define (not-empty l)
-    (not (empty? l)))
-  (cond
-    [(equal? depth 0)  (list (list (Assume-loop 
-                                                  (not (Loop-condition loop)) loop-id)))]
-    [else
-     (let ([possible-executions (possible-single-loop-executions (Loop-instr-list loop))])
-       ;; (display possible-executions) (display "\n")
-
-       (map (append-item (Assume-loop (Loop-condition loop) loop-id)) (filter not-empty (all-combinations possible-executions (unroll-loop loop (- depth 1) loop-id)))))]))
-     
-(define (range n)
-  (if (= n 0)
-      (list 0)
-      (append (list n) (range (- n 1)))))
-
-
-(define (possible-single-loop-executions l)
-  ;; (display "possible loop executions\n")
-  (cond
-    [(empty? l) (list (list))]
-    [(Single-branch? (first l))
-     (append
-      (list (list (Assume-simulation (Single-branch-condition (first l)))))
-      (map (append-item (Assume-simulation (lambda (e) (not ((Single-branch-condition (first l)) e))))) (possible-single-loop-executions (rest l))))]
-    [else
-     (map (append-item (first l)) (possible-single-loop-executions (rest l)))]))
-   
-
-
-(define (all-unrolls loop depth loop-id)
-
-  (define (give-ids-to-instr-list loop loop-id)
-    ;; (display "assigning ids\n")
-    ;; (display loop) (display "\n")
-    loop)
-    ;; (cond
-    ;;   [(empty? loop) `()]
-    ;;   [(Repeat-meta? (first loop))
-    ;;    ;; (display "going into repeat meta\n")
-    ;;    (append
-    ;;     (list (Repeat-meta (give-ids-to-instr-list (Repeat-meta-instr-list (first loop)) loop-id) (Repeat-meta-which-var (first loop))))
-    ;;     (give-ids-to-instr-list (rest loop) loop-id))]
-
-    ;;   [(Single-branch? (first loop))
-    ;;    ;; (display "going into single branch\n")
-    ;;    (append
-    ;;     (list (Single-branch (Single-branch-condition (first loop)) (give-ids-to-instr-list (Single-branch-branch (first loop)) loop-id)))
-    ;;     (give-ids-to-instr-list (rest loop) loop-id))]
-
-    ;;   [(Meta-addition? (first loop))
-    ;;    (append
-    ;;     (list (Meta-addition (give-ids-to-instr-list (Meta-addition-instr-list (first loop)) loop-id) (Meta-addition-which-var (first loop))))
-    ;;     (give-ids-to-instr-list (rest loop) loop-id))]
-                     
-    ;;   [else
-    ;;    (append
-    ;;     (list (add-new-line-id (first loop) loop-id))
-    ;;     (give-ids-to-instr-list (rest loop) loop-id))]))
-
-                         
-
-  (define (all-unrolls-helper loop depth)
-    ;; (display "all unrolls\n")
-
-    (cond
-      [(> 0 depth) (list)]
-      [else
-       (append
-        (unroll-loop loop depth loop-id)
-        (all-unrolls-helper loop (- depth 1)))]))
-
-  (cond
-    [(Loop? loop)
-     (let ([loop-with-ids (Loop (Loop-condition loop) (give-ids-to-instr-list (Loop-instr-list loop) loop-id))])
-       (all-unrolls-helper loop-with-ids depth))]
-    [(Maybe-loop? loop)
-     (let ([loop-with-ids (Loop (Maybe-loop-condition loop) (give-ids-to-instr-list (Maybe-loop-instr-list1 loop) loop-id))])
-       (all-unrolls-helper loop-with-ids depth))]
-
-    [else
-     (displayln loop)
-     (displayln "Need loop or maybe loop. Something is wrong")]))
-
-
-
-(define thread1
-  (Thread-list
-   (list
-    (Run-method "remove" (list 1 "test") "ret" ))))
-
-
-(define thread2
-  (Thread-list
-   (list
-    (Run-method "extension" (list 1 "test") "ret2" ))))
-
-
-       
-  
-(define line-ids (void))
-;; (define (add-new-line-id line loop-id)
-;;   ;; (display "try adding line id to: ")(display loop-id) (display "\n")
-;;   (
-  ;; (cond
-  ;;   [(Set-pointer? line)
-  ;;    (if (None? (Set-pointer-instr-id line))
-  ;;        (Set-pointer (Set-pointer-id line) (Set-pointer-type line) (Set-pointer-offset line) (Set-pointer-val line) (new-line-id))
-  ;;        line)]
-     
-  ;;   [(Lock? line)
-  ;;    (if (None? (Lock-instr-id line))
-  ;;        (Lock (Lock-id line) (new-line-id))
-  ;;        line)]
-  ;;   [(Create-var? line)
-  ;;    (if (None? (Create-var-instr-id line))
-  ;;        (Create-var (Create-var-id line) (Create-var-type line) (new-line-id))
-  ;;        line)]
-
-    
-  ;;   [(Set-var? line)
-  ;;    (if (None? (Set-var-instr-id line))
-  ;;        (Set-var (Set-var-id line) (Set-var-assignment line) (new-line-id))
-  ;;        line)]
-
-  ;;   [(Unlock? line)
-  ;;    (if  (None? (Unlock-instr-id line))
-  ;;        (Unlock (Unlock-id line) (new-line-id))
-  ;;        line)]
-
-  ;;   [(Continue? line)
-  ;;    ;; (display "found a continue...\n")
-  ;;    ;; (display "adding id ") (display loop-id) (display "\n")
-  ;;    (if (and (not (None? loop-id)) (None? (Continue-to-where line)))
-  ;;        (Continue loop-id)
-  ;;        line)]
-  ;;   [else
-  ;;    line]))
-(define (new-line-id)
-  (set! line-ids (+ line-ids 1))
-  line-ids)
-      
-
 
 
 (define meta-var-count (void))
@@ -213,6 +41,81 @@
   (set! loop-id-count (+ loop-id-count 1))
   loop-id-count)
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;; METHODS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;; Takes in a Loop C-Instruction, and returns a list of all unrollings of the loop
+;; up to depth "depth". We also take in a loop-id, which is a unique id associated
+;; with this particular loop.
+;; Loop executions include "assume" statements which are associated with a particular id
+;; The loop-id ensures that in the sketch, we can recognize all of the executions as
+;; the same loop
+(define (unroll-loop loop depth loop-id)
+  ;; (display "unrolling at depth...") (display depth) (display "\n")
+  (define (not-empty l)
+    (not (empty? l)))
+  (cond
+    [(equal? depth 0)  (list (list (Assume-loop 
+                                                  (not (Loop-condition loop)) loop-id)))]
+    [else
+     (let ([possible-executions (possible-single-loop-executions (Loop-instr-list loop))])
+       ;; (display possible-executions) (display "\n")
+
+       (map (append-item (Assume-loop (Loop-condition loop) loop-id)) (filter not-empty (all-combinations possible-executions (unroll-loop loop (- depth 1) loop-id)))))]))
+     
+
+
+;; Gives all possible executions of a particular list of instructions which includes branches.
+;; Branches are converted to multiple traces with assume statements
+(define (possible-single-loop-executions l)
+  ;; (display "possible loop executions\n")
+  (cond
+    [(empty? l) (list (list))]
+    [(Single-branch? (first l))
+     (append
+      (list (list (Assume-simulation (Single-branch-condition (first l)))))
+      (map (append-item (Assume-simulation (lambda (e) (not ((Single-branch-condition (first l)) e))))) (possible-single-loop-executions (rest l))))]
+    [else
+     (map (append-item (first l)) (possible-single-loop-executions (rest l)))]))
+   
+
+
+
+;; Gives all possible executions of the loop up to depth "depth". Gives loop id "loop-id" to all
+;; assume-loops, so that we can identify them with this particular loop. 
+(define (all-unrolls loop depth loop-id)
+  (define (all-unrolls-helper loop depth)
+    ;; (display "all unrolls\n")
+
+    (cond
+      [(> 0 depth) (list)]
+      [else
+       (append
+        (unroll-loop loop depth loop-id)
+        (all-unrolls-helper loop (- depth 1)))]))
+
+  ;; This section simply allows us to cover both "Maybe-loop"s and "Loop"s. 
+  (cond
+    [(Loop? loop)
+       (all-unrolls-helper loop depth)]
+    [(Maybe-loop? loop)
+     (let ([loop-version (Loop (Maybe-loop-condition loop) (Maybe-loop-instr-list1 loop))])
+       (all-unrolls-helper loop-version depth))]
+
+    [else
+     (displayln loop)
+     (displayln "Need loop or maybe loop. Something is wrong")]))
+
+
+
+       
+
+
+
+
+
+;; Computes all possible interleavings of two instr-lists
 (define (interleave-lists instr-list1 instr-list2)
   (cond
     [(empty? instr-list1) (list instr-list2)]
@@ -224,7 +127,7 @@
 
 
 
-
+;; Computes all possible interleavings of two instr-lists, but is aware 
 (define (interleave-lists-marker instr-list1 instr-list2)
   (define (helper instr-list1 instr-list2 ctx-switch-enabled found-marker)
     (cond
@@ -250,7 +153,10 @@
         
         
 
-
+;; Computes all interleavings of instr-list2 interrupting instr-list1 inside the hole given by
+;; the argument "hole". This is specifically for unrolling possible loops, where we have a
+;; trace which has been given a possible loop sketch addition. This interleaving method
+;; returns the expansion of the maybe loop.
 (define (interleave-lists-at-holes instr-list1 instr-list2 hole)
   ;; (display "INTERLEAVING LIST1: ") (displayln instr-list1)
   ;; (display "INTERLEAVING LIST2: ") (displayln instr-list2)
@@ -266,71 +172,58 @@
     [else
      (map (append-item (first instr-list1)) (interleave-lists-at-holes (rest instr-list1) instr-list2 hole))]))
 
+
+
+
+;; Takes a Thread-list which is a trace which may include any program element, including Sketch elements
+;; Branches, Loops, Maybe-loops etc... 
+;; Returns a list of concrete traces which represent all possible runs of the original trace
 (define (thread-runs t library t-id to-return)
 
   (set! line-ids 0)
 
 
-    
+  ;; If we have a Maybe-loop, we want to expand it into all possible executions
   (define (handle-maybe-loop instr-list to-return)
 
     (let
         ([maybe-loop (first instr-list)]
-         [possible-loops (reduce append (map (lambda (l)  (unroll-thread-runs (append l (rest instr-list)) to-return)) (all-unrolls (first instr-list) 1 (new-loop-id))))])
+         [possible-loops
+          (reduce append (map ;; Unroll ever loop and then recursively compute thread-runs for unrolled loops
+                          (lambda (l) 
+                            (unroll-thread-runs (append l (rest instr-list)) to-return))
+                          (all-unrolls (first instr-list) 1 (new-loop-id))))])
 
-      (let
+      (let ;; Interleave unrolled loops as necessary - only in actual holes
           ([interleavings (reduce append
                                   (map
                                    (lambda (l)
-                                     ;; (displayln "one loop possibility\n")
-                                     ;; (display "answer: ") (displayln                                     (length (interleave-lists-at-holes l (Maybe-loop-instr-list2 maybe-loop) (Maybe-loop-hole maybe-loop))))
-
-                                     (interleave-lists-at-holes l (Maybe-loop-instr-list2 maybe-loop) (Maybe-loop-hole maybe-loop)))
+                                     (interleave-lists-at-holes l (Maybe-loop-instr-list2 maybe-loop)
+                                                                (Maybe-loop-hole maybe-loop)))
                                    possible-loops))])
-
-        ;; (display "INTERLEAVINGS: ") (displayln  (first interleavings))
-        
-        
-
-        
-
-      ;; (display "POSSIBLE-LOOPS: ")
-      ;; (displayln (second (interleave-lists-at-holes (first possible-loops) (Maybe-loop-instr-list2 maybe-loop) (Maybe-loop-hole maybe-loop))))
-
-      
       interleavings)))
 
    
-
+  ;; This is simply the unrolling of a particular thread - exands into a list of traces with Assume statements representing all possible runs of
+  ;; the given thread
   (define (unroll-thread-runs instr-list to-return)
-    ;; (display "thread-runs list: ")(display instr-list) (display "\n")
+
     (cond
       [(empty? instr-list) ;; (display "empty\n")
        (list (list))]
+
+      ;; Return statements simply set the return var - TODO: This may no longer make sense - check
       [(Return? (first instr-list)) ;; (display "return ") (displayln (~v to-return))
        (list (list (Set-var to-return (Return-val (first instr-list)) )))]
+
+      ;; Single branch simply exands into the case where the branch is run, and where it's not
       [(Single-branch? (first instr-list)) ;; (display "single branch\n")
        (append
         (map (append-item (Assume-simulation (Single-branch-condition (first instr-list)))) (unroll-thread-runs (append (Single-branch-branch (first instr-list)) (rest instr-list)) to-return))
         (map (append-item (Assume-simulation (Not (Single-branch-condition (first instr-list))))) (unroll-thread-runs (rest instr-list) to-return)))]
 
-      ;; [(Run-method? (first instr-list)) ;; (display "run method\n")
-      ;;  (define arg-var-name (string-append "new-var" (~v (freshvar))))
-      ;;  (define new-ctx-switch (Context-switch))
-      ;;  (set-C-Instruction-thread-id! new-ctx-switch (C-Instruction-thread-id (first instr-list))) 
-      ;;  (map (append-list
-      ;;        (list
-      ;;         new-ctx-switch
-      ;;         (add-new-line-id (Create-var arg-var-name "int" (None) ) (None))
-      ;;         (add-new-line-id (Set-var arg-var-name (Run-method-args (first instr-list)) (None)) (None))))
-
-
-      ;;       (all-combinations (unroll-thread-runs (retrieve-code library (Run-method-method (first instr-list))) (Run-method-ret (first instr-list)))
-      ;;                         (unroll-thread-runs (rest instr-list) to-return)))]
-
-
-
-
+      ;; This is a Sketch element - a possible addition to the program which either exists or does not exist
+      ;; existence is determined by a unique meta-variable in the Sketch. This is identified by the Assume-meta-condition
       [(Meta-addition? (first instr-list))
        (let ([new-meta (new-meta-var)])
          (append
@@ -338,18 +231,8 @@
                                                                                     (rest instr-list)) to-return))
           (map (append-item (Assume-not-meta new-meta)) (unroll-thread-runs (rest instr-list) to-return))))]
 
+      ;; Like the Meta-addition, but a branch. One of the two branches is the two program, selecting which branch is left to the synthesizer
       [(Meta-branch? (first instr-list))
-       ;; (display "meta-branch\n")
-       ;; (displayln           (length (map (append-item (Assume-meta 0)) (unroll-thread-runs (append
-       ;;                                                                   (Meta-branch-branch1 (first instr-list))
-       ;;                                                                   (rest instr-list))
-       ;;                                                                  to-return))))
-       ;; (displayln           (length (map (append-item (Assume-not-meta 0)) (unroll-thread-runs (append
-       ;;                                                                       (Meta-branch-branch2 (first instr-list))
-       ;;                                                                       (rest instr-list))
-       ;;                                                                      to-return))))
-
- 
        (let ([new-meta (new-meta-var)])
          (append
           (map (append-item (Assume-meta new-meta)) (unroll-thread-runs (append
@@ -361,19 +244,13 @@
                                                                              (rest instr-list))
                                                                             to-return))))]
 
-
-          
-       
-
+      ;; Loops must be unrolled into every possible execution up to a certain number
       [(Loop? (first instr-list)) ;; (display "looping\n")
-       ;; (display "loop id: ") (display (new-loop-id)) (display "\n")
-       ;; (display "looping at ") (display instr-list) (display "\n")
-       ;; (display "inside: ") (display (Loop-instr-list (first instr-list))) (display "\n")
-       ;; (display "unrolls: ") (display (all-unrolls (first instr-list) 2 (new-loop-id))) (display "\n")
-       ;; (exit)
        
        (reduce append (map (lambda (l)  (unroll-thread-runs (append l (rest instr-list)) to-return)) (all-unrolls (first instr-list) 1 (new-loop-id))))]
 
+      ;; This is the equivalent of the Sketch "repeat". We repeat a certain section of code some number of times. That number is chosen by the synthesizer.
+      ;; A Repeat node is associated with a particular meta-variable Repeat-meta-which-var which is what will be synthesized in the final Sketch
       [(Repeat-meta? (first instr-list))
        (reduce append (map (lambda (l) (map (append-item (Repeat-meta l (Repeat-meta-which-var (first instr-list)))) (unroll-thread-runs (rest instr-list) to-return)))
 
@@ -383,7 +260,8 @@
 
 
 
-
+      ;; This is a possible loop. Whether the loop will be included is chosen by the synthesizer - If it is a loop, we must expand the loop and fill in the interleavings
+      ;; which are equivalent to the original ones from the error trace. This is done with Handle-maybe-loop
       [(Maybe-loop? (first instr-list))
        (let
            ([new-meta (new-meta-var)])
@@ -548,143 +426,6 @@
                      ) (new-meta-var))))))
 
 
-(define library
-  (list
-
-   (Method
-    "push"
-    (list "Node" "int" "int")
-    "int"
-    (list
-     (Lock 1 )
-     (Create-var "cur" "Node" )
-     (Create-var "prev" "Node" )
-     (Set-var "cur" (Get-argument 0) )
-     (Set-var "prev" (Get-argument 0) )
-     (Loop (And (Not (Is-none? (Get-var "cur"))) (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))))
-           (list
-            (Set-var "prev" (Get-var "cur") )
-            (Set-var "cur" (Dereference "cur" "Node" "next") )))
-     (Single-branch
-      (Is-none? (Get-var "cur"))
-      (list
-       (Set-pointer "prev" "Node" "next" (New-struct "Node" (list (None) (Get-argument 1) (Get-argument 2) (None) )) )
-       (Unlock 1 )
-       (Return (Get-argument 2) )))
-
-     (Set-pointer "cur" "Node" "val" (Get-argument 2) )
-     (Unlock 1 )
-     (Return (Get-argument 2) )
-
-     ))
-     
-
-
-   (Method
-    "get"
-    ;; (add-ids add-method-id
-    (list "Node" "int")
-    "int"
-    ;; (create-announcement-version 
-     (list
-      (Lock 1)
-      (Create-var "cur" "Node" )
-      (Set-var "cur" (Get-argument 0))
-      (Loop  (And (Not (Is-none? (Get-var "cur"))) (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))) )
-            (list
-             (Set-var "cur" (Dereference "cur" "Node" "next") )))
-      (Single-branch
-        (Is-none? (Get-var "cur"))
-       (list
-        (Unlock 1)
-        (Return (None))))
-      (Unlock 1)
-      (Return (Dereference "cur" "Node" "val")))
-     ;; 0))
-    ;; ))
-     )
-    
-    
-    (Method
-     "contains"
-
-     (list "Node" "int")
-     "int"
-     ;; (add-ids add-method-id
-      (list
-       (Create-var "val" "int")
-       (Run-method "get" (list (Get-argument 0) (Get-argument 1)) "val") ;; Run method "get" with arguments "key"
-       (Return (Not (Is-none? (Get-var "val"))) ))
-      ;; 1))
-     )
-    
-   (Method
-    "remove"
-    (list "Node" "int")
-    "int"
-    ;; (add-ids add-method-id
-     (list
-      (Lock 1)
-      (Create-var "cur" "Node")
-      (Create-var "prevNode" "Node")
-      (Create-var "oldVal" "Node")
-      
-      (Set-var "cur" (Get-argument 0))
-      (Single-branch 
-                     (Is-none? (Get-var "cur"))
-                     (list
-                      (Unlock 1)
-                      (Return  (None))))
-      
-      
-      (Set-var "oldVal" (Dereference "cur" "Node" "val"))
-      (Set-var "prevNode" (Get-argument 0))
-     
-      (Loop  (And (Not (Is-none? (Get-var "cur"))) (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))))
-
-             ;; (And (Not (Equal (Dereference (Dereference "cur" "Node" "next") "Node" "key") (Get-argument 1))) (Not (Equal (Get-var "cur") 0)))
-            (list
-             (Set-var "oldVal" (Dereference "cur" "Node" "val"))
-             (Set-var "prevNode" (Get-var "cur"))           
-             (Set-var "cur" (Dereference "cur" "Node" "next"))))
-
-      (Added-CAS-Marker)
-      (Single-branch 
-       (Is-none? (Get-var "cur"))
-       (list
-        (Unlock 1)
-        (Return  (None))))
-      
-
-      (Set-var "oldVal" (Dereference "cur" "Node" "val"))
-      (Set-pointer "prevNode" "Node" "next" (Dereference "cur" "Node" "next"))
-      (Unlock 1)
-      (Return (Get-var "oldVal")))
-     ;; 2))
-    )
-
-
-   (Method
-    "extension"
-    ;; (add-ids add-method-id
-    (list "Node" "int")
-    "int"
-     (list
-      (Create-var "val" "int" )
-      (Create-var "found" "int" )
-      (Set-var "val" (None) )
-      (Run-method "contains" (list (Get-argument 0) (Get-argument 1)) "found")
-      (Single-branch 
-       (Get-var "found") 
-       (list
-        (Run-method "get" (list (Get-argument 0) (Get-argument 1)) "val")
-        (Run-method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway")))
-      (Return (Get-var "val")))
-    )))
-     
-     ;; 3))))
-
-    
 
 
 
@@ -721,78 +462,12 @@
     
   
 
-(define (all-equivalent-interleavings interleaving-full thread1 thread2 library)
-
-  (define (all-equivalent-interleavings-helper interleavings thread1-runs thread2-runs)
-    (display "all-equivalent-interleavings-helper\n")
-    (cond
-      [(empty? interleavings)
-       (list (list))]
-      [else
-       (let ([t-id (Get-thread-id (first interleavings))]
-             [same-id-thread1 (filter (lambda (l) (and (not (empty? l)) (equal? (Get-instr-id (first l))
-                                                                                (Get-instr-id (first interleavings)))))
-                                      thread1-runs)]
-             [same-id-thread2 (filter (lambda (l) (and (not (empty? l)) (equal? (Get-instr-id (first l))
-                                                                                (Get-instr-id (first interleavings)))))
-                                      thread2-runs)]
-
-             [maybe-loop-thread1 (filter (lambda (l) (and (not (empty? l)) (None? (Get-instr-id (first l)))))
-                                         thread1-runs)]
-             [maybe-loop-thread2 (filter (lambda (l) (and (not (empty? l)) (None? (Get-instr-id (first l)))))
-                                         thread2-runs)])
-         
-
-
-         ;; (display "same-id-thread1: ") (display  (map (lambda (l) (rest l)) same-id-thread1)) (display "\n")
-         ;; (display "maybe-loop-thread1: ") (display maybe-loop-thread1) (display "\n")
-
-
-
-
-         (cond
-           [ (equal? t-id 0) 
-            (append
-             (map (lambda (l) (if (empty? l) `()
-                                  (append (list (first l))
-
-                                          (first (all-equivalent-interleavings-helper
-                                                            (rest interleavings)
-                                                            (list (rest l))
-                                                            thread2-runs)))))
-                  same-id-thread1)
-
-
-
-
-             (map (lambda (l)
-                    (display l) (display "\n")
-                    (if (> 2 (length l)) `()
-                        (all-equivalent-interleavings-helper (find-appropriate-subseq interleaving-full (first (rest l)))
-                                                  (rest (list l))
-                                                  thread2-runs)))
-                  maybe-loop-thread1))]
-           
-           [else
-            (list (list))]))]))
-
-  
-            
-
-
-
-  
-  (let ([thread1-runs (thread-runs thread1 library 0 "")]
-        [thread2-runs (thread-runs thread2 library 1 "")])
-
-    (all-equivalent-interleavings-helper interleaving-full thread1-runs thread2-runs)))
 
 
 
 
 
-
-   
+;; Takes in a list of lists of C-Instructions, and returns a list of traces each with an ID   
 (define (transform-to-traces l)
   (define (helper l n)
     (cond
@@ -804,103 +479,6 @@
         (helper (rest l) (+ n 1)))]))
       (helper l 0))
      
-
-
-
-(define thread3
-  (Thread-list
-   (list
-    (Run-method "get" (list 1 "test") "ret" ))))
-
-
-
-(define test
-  (Thread-list
-   (list
-    ;; (Create-var "ret1" "int" (None))
-    (Create-var "ret2" "int" )
-    (Create-var "ret3" "int" )
-    (Run-Method "push" (list (Get-var "shared") 1 5) "ret1" 0 )
-    (Run-Method "push" (list (Get-var "shared") 2 5) "ret1" 0 )
-    (Run-Method "push" (list (Get-var "shared") 3 7) "ret1" 0 )
-    (Run-Method "get" (list (Get-var "shared") 2 ) "ret3" 0)
-    ;; (Run-Method "contains" (list (Get-var "shared") 1) "ret2" 1)
-    (Run-Method "remove" (list (Get-var "shared") 1) "ret1" 0))))
-  
-
-
-
-
-
-
-;;; Mooly's error
-(define mooly-test
-  (Thread-list
-   (list
-    (Run-Method "push" (list (Get-argument 0) 1 5) "throwaway" 0)
-    (Create-var "val" "int" )
-    (Create-var "found" "int" )
-    (Set-var "val" 0 )
-    (Run-Method "contains" (list (Get-argument 0) (Get-argument 1)) "found" 0)
-    (Assume-simulation (Not (Equal (Get-var "found") 0)))
-
-    
-    (Run-Method "get" (list (Get-argument 0) (Get-argument 1)) "val" 0)
-    (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "ret2" 1)
-    (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0)
-    (Set-var "ret1" (Get-var "val") ))))
-
-
-
-(define mooly-sketch-test
-  (Thread-list
-   (list
-    (Run-Method "push" (list (Get-argument 0) 1 5) "throwaway" 0)
-    (Create-var "val" "int" )
-    (Create-var "found" "int" )
-    (Set-var "val" 0 )
-    (Run-Method "contains" (list (Get-argument 0) (Get-argument 1)) "found" 0)
-    (Assume-simulation (Not (Equal (Get-var "found") 0)))
-
-    (Meta-branch 0
-                 (list
-                  (Run-Method "get" (list (Get-argument 0) (Get-argument 1)) "val" 0)
-                  (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "ret2" 1)
-                  (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0))
-                 (list
-                  (Create-var "loop-break" "int" )
-                  (Set-var "loop-break" #f )
-                  (Maybe-loop 1 (Not (Get-var "loop-break"))
-                              (list
-                               (Run-Method-instr-id "get" (list (Get-argument 0) (Get-argument 1)) "val" 0 0)
-                               (Run-Method-instr-id "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0 1))
-                              (list
-                               (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "ret2" 1))
-
-                              (list
-                               (Run-Method "get" (list (Get-argument 0) (Get-argument 1)) "val" 0)
-                               (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "ret2" 1)
-                               (Run-Method "remove" (list (Get-argument 0) (Get-argument 1)) "throwaway" 0))
-
-
-
-                              (Hole 0 (list) 1))))
-
-                              
-
-                              
-                        
-
-                 
-    (Set-var "ret1" (Get-var "val")))))
-
-
-
-
-
-
-
-
 
 
 
@@ -1003,9 +581,10 @@
 
 (define first-args (void))
 (set! first-args (list shared 1))
+(define POSSIBLE (void))
+(set! POSSIBLE #t)
 
-
-(define pick-trace 1)")
+(define-symbolic pick-trace integer?)")
 
 
 
@@ -1018,9 +597,20 @@
 
 (string-append
  prelude
- ;; (generate-library-code library)
+ (generate-library-code library)
+
+   (reduce string-append (map (lambda (v) (string-append "(define " v " (void))\n")) variables-of-interest))
+ ;; All symbolic variables which will be referenced in the possible traces 
+ (reduce string-append
+         (map (lambda (v) (string-append "(define-symbolic " (Tuple-a v) " " (Tuple-b v) ")\n"))
+              meta-vars))
+    
+
  
- (trace-list-to-sketch (transform-to-traces all-runs) library "first-args" new-scope 0)))))
+ (trace-list-to-sketch (transform-to-traces all-runs) library "first-args" new-scope 0)
+
+ "(synthesize #:forall (list pick-trace)
+              #:guarantee (linearizable-check))"))))
 
 
 ;; (display "ALL-RUNS length: ") (displayln (length all-runs))
@@ -1138,7 +728,7 @@
 
 
 
-(define sketch-output (interleaving-to-sketch mooly-sketch-test (list "ret10" "ret20" "ret30" "throwaway0") library (Hole 0 (list) 1)))
+(define sketch-output (interleaving-to-sketch mooly-sketch-test (list "ret1" "ret2" "ret3" "throwaway") library (Hole 0 (list) 1)))
 (define all-runs (thread-runs mooly-sketch-test library 0 ""))
 
 ;; (length (reduce append (map (lambda (l) (convert-trace-to-interleavings l library (list "remove"))) all-runs)))

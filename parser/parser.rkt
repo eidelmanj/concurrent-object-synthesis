@@ -63,7 +63,7 @@
 (define-syntax-rule (tostring a) (format "~a" a))
 
 (define-tokens a (NUM VAR TYPE ADDRESS))
-(define-empty-tokens b (~ \. \, NULL BOOL RETURN SHARED GETTERS SETTERS ELSE  STRUCT LOOP WHILE FOR DO \; = + -  < > & AND OR NOT EQUAL EOF LET IN IF \( \) \{ \} ))
+(define-empty-tokens b (~ \. \, NULL BOOL RETURN SHARED GETTERS SETTERS ELSE STRUCT LOOP WHILE FOR DO \; = + -  < > & AND OR NOT EQUAL EOF LET IN IF \( \) \{ \} ))
 
 (define-lex-trans number
   (syntax-rules ()
@@ -82,14 +82,15 @@
                                 "?" "!" ":" "$" "%" "^" "&"))
   (basic-types (re-or "void" "int" "char" "Node" "Integer" "pthread_mutex_t" "pthread_mutex_t*" "int*" "char*" "struct"))
   (identifier (re-+ identifier-characters))
-  (loop (re-or "while" "for")))
+  (loop (re-or "while" "for"))
+  (truth-values (re-or "true" "false")))
 
 (define simple-math-lexer
   (lexer
    ("=" (token-=))
    ("-" (token--))
    ("+" (token-+))
-   ((re-or "true" "false") (token-BOOL))
+   (truth-values (token-BOOL))
    ("==" (token-EQUAL))
    ("<" (token-<))
    (">" (token->))
@@ -148,7 +149,7 @@
 (define-struct arg-decl (id))
 (define-struct arg-node (v next))
 (define-struct arg-add-node (v next))
-(define-struct struct-declaration-node (nm members))
+(define-struct struct-declaration-node (tp nm fields))
 (define-struct struct-declaration-root (struct))
 (define-struct field-node (type name next))
 (define-struct single-var (v))
@@ -268,8 +269,8 @@
               ((& VAR add-arg) (make-arg-node (make-arg-decl $2) $3))
               ((VAR add-arg) (make-arg-node (make-arg-decl $1) $2)))
     
-    (struct-declaration ((STRUCT VAR \{ field-members \} \;) 
-      (make-struct-declaration-node $2 $4)))
+    (struct-declaration ((TYPE VAR \{ field-members \} \;) 
+      (make-struct-declaration-node $1 $2 $4)))
 
     ;; function calls
     (function-call (( VAR \( arg-list \) ) (function-call-node $1 $3)))
