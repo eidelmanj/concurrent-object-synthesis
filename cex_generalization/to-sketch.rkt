@@ -18,11 +18,8 @@
 
 
 
-(define (retrieve-code library id)
-  (let ([lib-matches (filter (lambda (m) (equal? (Method-id m) id)) library)])
-    (Method-instr-list (first lib-matches))))
 
-
+;;;;;;;;;;;;;;;;; Binding related stuff - TODO: Determine whether still needed ;;;;;;;;;;;;;;;;;;;;;;
 (define num-sim-loops (void))
 (set! num-sim-loops 0)
 
@@ -76,6 +73,12 @@
              scope-num
              (get-most-recent-binding var-name parent-binding parent-scope))))]))
     
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;; Trace to Sketch conversion ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 (define (print-non-sketch-simulation instr-list library arg-store ret-store scope-num parent-scope)
   (cond
@@ -327,12 +330,6 @@
 
 
 
-(define (list-multiply instr-list num)
-  (cond
-    [(equal? num 0) `()]
-    [else
-     (append instr-list (list-multiply instr-list (- num 1)))]))
-
 (define (sketch-unroll-repeat instr-list meta-var depth arg-store scope-num parent-scope)
   (cond
     [(equal? depth 0) (string-append "[(equal? " meta-var " 0) (begin (void))]\n")]
@@ -357,93 +354,6 @@
 
 
 
-  
-(define (maybe-loop-to-sketch condition
-                              instr-list1
-                              instr-list2
-                              hole
-                              library
-                              arg-store
-                              scope-num
-                              parent-scop)
-  "TODO: MAYBE-LOOP\n")
-
-
-(define (has-trace? t-set t)
-  (> (length (filter (lambda (t-prime) (equal? (Trace-trace-id t-prime) (Trace-trace-id t)))
-          t-set)) 0))
-
-(define (trace-ids-equal? t-set1 t-set2)
-  ;; (displayln "Checking trace equality")
-  ;; (display "answer: ") (displayln   (equal? (length (filter (lambda (t) (not (has-trace? t-set2 t))) t-set1)) 0))
-
-
-  (equal? (length (filter (lambda (t) (not (has-trace? t-set2 t))) t-set1))
-     0))
-
-(define (rest-of-traces t-list)
-  ;; (displayln "Rest-of-traces")
-  (filter (lambda (t)
-            (not (empty? (Trace-t t))))
-          
-          (map (lambda (t)
-                 ;; (displayln t)
-                 (Trace (Trace-trace-id t) (rest (Trace-t t))))
-               t-list)))
-
-
-;; (define (expression-equality-check elem1 elem2)
-;;   (cond
-;;     [(not (equal? (object-name elem1) (object-name elem2)))
-;;      #f]
-;;     [(Dereference? elem1)
-;;      (and (equal? (Dereference-id elem1) (Dereference-id elem2))
-;;           (equal? (Dereference-type elem1) (Dereference-type elem2))
-;;           (equal? (Dereference-offset elem1) (Dereference-offset elem2)))]
-;;     [(Equal? elem1)
-;;      (and (expression-equality-check (Equal-expr1 elem1) (Equal-expr1 elem2))
-;;           (expression-equality-check (Equal-expr2 elem1) (Equal-expr2 elem2)))]
-;;     [(And? elem1)
-;;      (and (expression-equality-check (And-expr1 elem1) (And-expr1 elem2))
-;;           (expression-equality-check (And-expr2 elem1) (And-expr2 elem2)))]
-;;     [(Or? elem1)
-;;      (and (expression-equality-check (Or-expr1 elem1) (Or-expr1 elem2))
-;;           (expression-equality-check (Or-expr2 elem1) (Or-expr2 elem2)))]
-;;     [(Not? elem1)
-;;      (expression-equality-check (Not-expr elem1) (Not-expr elem2))]
-;;     [(Get-var? elem1)
-;;      (equal? (Get-var-id elem1) (Get-var-id elem2))]
-;;     [(Add? elem1)
-;;      (and (expression-equality-check (Add-expr1 elem1) (Add-expr1 elem2))
-;;           (expression-equality-check (Add-expr2 elem1) (Add-expr2 elem2)))]
-;;     [(Subtract? elem1)
-;;      (and (expression-equality-check (Subtract-expr1 elem1) (Subtract-expr1 elem2))
-;;           (expression-equality-check (Subtract-expr2 elem1) (Subtract-expr2 elem2)))]
-;;     [(Divide? elem1)
-;;      (and (expression-equality-check (Divide-expr1 elem1) (Divide-expr1 elem2))
-;;           (expression-equality-check (Divide-expr2 elem1) (Divide-expr2 elem2)))]
-;;     [(Multiply? elem1)
-;;      (and (expression-equality-check (Multiply-expr1 elem1) (Multiply-expr1 elem2))
-;;           (expression-equality-check (Multiply-expr2 elem1) (Multiply-expr2 elem2)))]
-;;     [(Less-than? elem1)
-;;      (and (expression-equality-check (Less-than-expr1 elem1) (Less-than-expr1 elem2))
-;;           (expression-equality-check (Less-than-expr2 elem1) (Less-than-expr2 elem2)))]
-;;     [(Less-than-equal? elem1)
-;;      (and (expression-equality-check (Less-than-equal-expr1 elem1) (Less-than-equal-expr1 elem2))
-;;           (expression-equality-check (Less-than-equal-expr2 elem1) (Less-than-equal-expr2 elem2)))]
-;;     [(Greater-than? elem1)
-;;      (and (expression-equality-check (Greater-than-expr1 elem1) (Greater-than-expr1 elem2))
-;;           (expression-equality-check (Greater-than-expr2 elem1) (Greater-than-expr2 elem2)))]
-;;     [(Greater-than-equal? elem1)
-;;      (and (expression-equality-check (Greater-than-equal-expr1 elem1) (Greater-than-equal-expr1 elem2))
-;;           (expression-equality-check (Greater-than-equal-expr2 elem1) (Greater-than-equal-expr2 elem2)))]
-;;     [(Is-none?? elem1)
-;;      (equal? (Is-none?-val elem1) (Is-none?-val elem2))]
-;;     [else
-;;      (equal? elem1 elem2)]))
-    ;; [(Structure? elem1)
-    ;;  (equal? (Structure-fields elem1) (Structure-fields elem2))]
-    ;; [(
 
 
 
@@ -455,55 +365,11 @@
 
 
 
-(define (command-equality-check elem1 elem2)
-  ;; (displayln   (equal? (object-name elem1) (object-name elem2)))
-  (equal? (object-name elem1) (object-name elem2)))
-  ;; (displayln
-  ;;  (and (equal? (object-name elem1) (object-name elem2))
-
-  ;;       (not (or (null? (C-Instruction-instr-id elem1)) (null? (C-Instruction-instr-id elem2))))
-    
-  ;;       (equal? (C-Instruction-instr-id elem1) (C-Instruction-instr-id elem2))))
-  ;; (and (equal? (object-name elem1) (object-name elem2))
-
-  ;;       (not (or (null? (C-Instruction-instr-id elem1)) (null? (C-Instruction-instr-id elem2))))
-    
-  ;;       (equal? (C-Instruction-instr-id elem1) (C-Instruction-instr-id elem2))))
 
 
 
 
-    ;; [(Set-pointer? elem1)
-    ;;  (and (equal? (Set-pointer-id elem1) (Set-pointer-id elem2))
-    ;;       (equal? (Set-pointer-type elem1) (Set-pointer-type elem2))
-    ;;       (equal? (Set-pointer-offset elem1) (Set-pointer-offset elem2))
-    ;;       (expression-equality-check (Set-pointer-val elem1) (Set-pointer-val elem2)))]
-    ;; [(CAS? elem1)
-    ;;  (and (equal? (CAS-v1 elem1) (CAS-v1 elem2))
-    ;;       (equal? (CAS-v2 elem1) (CAS-v2 elem2))
-    ;;       (expression-equality-check (CAS-new-val elem1) (CAS-new-val elem2))
-    ;;       (equal? (CAS-ret elem1) (CAS-ret elem2)))]
-    ;; [(Create-var? elem1)
-    ;;  (and (equal? (Create-var-id elem1) (Create-var-id elem2))
-    ;;       (equal? (Create-var-type elem1) (Create-var-type elem2)))]
-    ;; [(Set-var? elem1)
-    ;;  (and (equal? (Set-var-id elem1) (Set-var-id elem2))
-    ;;       (expression-equality-check (Set-var-assignment elem1) (Set-var-assignment elem2)))]
-    ;; [(Lock? elem1)
-    ;;  (and (equal? (Lock-id elem1) (Lock-id elem2)))]
-    ;; [(Unlock? elem1)
-    ;;  (and (equal? (Unlock-id elem1) (Unlock-id elem2)))]
-    ;; [(Return? elem1)
-    ;;  (and (expression-equality-check (Return-val elem1) (Return-val elem2)))]
-    ;; [(Assume-meta? elem1)
-    ;;  (and (equal? (Assume-meta-condition elem1) (Assume-meta-condition elem2)))]
-    ;; [(Assume-not-meta? elem1)
-    ;;  (and (equal? (Assume-not-meta-condition elem1) (Assume-not-meta-condition elem2)))]
-    ;; [(Assume-simulation? elem1)
-    ;;  (and (expression-equality-check (Assume-simulation-condition elem1) (Assume-simulation-condition elem2)))]
-    ;; [else (displayln "COMMAND EQUALITY REACHED ELSE")
-    ;;  #f]))
-          
+
 
 ;; Generates Sketch where we only separate traces that are actually different from each other
 ;; so if two traces have a common prefix, they only diverge when they have to
@@ -517,7 +383,7 @@
        (string-append "(equal? pick-trace " (~v (Trace-trace-id (first t-list))) ") "
                       (equals-any-t-id (rest t-list)))]))
 
-
+  
 
   
 
@@ -959,36 +825,3 @@
     [else (find-continue-sublist (rest instr-list) to-where)]))
 
 
-
-;; (display (instr-list-to-sketch (list
-;;                                 (Create-var "test" "Node" (None))
-;;                                 (Set-var "test" (Dereference "cur" "Node" "next" ) (None))
-;;                                 (Assume-simulation (Or (Equal (Get-var "test" ) 1) (Equal (Get-var "test" ) 2)))
-;;                                 (Set-pointer "test" "Node" "next" (Dereference "cur" "Node" "next") (None))
-
-;;                                 )))
-     
-
-
-
-
-;; (struct node (key val bits next) #:mutable #:transparent)
-
-;; (struct Null-node ())
-;; (struct Null-val ())
-
-;; (define n (void))
-;; (set! n (Null-node))
-
-;; (define (new-node key val)
-;;   (node key val 0 (Null-node)))
-
-;; (define (set-next n next)
-;;   (set-node-next! n next))
-
-;; (set! n (new-node "a" 1))
-
-;; (set-next n (new-node "b" 2))
-;; n
-;; (set-next n (new-node "c" 3))
-;; n

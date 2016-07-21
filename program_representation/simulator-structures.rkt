@@ -9,6 +9,7 @@
 
  ; C Instructions
  (struct-out C-Instruction)
+
  (c-struct-out Repeat-meta)
  (c-struct-out Meta-addition)
  (c-struct-out CAS)
@@ -28,6 +29,36 @@
  (c-struct-out Context-switch)
 
  (struct-out Log)
+
+ ;; (struct-out Repeat-meta)
+ ;; (struct-out Meta-addition)
+ ;; (struct-out CAS)
+ ;; (struct-out Create-var)
+ ;; (struct-out Set-var)
+ ;; (struct-out Lock)
+ ;; (struct-out Unlock)
+ ;; (struct-out Return)
+ ;; (struct-out Get-argument)
+ ;; (struct-out Run-method)
+ ;; (struct-out Single-branch)
+
+ (struct-out Added-CAS-Marker)
+
+
+ command-equality-check
+ trace-ids-equal?
+ rest-of-traces
+ has-trace?
+
+ RW-operation
+
+ ;; (struct-out Loop)
+ ;; (struct-out Maybe-loop)
+
+ ;; (struct-out Branch)
+ ;; (struct-out Context-switch)
+
+ 
  ; Extra constructors for instruction structs
  Run-Method
  Run-Method-instr-id
@@ -277,3 +308,30 @@
   ;;   [(Info  t-id instr-id) instr-id]
   ;;   [_
   ;;    (None)]))
+
+
+(define (has-trace? t-set t)
+  (> (length (filter (lambda (t-prime) (equal? (Trace-trace-id t-prime) (Trace-trace-id t)))
+          t-set)) 0))
+
+(define (trace-ids-equal? t-set1 t-set2)
+  ;; (displayln "Checking trace equality")
+  ;; (display "answer: ") (displayln   (equal? (length (filter (lambda (t) (not (has-trace? t-set2 t))) t-set1)) 0))
+
+
+  (equal? (length (filter (lambda (t) (not (has-trace? t-set2 t))) t-set1))
+     0))
+
+(define (rest-of-traces t-list)
+  ;; (displayln "Rest-of-traces")
+  (filter (lambda (t)
+            (not (empty? (Trace-t t))))
+          
+          (map (lambda (t)
+                 ;; (displayln t)
+                 (Trace (Trace-trace-id t) (rest (Trace-t t))))
+               t-list)))
+
+(define (command-equality-check elem1 elem2)
+  ;; TODO: This is supposed to go by instr-id, but we don't have that yet
+  (equal? (object-name elem1) (object-name elem2)))
