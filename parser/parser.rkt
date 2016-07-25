@@ -63,7 +63,7 @@
 (define-syntax-rule (tostring a) (format "~a" a))
 
 (define-tokens a (NUM VAR TYPE ADDRESS))
-(define-empty-tokens b (~ \. \, NULL BOOL RETURN SHARED GETTERS SETTERS ELSE STRUCT LOOP WHILE FOR DO \; = + -  < > & AND OR NOT EQUAL EOF LET IN IF \( \) \{ \} ))
+(define-empty-tokens b (~ \. \, NULL BOOL RETURN SHARED GETTERS SETTERS ELSE LOOP WHILE FOR DO \; = + -  < > & AND OR NOT EQUAL EOF LET IN IF \( \) \{ \} ))
 
 (define-lex-trans number
   (syntax-rules ()
@@ -113,7 +113,7 @@
    ("shared" (token-SHARED))
    ("getters" (token-GETTERS))
    ("setters" (token-SETTERS))
-   ("struct" (token-STRUCT))
+   ;("struct" (token-STRUCT))
    ("do" (token-DO))
    ("while" (token-WHILE))
    ("for" (token-FOR))
@@ -230,6 +230,7 @@
     (statement 
                ((VAR = function-call \;) (make-function-call-root $3 $1))
                ((VAR = exp \;) (make-assign-stmt $1 $3))
+               ((TYPE VAR = exp \;) (make-decl-node $1 (make-assign-stmt $2 $4)))
                ((method-declaration) (make-method-root $1))
                ((function-call \;) (make-function-call-root $1 null))
                ((VAR \. object-access \;) (make-object-access $1 $3))
