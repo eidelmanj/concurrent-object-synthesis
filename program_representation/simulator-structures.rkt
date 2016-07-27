@@ -82,6 +82,8 @@
  (struct-out Meta-information)
  (struct-out Tuple)
  (struct-out Hole)
+
+ (struct-out Optimistic-Condition)
  (struct-out Get-var)
  (struct-out Dereference)
  (struct-out Equal)
@@ -249,6 +251,7 @@
 (define-struct Constant (value))
 (struct Structure (id fields))
 (struct Field (name type))
+(struct Optimistic-Condition (meta-var))
 
 
 (struct None () #:transparent)

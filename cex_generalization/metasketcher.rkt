@@ -6,18 +6,62 @@
 
  )
 
+(define optimistic-count (void))
+(set! optimistic-count 0)
+(define (new-optimistic-id)
+  (set! optimistic-count (+ optimistic-count 1))
+  optimistic-count)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;; Metasketch for Base Library ;;;;;;;;;;;;;;;;;;;;;;
+
+
+(define (metasketch-library-add-announcement library method-name)
+
+  (let
+      ([methods-of-interest
+        (filter
+         (lambda (m)
+           (equal? (Method-id m) method-name))
+         library)]
+       [rest-of-methods
+         (filter
+          (lambda (m)
+            (not (equal? (Method-id m) method-name)))
+          library)])
+
+    (if (or (> (length methods-of-interest) 1) (< (length methods-of-interest) 1))
+        (displayln "WARNING: Found strange number of library matches for given name. Probably an error...")
+
+        (let
+            ([method-match (first methods-of-interest)])
+
+          (append
+           (list method-match)
+           rest-of-methods)))))
+
+          
+          
+  
 
 
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;; Metasketch for Composed Method ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;; Optimistic Concurrency repair protocol ;;;;;;;;;;;;;;;;;
 (define (metasketch-optimistic-strategy instr-list hole)
   (metasketch-repair instr-list optimistic-repair-strt optimistic-repair-end hole))
 
   
-;; TODO: Decide how to represent optimistic check expressions
+;; TODO: Have to actually interpret Optimistic-Condition
 (define (generate-optimistic-check-expression interruptor output-var)
-  (Set-var output-var "OPTIMISTIC"))
+  (Set-var output-var (Optimistic-Condition (new-optimistic-id))))
+
+  
+
 
 (define (optimistic-repair-strt instr-list hole)
   (list
