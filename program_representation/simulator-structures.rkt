@@ -43,7 +43,12 @@
  ;; (struct-out Single-branch)
 
  (struct-out Added-CAS-Marker)
+ (struct-out Goto)
 
+
+
+ (struct-out Atomic-Start-Marker)
+ (struct-out Atomic-End-Marker)
 
  command-equality-check
  trace-ids-equal?
@@ -144,10 +149,23 @@
 (c-struct Run-method (method args ret) #:transparent #:mutable)
 (c-struct Single-branch (condition branch) #:transparent)
 
+
 (c-struct Assume-meta (condition))
 (c-struct Assume-not-meta (condition))
 (c-struct Assume-simulation (condition) #:transparent)
 (c-struct Assume-loop (condition to-where))
+
+(struct Goto C-Instruction (goto-addr [unroll-count #:auto #:mutable]) #:transparent #:auto-value null)
+
+
+
+(struct Atomic-Start-Marker C-Instruction ())
+(struct Atomic-End-Marker C-Instruction ())
+
+(define (RW-operation o)
+  (or (CAS? o) (Set-pointer? o) (Set-var? o)))
+
+
 
 
 (c-struct Loop (condition instr-list) #:transparent)
