@@ -1,12 +1,28 @@
 #lang racket
 
+(require "../program_representation/simulator-structures.rkt")
+
 (provide
  unique
  append-list
  append-item
  all-combinations
+ retrieve-code
+ list-multiply
  range
  reduce)
+
+
+(define (list-multiply instr-list num)
+  (cond
+    [(equal? num 0) `()]
+    [else
+     (append instr-list (list-multiply instr-list (- num 1)))]))
+
+
+(define (retrieve-code library id)
+  (let ([lib-matches (filter (lambda (m) (equal? (Method-id m) id)) library)])
+    (Method-instr-list (first lib-matches))))
 
 
 (define (range n)
