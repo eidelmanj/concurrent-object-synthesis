@@ -204,7 +204,8 @@
       interleavings)))
 
    
-  ;; This is simply the unrolling of a particular thread - exands into a list of traces with Assume statements representing all possible runs of
+  ;; This is simply the unrolling of a particular thread -
+  ;; exands into a list of traces with Assume statements representing all possible runs of
   ;; the given thread
   (define (unroll-thread-runs instr-list to-return)
 
@@ -223,7 +224,8 @@
         (map (append-item (Assume-simulation (Not (Single-branch-condition (first instr-list))))) (unroll-thread-runs (rest instr-list) to-return)))]
 
       ;; This is a Sketch element - a possible addition to the program which either exists or does not exist
-      ;; existence is determined by a unique meta-variable in the Sketch. This is identified by the Assume-meta-condition
+      ;; existence is determined by a unique meta-variable in the Sketch.
+      ;; This is identified by the Assume-meta-condition
       [(Meta-addition? (first instr-list))
        (let ([new-meta (new-meta-var)])
          (append
@@ -231,7 +233,8 @@
                                                                                     (rest instr-list)) to-return))
           (map (append-item (Assume-not-meta new-meta)) (unroll-thread-runs (rest instr-list) to-return))))]
 
-      ;; Like the Meta-addition, but a branch. One of the two branches is the two program, selecting which branch is left to the synthesizer
+      ;; Like the Meta-addition, but a branch. One of the two branches is the two program,
+      ;; selecting which branch is left to the synthesizer
       [(Meta-branch? (first instr-list))
        (let ([new-meta (new-meta-var)])
          (append
@@ -249,8 +252,10 @@
        
        (reduce append (map (lambda (l)  (unroll-thread-runs (append l (rest instr-list)) to-return)) (all-unrolls (first instr-list) 1 (new-loop-id))))]
 
-      ;; This is the equivalent of the Sketch "repeat". We repeat a certain section of code some number of times. That number is chosen by the synthesizer.
-      ;; A Repeat node is associated with a particular meta-variable Repeat-meta-which-var which is what will be synthesized in the final Sketch
+      ;; This is the equivalent of the Sketch "repeat". We repeat a certain section of code some number of times.
+      ;; That number is chosen by the synthesizer.
+      ;; A Repeat node is associated with a particular meta-variable Repeat-meta-which-var
+      ;; which is what will be synthesized in the final Sketch
       [(Repeat-meta? (first instr-list))
        (reduce append (map (lambda (l) (map (append-item (Repeat-meta l (Repeat-meta-which-var (first instr-list)))) (unroll-thread-runs (rest instr-list) to-return)))
 
@@ -260,7 +265,8 @@
 
 
 
-      ;; This is a possible loop. Whether the loop will be included is chosen by the synthesizer - If it is a loop, we must expand the loop and fill in the interleavings
+      ;; This is a possible loop. Whether the loop will be included is chosen by the synthesizer -
+      ;; If it is a loop, we must expand the loop and fill in the interleavings
       ;; which are equivalent to the original ones from the error trace. This is done with Handle-maybe-loop
       [(Maybe-loop? (first instr-list))
        (let
@@ -613,48 +619,6 @@
               #:guarantee (linearizable-check))"))))
 
 
-;; (display "ALL-RUNS length: ") (displayln (length all-runs))
-;; (display "META-VARS: ") (displayln meta-vars)
-;; (displayln (first all-runs))
-
-
-
-
-
-;; (display (length all-runs)) (display "\n")
-
-
-
-;;; OLD VERSION BEGINS HERE
-;; (add-binding-parent new-scope 0)
-;; (string-append
-;;    prelude
-;;   (reduce string-append (map (lambda (v) (string-append "(define " v " (void))\n")) variables-of-interest))
-
-;;   (remove-global-declarations
-
-
- 
-;;    (string-append
-
-;;     ;; All symbolic variables which will be referenced in the possible traces 
-;;     (reduce string-append
-;;             (map (lambda (v) (string-append "(define-symbolic " (Tuple-a v) " " (Tuple-b v) ")\n"))
-;;                  meta-vars))
-    
-
-;;     "(cond\n"
-    
-;;     (reduce string-append
-;;             (map (lambda (l) (set! count-branches (+ count-branches 1)) (string-append "[(equal? pick-trace " (~v count-branches) ") (begin\n" (instr-list-to-sketch l library "first-args" new-scope 0) ")]\n"))
-;;                  all-runs))
-    
-;;     ")\n")
-   
-;;    (map (lambda (v) (string-append "(define " v " (void))")) variables-of-interest))
-
-
-;;   "(list " (reduce string-append (map (lambda (v) (string-append "(cons \"" v "\" " v ") ")) variables-of-interest)) ")"))))
 
     
 
@@ -726,6 +690,25 @@
 
 
 
+(define (give-ids-to instr-list n)
+  (cond
+    [(empty? instr-list) n]
+    [(Single-branch? (first instr-list))
+     (set-C-Instruction-instr-id! (first instr-list) n)
+     (give-ids-to
+      (rest instr-list)
+      (give-ids-to (Single-branch-branch (first instr-list)) (+ n 1)))]
+    [else
+     ;; (display (first instr-list)) (display "-") (displayln n)
+     (set-C-Instruction-instr-id! (first instr-list) n)
+     (give-ids-to (rest instr-list) (+ n 1))]))
+    
+
+;; (give-ids-to (Method-instr-list (list-ref library 4)) 0)
+
+;; (define mooly-announcement-sketch (metasketch-announcement-strategy (Method-instr-list (list-ref library 4)) (Hole 5 (list) 6)))
+
+;; (Single-branch-branch (fifth mooly-announcement-sketch))
 
 
 (define sketch-output (interleaving-to-sketch mooly-sketch-test (list "ret1" "ret2" "ret3" "throwaway") library (Hole 0 (list) 1)))
