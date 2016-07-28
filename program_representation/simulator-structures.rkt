@@ -10,6 +10,7 @@
  ; C Instructions
  (struct-out C-Instruction)
 
+
  (c-struct-out Repeat-meta)
  (c-struct-out Meta-addition)
  (c-struct-out CAS)
@@ -42,6 +43,21 @@
  ;; (struct-out Run-method)
  ;; (struct-out Single-branch)
 
+
+ ;; (struct-out Repeat-meta)
+ ;; (struct-out Meta-addition)
+ ;; (struct-out Meta-addition-choice)
+ ;; (struct-out CAS)
+ ;; (struct-out Create-var)
+ ;; (struct-out Set-var)
+ ;; (struct-out Lock)
+ ;; (struct-out Unlock)
+ ;; (struct-out Return)
+ ;; (struct-out Get-argument)
+ ;; (struct-out Run-method)
+ ;; (struct-out Single-branch)
+
+ 
  (struct-out Added-CAS-Marker)
  (struct-out Goto)
 
@@ -56,6 +72,12 @@
  has-trace?
 
  RW-operation
+ read-operation?
+ write-operation?
+ has-write-op?
+ has-read-op?
+ get-read-pointer
+ read-operation-pointer
 
  ;; (struct-out Loop)
  ;; (struct-out Maybe-loop)
@@ -113,7 +135,14 @@
  (struct-out Is-none?)
  (struct-out Structure)
  (struct-out Field)
- (struct-out Binding-list))
+
+ (struct-out Binding-list)
+ (struct-out Thread-Op)
+
+ freshvar
+ new-meta-var
+ new-loop-id)
+
 
 
 
@@ -138,6 +167,7 @@
 #| C INSTRUCTION STRUCTS |#
 
 ;; Specific C instruction structures.
+
 (c-struct Set-pointer (id type offset val ) #:transparent)
 (c-struct Repeat-meta (instr-list which-var))
 (c-struct Meta-addition (instr-list which-var))
@@ -157,6 +187,21 @@
 (c-struct Assume-simulation (condition) #:transparent)
 (c-struct Assume-loop (condition to-where))
 
+;; (struct Set-pointer C-Instruction (id type offset val ))
+;; (struct Repeat-meta C-Instruction (instr-list which-var))
+;; (struct Meta-addition C-Instruction (instr-list which-var))
+;; (struct Meta-addition-choice C-Instruction (instr-list which-var))
+;; (struct CAS C-Instruction (v1 v2 new-val ret))
+;; (struct Create-var C-Instruction (id type))
+;; (struct Set-var C-Instruction (id assignment))
+;; (struct Lock C-Instruction (id) #:transparent)
+;; (struct Unlock C-Instruction (id))
+;; (struct Return C-Instruction (val))
+;; (struct Get-argument C-Instruction (id))
+;; (struct Run-method C-Instruction (method args ret))
+;; (struct Single-branch C-Instruction (condition branch))
+
+
 (struct Goto C-Instruction (goto-addr [unroll-count #:auto #:mutable]) #:transparent #:auto-value null)
 
 
@@ -166,6 +211,41 @@
 
 (define (RW-operation o)
   (or (CAS? o) (Set-pointer? o) (Set-var? o)))
+
+
+
+(define (write-operation? o)
+  (or (CAS? o) (Set-pointer? o)))
+
+(define (read-operation? o)
+  (and (Set-var? o)
+       (Dereference? (Set-var-assignment o))))
+
+(define (read-operation-pointer o)
+  (Dereference-id (Set-var-assignment o)))
+
+
+
+
+(define (has-write-op? l)
+  (< 0 (length (filter (lambda (o) (write-operation? o)) l))))
+(define (has-read-op? l)
+  (< 0 (length (filter (lambda (o) (read-operation? o)) l))))
+
+
+(define (get-read-pointer l)
+  (let
+      ([all-reads (filter (lambda (o)
+            (and (Set-var? o) (Dereference? (Set-var-assignment o)))) l)])
+    (cond
+      [(empty? all-reads)
+       `()]
+      [else
+       (cons (Dereference-id (Set-var-assignment (first all-reads)))
+             (Dereference-type (Set-var-assignment (first all-reads))))])))
+
+
+(struct Added-CAS-Marker C-Instruction ())
 
 
 
@@ -356,3 +436,35 @@
 (define (command-equality-check elem1 elem2)
   ;; TODO: This is supposed to go by instr-id, but we don't have that yet
   (equal? (object-name elem1) (object-name elem2)))
+
+
+
+
+
+
+
+
+;; We keep a global counter of all the new variables in the sketch that we have created so far
+;; (freshvar) gives a new program variable id
+(define counter (void))
+(set! counter 0)
+(define (freshvar)
+  (set! counter (+ counter 1))
+  counter)
+
+
+(define meta-var-count (void))
+(set! meta-var-count 0)
+
+(define (new-meta-var)
+  (set! meta-var-count (+ meta-var-count 1))
+  meta-var-count)
+  
+
+
+(define loop-id-count (void))
+(set! loop-id-count 0)
+
+(define (new-loop-id)
+  (set! loop-id-count (+ loop-id-count 1))
+  loop-id-count)

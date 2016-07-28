@@ -16,32 +16,6 @@
 
 (define (line-ids) (void))  
 
-;; We keep a global counter of all the new variables in the sketch that we have created so far
-;; (freshvar) gives a new program variable id
-(define counter (void))
-(set! counter 0)
-(define (freshvar)
-  (set! counter (+ counter 1))
-  counter)
-
-
-(define meta-var-count (void))
-(set! meta-var-count 0)
-
-(define (new-meta-var)
-  (set! meta-var-count (+ meta-var-count 1))
-  meta-var-count)
-  
-
-
-(define loop-id-count (void))
-(set! loop-id-count 0)
-
-(define (new-loop-id)
-  (set! loop-id-count (+ loop-id-count 1))
-  loop-id-count)
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;; METHODS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -718,3 +692,4 @@
 ;; (displayln sketch-output)
 ;; ;; (displayln (interleaving-to-sketch (convert-trace-to-interleavings (first all-runs) library (list "remove"))))
 
+(Method-instr-list (first (metasketch-library-add-announcement library "get")))

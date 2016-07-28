@@ -3,7 +3,7 @@
 
 (provide
  metasketch-announcement-strategy
-
+ metasketch-library-add-announcement
  )
 
 (define optimistic-count (void))
@@ -13,11 +13,103 @@
   optimistic-count)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;; Metasketch for Base Library ;;;;;;;;;;;;;;;;;;;;;;
-
-
 (define (metasketch-library-add-announcement library method-name)
+
+  ;; We are able to make an announcement any time before
+  ;; the Lin. point of the method
+  (define (repair-lib-announce-helper instr-list meta-var)
+    (cond
+      [(empty? instr-list)
+       ;; (display "Found empty: ")
+       ;; (displayln instr-list)
+       `()]
+
+      [(Loop? (first instr-list))
+       ;; (displayln "Found a loop")
+       (if (and
+            (not (has-write-op? (Loop-instr-list (first instr-list))))
+            (has-read-op? (Loop-instr-list (first instr-list))))
+
+           (let ([pointer-to-read-obj (get-read-pointer (Loop-instr-list (first instr-list)))])
+             ;; (display "Found the following pointer: ")
+             ;; (displayln pointer-to-read-obj)
+             (append
+              (list (first instr-list))
+              (list (Meta-addition-choice
+                     (list (Set-pointer (car pointer-to-read-obj) (cdr pointer-to-read-obj) "bits" (Mystery-const)))
+                     meta-var))
+              (repair-lib-announce-helper (rest instr-list) meta-var)))
+
+           (append
+            (list (first instr-list))
+            (repair-lib-announce-helper (rest instr-list) meta-var)))]
+
+
+      [(Single-branch? (first instr-list))
+
+       (let ([saw-write-op? (has-write-op? (Single-branch-branch (first instr-list)))])
+         (append
+          (list
+           (Single-branch
+            (Single-branch-condition (first instr-list))
+            (repair-lib-announce-helper (Single-branch-branch (first instr-list)) meta-var)))
+          (if saw-write-op?
+              (rest instr-list)
+              (repair-lib-announce-helper (rest instr-list) meta-var))))]
+
+          
+      [(Branch? (first instr-list))
+
+       (let ([saw-write-op?
+              (or
+               (has-write-op? (Branch-branch1 (first instr-list)))
+               (has-write-op? (Branch-branch2 (first instr-list))))])
+
+         (append
+          (list
+           (Branch
+            (Branch-condition (first instr-list))
+
+            (repair-lib-announce-helper (Branch-branch1 (first instr-list)) meta-var)
+            (repair-lib-announce-helper (Branch-branch2 (first instr-list)) meta-var)))
+
+          (if saw-write-op?
+              (rest instr-list)
+              (repair-lib-announce-helper (rest instr-list) meta-var))))]
+
+      
+
+      
+      [(read-operation? (first instr-list))
+       ;; (displayln "Found read op")
+       (let ([pointer-to-read-obj (read-operation-pointer (first instr-list))])
+
+         (append
+          (list
+           (Meta-addition-choice
+            (list (Set-pointer (car pointer-to-read-obj) (cdr pointer-to-read-obj) "bits" (Mystery-const)))
+            meta-var))
+            
+          (list (first instr-list))
+
+          (repair-lib-announce-helper (rest instr-list) meta-var)))]
+
+      [(write-operation? (first instr-list))
+       ;; (displayln "Found write op")
+       (rest instr-list)]
+      [else
+       ;; (display "Not read or write: ")
+       ;; (displayln (first instr-list))
+       (append
+        (list (first instr-list))
+        (repair-lib-announce-helper (rest instr-list) meta-var))]
+      ))
+          
+    
+    
+
 
   (let
       ([methods-of-interest
@@ -36,9 +128,17 @@
 
         (let
             ([method-match (first methods-of-interest)])
-
+          ;; (display "Method-matched: ")
+          ;; (displayln (repair-lib-announce-helper (Method-instr-list method-match) (new-meta-var)))
           (append
-           (list method-match)
+           (list
+            (Method
+             (Method-id method-match)
+             (Method-args method-match)
+             (Method-ret-type method-match)
+             (repair-lib-announce-helper (Method-instr-list method-match) (new-meta-var))))
+
+            
            rest-of-methods)))))
 
           
@@ -94,7 +194,6 @@
 
 ;; Tries to defend a given instr-list from a particular hole happening using
 ;; announcements
-;; TODO: This only modifies the composed method - we clearly also need to
 ;; modify the base library
 (define (announcement-repair-strt instr-list hole)
   (list
