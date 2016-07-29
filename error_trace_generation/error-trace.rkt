@@ -48,7 +48,7 @@
             (define op (one-of ops)) ; choice point
             (define new-mut (append before (list instr) op tail))
             (define new-vars (append variables
-                                     (map (curryr arg-types library) op)))
+                                     (map (curryr return-type library) op)))
             (define new-client (append client op))
             (unless (empty? op) (yield new-mut new-vars new-client))
             (instrument new-mut (+ breakpoint (length op) 1) new-vars new-client)]
@@ -128,15 +128,27 @@
 
 (require (only-in racket/control prompt))
 
+; Temporary, to be removed once init is no longer hard-coded.
+(require (only-in "../program_representation/simulator-structures.rkt"
+                  Set-var New-struct None Get-var Return))
+(define init
+  `(,(Create-var "shared" "Node")
+    ,(Set-var "shared" (New-struct "Node" `(,(None) 0 0 0)))
+    ,(Run-method "push" `(,(Get-var "shared") 1 2) null)
+    ,(Run-method "push" `(,(Get-var "shared") 2 4) null)))
+
 (define (error-traces library method-name pointers)
   (define mut (get-method method-name library))
+
+  ; Set up the interpreter
   (define lib (remove mut library))
   (define interpreter (make-interpreter lib))
+
+  ; Set up the instrumenter
   (define g (instrumenter (number-lines (Method-instr-list mut)) lib pointers))
-  (define arguments (for/list ([type (Method-args mut)])
-                      (if (member type primitive-types)
-                          (random-value-of-type type)
-                          (first (hash-ref pointers type)))))
+
+  ; Pick some arguments for the MUT
+  (define arguments (pick-arguments mut lib pointers init))
 
   (define results '())
 
@@ -147,7 +159,7 @@
      ;  linearizable, or we couldn't come up with arguments to make the trace
      ;  feasible.
      (define result
-       (linearizable trace mut client vars pointers lib interpreter arguments))
+       (linearizable trace mut client vars pointers lib interpreter arguments init))
      (unless (lin-result-result result)
        (unless (null? (lin-result-trace result))
          (set! results (append results (list result))))

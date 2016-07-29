@@ -27,7 +27,7 @@
          arg1))
    args pe-args))
 
-(define (linearizable trace mut client variables pointers library interpret arguments)
+(define (linearizable trace mut client variables pointers library interpret arguments init)
   ; Simulate each possible interleaving of mut with the instructions of client.
   ; Return a vector of (bool error-trace client) where bool is #t if trace has been
   ;  found to be linearizable, #f otherwise, error-trace is a log of the execution of
@@ -40,22 +40,12 @@
      (define instrs (list (Create-var mut-ret ret-type)
                           (Method id args ret-type trace)
                           (Run-method id arguments mut-ret)))
-     (define declarations (list*
-                           (Create-var "shared" "Node")
-                           (Set-var "shared"
-                                    '(Node
-                                      (Node
-                                       (Node
-                                        '()
-                                        2 4 0)
-                                       1 2 0)
-                                      0 0 0))
-                           (for/list ([var variables])
-                             (Create-var (car var) (cdr var)))))
+     (define declarations (for/list ([var variables])
+                            (Create-var (car var) (cdr var))))
      (define vars (cons mut-ret (map car variables)))
 
      ; Run the instrumented method and get the results.
-     (define results (interpret (append declarations instrs) vars))
+     (define results (interpret (append init declarations instrs) vars))
      (define result-trace (hash-ref results reserved-trace-keyword))
      (define compare-results (hash-remove results reserved-trace-keyword))
 
@@ -93,7 +83,8 @@
                (define this-result
                  (hash-remove
                   (interpret
-                   (append declarations
+                   (append init
+                           declarations
                            `(,(Create-var mut-ret ret-type)
                              ,(Create-var 'dummy 'int)
                              ,mut
