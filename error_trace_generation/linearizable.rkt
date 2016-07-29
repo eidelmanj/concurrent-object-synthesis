@@ -1,14 +1,16 @@
 #lang racket/base
 
 (require (only-in "../program_representation/simulator-structures.rkt"
-                  Method Create-var Run-method Thread-list)
+                  Method Create-var Run-method)
          (only-in racket/list first)
          (only-in racket/match match)
+         (only-in racket/pretty pretty-display)
+         "interpret.rkt"
          "vars.rkt")
 
 (provide linearizable?)
 
-(define (linearizable? trace mut client variables pointers library)
+(define (linearizable? trace mut client variables pointers library interpret)
   ; Simulate each possible interleaving of mut with the instructions of client.
   ; If the result of running the trace matches the result of one of those simulations,
   ;  return #t. Otherwise return #f.
@@ -22,23 +24,18 @@
      
      (define mut-ret (fresh-var))
      (define instrs (list (Create-var mut-ret ret-type)
+                          (Method id args ret-type trace)
                           (Run-method id arguments mut-ret)))
      (define declarations (for/list ([var variables])
                             (Create-var (car var) (cdr var))))
      (define vars (cons mut-ret (map car variables)))
 
-     (displayln (Thread-list (append declarations instrs)))
-     (displayln "")
-     (displayln trace)#;
-     
      ; Run the instrumented method and get the results.
-     (pretty-display
-      (interleaving-to-sketch
-       (Thread-list (append declarations instrs))
-       vars
-       (cons (Method id args ret-type trace) library)))
+     (define results (interpret (append declarations instrs) vars))
+
+     (displayln results)])
      
-     (error)])
+     ;(error "test")])
      
      
      ; Generate all possible interleavings of mut (as an atomic unit) with client.
@@ -50,4 +47,4 @@
             vars
             (cons old-mut library))))
 
-  #t)
+  #f)

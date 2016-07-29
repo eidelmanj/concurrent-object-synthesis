@@ -1,11 +1,11 @@
 #lang racket
 
 (require "../program_representation/simulator-structures.rkt"
-         "error-trace.rkt"
-         "backtracking.rkt")
+         "error-trace.rkt")
 
 (define test-library
   (list
+   #;
    (Method
     "push"
     (list "Node" "int" "int")
@@ -70,4 +70,23 @@
       ,(Return (Get-var "val"))))))
 
 (bound 1)
-(error-traces test-library "extension" (make-hash `(("Node" . (,(Get-var "shared"))))))
+(error-traces
+ test-library
+ "extension"
+ (make-hash `(("Node" . ((Node
+                          (Node
+                           (Node
+                            (Node
+                             (Node
+                              (Node
+                               (Node
+                                (Node
+                                 (Node (None) 8 8 0)
+                                 7 7 0)
+                                6 6 0)
+                               5 5 0)
+                              4 4 0)
+                             3 3 0)
+                            2 2 0)
+                           1 1 0)
+                          0 0 0))))))

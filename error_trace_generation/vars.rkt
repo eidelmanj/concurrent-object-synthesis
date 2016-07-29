@@ -17,7 +17,7 @@
     [else null]))
 
 ; Return an as-yet unused variable name.
-(define (fresh-var) (symbol->string (gensym)))
+(define (fresh-var) (gensym))
 
 (module+ test
   (require rackunit)

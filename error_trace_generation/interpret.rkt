@@ -2,11 +2,13 @@
 
 (require "../program_representation/simulator-structures.rkt"
          (only-in racket/match match match-lambda define-match-expander)
-         racket/format)
+         racket/format
+         (only-in racket/function curryr))
 
-(provide make-interpreter)
+(provide make-interpreter transform)
 
 (define reserved-parameters-keyword 'parameters-reserved)
+(define reserved-trace-keyword 'trace-reserved) ; TODO: implement logging traces
 
 ; For backwards compatibility with the old format.
 ; The q is short for quote. It needs a better name though.
@@ -14,31 +16,32 @@
   (syntax-rules ()
     [(q id) (app to-symbol id)]))
 
+; Given an argument type, generate a hopefully unique parameter name.
+(define make-arg
+  (let ([counter -1])
+    (λ (type)
+      (set! counter (add1 counter))
+      (string->symbol (format "~a~a" type counter)))))
+
+(define (make-define-lambda method)
+  (match method
+    [(Method (q id) args ret-type instr-list)
+     (define parameters (map make-arg args))
+     `(define (,id . ,parameters)
+        ; Support for the return keyword
+        (let/cc return
+          ; A list of parameters for Get-argument
+          (define ,reserved-parameters-keyword (list . ,parameters))
+          . ; Method body
+          ,(map transform instr-list)))]))
+
 ; Return a function that takes a list of instructions and executes them
 ;  with the bindings associated with the functions in library.
 (define (make-interpreter library)
-  ; Given an argument type, generate a hopefully unique parameter name.
-  (define make-arg
-    (let ([counter -1])
-      (λ (type)
-        (set! counter (add1 counter))
-        (string->symbol (format "~a~a" type counter)))))
-
   ; These will be evaluated to instantiate the library method definitions
   ;  in the execution environment.
   (define library-defs
-    (map
-     (match-lambda
-       [(Method (q id) args ret-type instr-list)
-        (define parameters (map make-arg args))
-        `(define (,id . ,parameters)
-           ; Support for the return keyword
-           (let/cc return
-             ; A list of parameters for Get-argument
-             (define ,reserved-parameters-keyword (list . ,parameters))
-             . ; Method body
-             ,(map transform instr-list)))])
-     library))
+    (map make-define-lambda library))
 
   ; This namespace requires the larger racket library and then instantiates
   ;  the library method definitions so compiled programs can just call the
@@ -66,6 +69,12 @@
       `(make-hash (list . ,(map (λ (var-name)
                                   `(cons (quote ,var-name) ,var-name))
                                 vars-of-interest))))
+
+    #;#; ; for debugging
+    (displayln library-defs)
+    (displayln `(block . ,(append
+                           (map transform ast)
+                           `(,var-hash))))
 
     (eval
      ; Use block instead of begin so variables will be defined in a new
@@ -132,6 +141,9 @@
     ; Method calls
     [(Run-method _ _ (q id) args '()) `(,id ,@(map transform args))]
     [(Run-method _ _ (q id) args (q ret)) `(set! ,ret (,id . ,(map transform args)))]
+
+    ; Function declarations
+    [(Method _ _ _ _) (make-define-lambda instr)]
 
     ; Conditionals
     [(Single-branch _ _ (x condition) branch) (append

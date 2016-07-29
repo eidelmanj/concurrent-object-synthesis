@@ -8,9 +8,8 @@
                   Create-var
                   None
                   Thread-list)
-         (only-in "../cex_generalization/c-program-representation.rkt"
-                  interleaving-to-sketch)
          "backtracking.rkt"
+         "interpret.rkt"
          "linearizable.rkt"
          "methods.rkt"
          "vars.rkt"
@@ -105,6 +104,7 @@
 (define (error-traces library method-name pointers)
   (define mut (get-method method-name library))
   (define lib (remove mut library))
+  (define interpreter (make-interpreter lib))
   (define g (instrumenter (Method-instr-list mut) lib pointers))
 
   (define traces '())
@@ -119,10 +119,10 @@
      (displayln vars)
      (pretty-display (pretty-AST client))
      (displayln "")
-     (unless (linearizable? trace mut client vars pointers library) (fail)))
+     (unless (linearizable? trace mut client vars pointers lib interpreter) (fail)))
    (when (has-next?) (next)))
 
   (for-each
    (λ (trace)
-     (pretty-display (pretty-AST trace)) (displayln ""))
+     (pretty-display (map transform trace)) (displayln ""))
    traces))
