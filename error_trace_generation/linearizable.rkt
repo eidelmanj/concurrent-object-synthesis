@@ -33,9 +33,10 @@
      ; Run the instrumented method and get the results.
      (define results (interpret (append declarations instrs) vars))
 
-     (displayln results)])
+     (displayln results)
+     (displayln "")
      
-     ;(error "test")])
+     (error "test")])
      
      
      ; Generate all possible interleavings of mut (as an atomic unit) with client.

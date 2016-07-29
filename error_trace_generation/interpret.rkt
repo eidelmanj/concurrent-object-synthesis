@@ -3,7 +3,9 @@
 (require "../program_representation/simulator-structures.rkt"
          (only-in racket/match match match-lambda define-match-expander)
          racket/format
-         (only-in racket/function curryr))
+         (only-in racket/function curryr)
+         (only-in racket/list append-map)
+         (only-in racket/pretty pretty-print))
 
 (provide make-interpreter transform)
 
@@ -33,7 +35,11 @@
           ; A list of parameters for Get-argument
           (define ,reserved-parameters-keyword (list . ,parameters))
           . ; Method body
-          ,(map transform instr-list)))]))
+          ,(append
+            (transform-and-instrument instr-list)
+            (list
+             ; For methods that don't return anything, add an explicit return
+             '(displayln '(return))))))]))
 
 ; Return a function that takes a list of instructions and executes them
 ;  with the bindings associated with the functions in library.
@@ -50,11 +56,16 @@
     (parameterize ([current-namespace (make-base-empty-namespace)])
       (namespace-require 'racket)
       (namespace-require 'racket/block) ; see below for why we need this
-      (map eval library-defs)
 
       ; Important struct definitions. Node is temporary.
       (eval '(struct None ()))
       (eval '(struct Node (next key val bits) #:mutable))
+
+      ; Dummy methods for lock and unlock.
+      (eval '(define (lock x) (void)))
+      (eval '(define (unlock x) (void)))
+
+      (map eval library-defs)
 
       (current-namespace)))
 
@@ -71,17 +82,17 @@
                                 vars-of-interest))))
 
     #;#; ; for debugging
-    (displayln library-defs)
-    (displayln `(block . ,(append
-                           (map transform ast)
-                           `(,var-hash))))
+    (for-each pretty-print library-defs)
+    (pretty-print `(block . ,(append
+                              (transform-and-instrument ast)
+                              `(,var-hash))))
 
     (eval
      ; Use block instead of begin so variables will be defined in a new
      ;  scope. This is necessary because otherwise calling eval would
      ;  transform the namespace.
      `(block . ,(append
-                 (map transform ast)
+                 (transform-and-instrument ast)
                  `(,var-hash)))
      lib-namespace)))
 
@@ -111,6 +122,9 @@
   (syntax-rules ()
     [(x expr) (app transform expr)]))
 
+(define (transform-and-instrument instrs)
+  (append-map (compose instrument-trace transform) instrs))
+
 ; Transform an AST into a quoted S-expression.
 (define (transform instr)
   (match instr
@@ -124,10 +138,10 @@
     ; Method parameters are stored in a list with id reserved-parameters-keyword.
     [(Get-argument _ _ index) `(list-ref ,reserved-parameters-keyword ,index)]
 
-    ; This compiler is for single-thread runs only, so just ignore locks
-    ;  and don't worry about making CAS atomic.
-    [(Lock _ _ id) '(void)]
-    [(Unlock _ _ id) '(void)]
+    ; This compiler is for single-thread runs only, so just ignore locks (they're
+    ;  implemented with dummy methods) and don't worry about making CAS atomic.
+    [(Lock _ _ id) `(lock ,id)]
+    [(Unlock _ _ id) `(unlock ,id)]
     [(CAS _ _ p1 p2 new ret) (transform
                               (Set-var ret
                                        (Branch (Equal p1 p2)
@@ -180,6 +194,44 @@
     ; Literals
     [_ instr]))
 
+; Returns true if id is a symbol that could be considered a
+;  struct mutator, i.e. of the form set-struct-id-field!.
+(define (struct-mutator? id)
+  (and
+   (symbol? id)
+   (regexp-match? #px"^set-\\S+-\\S+!$" (symbol->string id))))
+
+(define (instrument-trace expr)
+  (match expr
+    ; Type information for defines is lost... maybe fix this.
+    [`(define ,id (void)) `((displayln (quote ,expr)) ,expr)]
+    [`(set! ,id ,expression) `((displayln (quote ,expr)) ,expr)]
+    [`(lock ,id) `((displayln (quote ,expr)) ,expr)]
+    [`(unlock ,id) `((displayln (quote ,expr)) ,expr)]
+    [`(return ,expression) `((displayln (quote ,expr)) ,expr)]
+
+    ; Pointer assignment
+    [`(,(? struct-mutator?) ,id ,value) `((displayln (quote ,expr)) ,expr)]
+
+    ; Compound expressions
+    [`(when ,condition ,body ...) `(,(append
+                                      `(when ,condition)
+                                      (append-map instrument-trace body)))]
+    [`(if ,condition
+          (begin ,consequent)
+          (begin ,alternate))
+     `((if ,condition
+           (begin . ,(append-map instrument-trace consequent))
+           (begin . ,(append-map instrument-trace alternate))))]
+    [`(let/cc ,return/continue ,body ...) `(,(append
+                                              `(let/cc ,return/continue)
+                                              (append-map instrument-trace body)))]
+    [`(let loop () ,body ...) `((let loop () .
+                                  ,(append-map instrument-trace body)))]
+
+    ; Leave everything else as-is
+    [_ `(,expr)]))
+
 (module+ test
   (require rackunit)
 
@@ -203,8 +255,8 @@
   (check-equal? (transform (Set-var 'x 1)) '(set! x 1))
   (check-equal? (transform (Get-var 'x)) 'x)
   (check-equal? (transform (Set-pointer 'test 'Node 'key 1)) '(set-Node-key! test 1))
-  (check-equal? (transform (Lock 0)) '(void))
-  (check-equal? (transform (Unlock 0)) '(void))
+  (check-equal? (transform (Lock 0)) '(lock 0))
+  (check-equal? (transform (Unlock 0)) '(unlock 0))
   (check-equal? (transform (Return 'x)) '(return x))
   (check-equal? (transform (Continue 0)) '(continue))
   (check-equal? (transform (New-struct 'Node (list (None) 1 2 0))) '(Node (None) 1 2 0))
@@ -261,7 +313,7 @@
       ,(Unlock 1)
       ,(Return (Get-argument 2))))
   (check-equal? (map transform push-instrs)
-                `((void)
+                `((lock 1)
                   (define cur (void))
                   (define prev (void))
                   (set! cur (list-ref ,reserved-parameters-keyword 0))
@@ -280,10 +332,10 @@
                                           (list-ref ,reserved-parameters-keyword 1)
                                           (list-ref ,reserved-parameters-keyword 2)
                                           (None)))
-                    (void)
+                    (unlock 1)
                     (return (list-ref ,reserved-parameters-keyword 2)))
                   (set-Node-val! cur (list-ref ,reserved-parameters-keyword 2))
-                  (void)
+                  (unlock 1)
                   (return (list-ref ,reserved-parameters-keyword 2))))
 
   (define get-instrs
@@ -300,7 +352,7 @@
       ,(Unlock 1)
       ,(Return (Dereference "cur" "Node" "val"))))
   (check-equal? (map transform get-instrs)
-                `((void)
+                `((lock 1)
                   (define cur (void))
                   (set! cur (list-ref ,reserved-parameters-keyword 0))
                   (let loop ()
@@ -311,9 +363,9 @@
                         (set! cur (Node-next cur)))
                       (loop)))
                   (when (None? cur)
-                    (void)
+                    (unlock 1)
                     (return 0))
-                  (void)
+                  (unlock 1)
                   (return (Node-val cur))))
 
   (define contains-instrs
@@ -346,8 +398,8 @@
                                    (Node (None) 1 3 0)
                                    2 4 0)
                                   1)
-                                'ret)
-                    (Get-var 'ret))
+                                'ret))
+  (displayln "")
   ; Last node in the list
   (check-var-equal? ret 4
                     (Create-var 'ret 'int)
@@ -356,8 +408,8 @@
                                    (Node (None) 1 3 0)
                                    2 4 0)
                                   2)
-                                'ret)
-                    (Get-var 'ret))
+                                'ret))
+  (displayln "")
   ; Node not in the list (early return)
   (check-var-equal? ret 0
                     (Create-var 'ret 'int)
@@ -366,5 +418,33 @@
                                    (Node (None) 1 3 0)
                                    2 4 0)
                                   3)
-                                'ret)
-                    (Get-var 'ret)))
+                                'ret))
+  (displayln "")
+
+  ; push
+  (check-var-equal? ret 6
+                    (Create-var 'ret 'int)
+                    (Run-method 'push
+                                '((Node
+                                   (Node (None) 1 3 0)
+                                   2 4 0)
+                                  3
+                                  6)
+                                'ret))
+
+  (displayln "")
+  ; Test manually-added returns
+  (check-var-equal? ret (void)
+                    (Create-var 'ret 'int)
+                    (Method 'test '() 'int `(,(Create-var 'a 'int)))
+                    (Run-method 'test '() 'ret))
+
+  (displayln "")
+  (check-var-equal? ret 0
+                    (Create-var 'ret 'int)
+                    (Run-method 'contains
+                                '((Node
+                                   (Node (None) 1 3 0)
+                                   2 4 0)
+                                  3)
+                                'ret)))
