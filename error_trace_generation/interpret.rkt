@@ -52,7 +52,6 @@
       (namespace-require 'racket/block) ; see below for why we need this
 
       ; Important struct definitions. Node is temporary.
-      (eval '(struct None ()))
       (eval '(struct Node (next key val bits) #:mutable))
 
       ; Dummy methods for lock and unlock.
@@ -227,8 +226,8 @@
     [(Not (x expr)) `(not ,expr)]
     [(And (x expr1) (x expr2)) `(and ,expr1 ,expr2)]
     [(Or (x expr1) (x expr2))  `(or ,expr1 ,expr2)]
-    [(Is-none? (x expr)) `(None? ,expr)]
-    [(None) '(None)]
+    [(Is-none? (x expr)) `(null? ,expr)]
+    [(None) ''()]
     [(Dereference (x id) type offset) (to-accessor id type offset)]
     [(Add (x expr1) (x expr2)) `(+ ,expr1 ,expr2)]
     [(Subtract (x expr1) (x expr2)) `(- ,expr1 ,expr2)]
@@ -273,7 +272,7 @@
                       (Create-var 'ret 'int)
                       (Run-method 'get
                                   '((Node
-                                     (Node (None) 1 3 0)
+                                     (Node '() 1 3 0)
                                      2 4 0)
                                     1)
                                   'ret)))
@@ -288,8 +287,8 @@
   (check-equal? (transform (Not #t)) '(not #t))
   (check-equal? (transform (And #t #f)) '(and #t #f))
   (check-equal? (transform (Or #t #f)) '(or #t #f))
-  (check-equal? (transform (Is-none? 'x)) '(None? x))
-  (check-equal? (transform (None)) '(None))
+  (check-equal? (transform (Is-none? 'x)) '(null? x))
+  (check-equal? (transform (None)) ''())
   (check-equal? (transform (Dereference 'test 'Node 'key)) '(Node-key test))
   (check-equal? (transform (Add 1 2)) '(+ 1 2))
   (check-equal? (transform (Subtract 1 2)) '(- 1 2))
@@ -307,12 +306,12 @@
   (check-equal? (transform (Unlock 0)) '(unlock 0))
   (check-equal? (transform (Return 'x)) '(return x))
   (check-equal? (transform (Continue 0)) '(continue))
-  (check-equal? (transform (New-struct 'Node (list (None) 1 2 0))) '(Node (None) 1 2 0))
+  (check-equal? (transform (New-struct 'Node (list (None) 1 2 0))) '(Node '() 1 2 0))
   (check-equal? (transform (Get-argument 0)) `(list-ref ,reserved-parameters-keyword 0))
   (check-equal? (transform (Run-method 'remove (list (None) 1) null))
                 '(remove (None) 1))
   (check-equal? (transform (Run-method 'get (list (None) 1) 'val))
-                '(set! val (get (None) 1)))
+                '(set! val (get '() 1)))
 
   ; Compound C instructions
   (check-equal? (transform (Single-branch #t (list (Add 1 2)))) '(when #t (+ 1 2)))
@@ -367,19 +366,19 @@
                   (set! cur (list-ref ,reserved-parameters-keyword 0))
                   (set! prev (list-ref ,reserved-parameters-keyword 0))
                   (let loop ()
-                    (when (and (not (None? cur))
+                    (when (and (not (null? cur))
                                (not (equal? (Node-key cur)
                                             (list-ref ,reserved-parameters-keyword 1))))
                       (let/cc continue
                         (set! prev cur)
                         (set! cur (Node-next cur)))
                       (loop)))
-                  (when (None? cur)
+                  (when (null? cur)
                     (set-Node-next! prev (Node
-                                          (None)
+                                          '()
                                           (list-ref ,reserved-parameters-keyword 1)
                                           (list-ref ,reserved-parameters-keyword 2)
-                                          (None)))
+                                          '()))
                     (unlock 1)
                     (return (list-ref ,reserved-parameters-keyword 2)))
                   (set-Node-val! cur (list-ref ,reserved-parameters-keyword 2))
@@ -404,13 +403,13 @@
                   (define cur (void))
                   (set! cur (list-ref ,reserved-parameters-keyword 0))
                   (let loop ()
-                    (when (and (not (None? cur))
+                    (when (and (not (null? cur))
                                (not (equal? (Node-key cur)
                                             (list-ref ,reserved-parameters-keyword 1))))
                       (let/cc continue
                         (set! cur (Node-next cur)))
                       (loop)))
-                  (when (None? cur)
+                  (when (null? cur)
                     (unlock 1)
                     (return 0))
                   (unlock 1)
@@ -443,7 +442,7 @@
                     (Create-var 'ret 'int)
                     (Run-method 'get
                                 '((Node
-                                   (Node (None) 1 3 0)
+                                   (Node '() 1 3 0)
                                    2 4 0)
                                   1)
                                 'ret))
@@ -452,7 +451,7 @@
                     (Create-var 'ret 'int)
                     (Run-method 'get
                                 '((Node
-                                   (Node (None) 1 3 0)
+                                   (Node '() 1 3 0)
                                    2 4 0)
                                   2)
                                 'ret))
@@ -461,7 +460,7 @@
                     (Create-var 'ret 'int)
                     (Run-method 'get
                                 '((Node
-                                   (Node (None) 1 3 0)
+                                   (Node '() 1 3 0)
                                    2 4 0)
                                   3)
                                 'ret))
@@ -471,7 +470,7 @@
                     (Create-var 'ret 'int)
                     (Run-method 'push
                                 '((Node
-                                   (Node (None) 1 3 0)
+                                   (Node '() 1 3 0)
                                    2 4 0)
                                   3
                                   6)
@@ -481,7 +480,7 @@
                     (Create-var 'ret 'int)
                     (Run-method 'contains
                                 '((Node
-                                   (Node (None) 1 3 0)
+                                   (Node '() 1 3 0)
                                    2 4 0)
                                   3)
                                 'ret)))
