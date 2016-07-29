@@ -2,15 +2,12 @@
 
 (require "../program_representation/simulator-structures.rkt"
          (only-in racket/match match match-lambda define-match-expander)
-         racket/format
-         (only-in racket/function curryr)
-         (only-in racket/list append-map)
-         (only-in racket/pretty pretty-print))
+         (only-in racket/list append-map))
 
-(provide make-interpreter transform)
+(provide make-interpreter transform reserved-trace-keyword)
 
 (define reserved-parameters-keyword 'parameters-reserved)
-(define reserved-trace-keyword 'trace-reserved) ; TODO: implement logging traces
+(define reserved-trace-keyword 'trace-reserved)
 
 ; For backwards compatibility with the old format.
 ; The q is short for quote. It needs a better name though.
@@ -25,17 +22,18 @@
       (set! counter (add1 counter))
       (string->symbol (format "~a~a" type counter)))))
 
-(define (make-define-lambda method)
+; Transform a Method struct into a function definition, optionally instrumented.
+(define (make-define-lambda method [log #f])
   (match method
     [(Method (q id) args ret-type instr-list)
      (define parameters (map make-arg args))
-     `(define (,id . ,parameters)
+     `(define (,id ,@parameters)
         ; Support for the return keyword
         (let/cc return
           ; A list of parameters for Get-argument
-          (define ,reserved-parameters-keyword (list . ,parameters))
-          . ; Method body
-          ,(transform-and-instrument instr-list)))]))
+          (define ,reserved-parameters-keyword (list ,@parameters))
+          ; Method body
+          ,@(transform-and-instrument instr-list log)))]))
 
 ; Return a function that takes a list of instructions and executes them
 ;  with the bindings associated with the functions in library.
@@ -67,31 +65,27 @@
 
   ; A closure that evaluates the given AST in the context of the library
   ;  method definitions and returns a map of the variables of interest to
-  ;  their values.
+  ;  their values, along with reserved-trace-keyword to a trace of the execution.
   ; All variables of interest MUST be declared in global scope of the AST.
   (λ (ast vars-of-interest)
     ; Constructs a statement that when passed to eval, constructs a hash
     ;  table of the names of the variables of interest to their values.
     (define var-hash
-      `(make-hash (list . ,(map (λ (var-name)
-                                  `(cons (quote ,var-name) ,var-name))
-                                vars-of-interest))))
-
-    #;#;#; ; for debugging
-    ;(for-each pretty-print library-defs)
-    (pretty-print `(block . ,(append
-                              (transform-and-instrument ast)
-                              `(,var-hash))))
-    (displayln "")
-    (displayln "")
+      `(make-immutable-hash (list
+                             (cons (quote ,reserved-trace-keyword)
+                                   (reverse ,reserved-trace-keyword))
+                             ,@(map (λ (var-name)
+                                      `(cons (quote ,var-name) ,var-name))
+                                    vars-of-interest))))
 
     (eval
      ; Use block instead of begin so variables will be defined in a new
      ;  scope. This is necessary because otherwise calling eval would
      ;  transform the namespace.
-     `(block . ,(append
-                 (transform-and-instrument ast)
-                 `(,var-hash)))
+     `(block
+       (define ,reserved-trace-keyword (list))
+       ,@(transform-and-instrument ast)
+       ,var-hash)
      lib-namespace)))
 
 ; For now, assume name is either a string or a symbol.
@@ -120,10 +114,63 @@
   (syntax-rules ()
     [(x expr) (app transform expr)]))
 
-(define (transform-and-instrument instrs)
-  #;
-  (append-map (compose instrument-trace transform) instrs)
-  (map transform instrs))
+; Transform a list of C instruction structs into a quoted S-expression to be passed
+;  to eval. The log flag controls whether or not the resulting code will be instrumented
+;  to provide a trace of its execution.
+; Code will only be instrumented if it is in the body of a top-level Method struct.
+;  All other code is left alone.
+(define (transform-and-instrument instrs [log #t])
+  (map transform
+       (if log
+           (instrument instrs)
+           instrs)))
+
+; Assuming that all the methods defined in instrs are the ones that should be logged,
+;  add logging statements at appropriate points in each defined method.
+(define (instrument instrs)
+  (map
+   (match-lambda
+     [(Method id args ret body) (Method id args ret (add-log-statements body))]
+     [instr instr])
+   instrs))
+
+; Add log statements for important instructions in instrs.
+(define (add-log-statements instrs)
+  (append-map
+   (λ (instr)
+     (cond
+       ; Simple instruction types to be logged
+       [(or (Create-var? instr)
+            (Set-var? instr)
+            (Set-pointer? instr)
+            (Return? instr)
+            (Lock? instr)
+            (Unlock? instr)
+            (CAS? instr)
+            (Run-method? instr))
+        `(,(Log instr) ,instr)]
+
+       ; Compound instructions
+       [else
+        (match instr
+          [(Single-branch _ _ condition branch)
+           `(,(Single-branch condition (cons (Log (Assume-simulation condition))
+                                             (add-log-statements branch))))]
+
+          [(Branch _ _ condition b1 b2)
+           `(,(Branch condition
+                      (cons (Log (Assume-simulation condition))
+                            (add-log-statements b1))
+                      (cons (Log (Assume-simulation (Not condition)))
+                            (add-log-statements b2))))]
+
+          [(Loop _ _ condition body)
+           `(,(Loop condition (cons (Log (Assume-simulation condition))
+                                    (add-log-statements body))))]
+
+          ; Leave everything else alone
+          [else instr])]))
+   instrs))
 
 ; Transform an AST into a quoted S-expression.
 (define (transform instr)
@@ -133,7 +180,8 @@
     [(Get-var (q id)) id]
     [(Set-pointer _ _ (x id) type offset (x val)) (to-mutator id type offset val)]
     [(Return _ _ (x expr)) `(return ,expr)]
-    [(New-struct (q type) parameters) `(,type . ,(map transform parameters))]
+
+    [(New-struct (q type) parameters) `(,type ,@(map transform parameters))]
 
     ; Method parameters are stored in a list with id reserved-parameters-keyword.
     [(Get-argument _ _ index) `(list-ref ,reserved-parameters-keyword ,index)]
@@ -154,25 +202,23 @@
 
     ; Method calls
     [(Run-method _ _ (q id) args '()) `(,id ,@(map transform args))]
-    [(Run-method _ _ (q id) args (q ret)) `(set! ,ret (,id . ,(map transform args)))]
+    [(Run-method _ _ (q id) args (q ret)) `(set! ,ret (,id ,@(map transform args)))]
 
     ; Function declarations
     [(Method _ _ _ _) (make-define-lambda instr)]
 
     ; Conditionals
-    [(Single-branch _ _ (x condition) branch) (append
-                                               `(when ,condition)
-                                               (map transform branch))]
+    [(Single-branch _ _ (x condition) branch) `(when ,condition
+                                                 ,@(map transform branch))]
     [(Branch _ _ (x condition) b1 b2) `(if ,condition
-                                           (begin . ,(map transform b1))
-                                           (begin . ,(map transform b2)))]
+                                           (begin ,@(map transform b1))
+                                           (begin ,@(map transform b2)))]
 
     ; Loops
     [(Loop _ _ (x condition) body) `(let loop ()
                                       (when ,condition
-                                        ,(append
-                                          '(let/cc continue)
-                                          (map transform body))
+                                        (let/cc continue
+                                          ,@(map transform body))
                                         (loop)))]
     [(Continue _) '(continue)]
 
@@ -191,6 +237,10 @@
     [(Greater-than (x expr1) (x expr2)) `(> ,expr1 ,expr2)]
     [(Greater-than-equal (x expr1) (x expr2)) `(>= ,expr1 ,expr2)]
 
+    ; Logging
+    [(Log instruction)
+     `(set! ,reserved-trace-keyword (cons ,instruction ,reserved-trace-keyword))]
+
     ; Literals
     [_ instr]))
 
@@ -201,36 +251,34 @@
    (symbol? id)
    (regexp-match? #px"^set-\\S+-\\S+!$" (symbol->string id))))
 
-(define (instrument-trace expr)
-  (match expr
-    ; Type information for defines is lost... maybe fix this.
-    [`(define ,id (void)) `((displayln (quote ,expr)) ,expr)]
-    [`(set! ,id ,expression) `((displayln (quote ,expr)) ,expr)]
-    [`(lock ,id) `((displayln (quote ,expr)) ,expr)]
-    [`(unlock ,id) `((displayln (quote ,expr)) ,expr)]
-    [`(return ,expression) `((displayln (quote ,expr)) ,expr)]
+(module* logging-test #f
+  (require racket/pretty)
 
-    ; Pointer assignment
-    [`(,(? struct-mutator?) ,id ,value) `((displayln (quote ,expr)) ,expr)]
-
-    ; Compound expressions
-    [`(when ,condition ,body ...) `(,(append
-                                      `(when ,condition)
-                                      (append-map instrument-trace body)))]
-    [`(if ,condition
-          (begin ,consequent)
-          (begin ,alternate))
-     `((if ,condition
-           (begin . ,(append-map instrument-trace consequent))
-           (begin . ,(append-map instrument-trace alternate))))]
-    [`(let/cc ,return/continue ,body ...) `(,(append
-                                              `(let/cc ,return/continue)
-                                              (append-map instrument-trace body)))]
-    [`(let loop () ,body ...) `((let loop () .
-                                  ,(append-map instrument-trace body)))]
-
-    ; Leave everything else as-is
-    [_ `(,expr)]))
+  (define get-instrs
+    `(,(Lock 1)
+      ,(Create-var "cur" "Node")
+      ,(Set-var "cur" (Get-argument 0))
+      ,(Loop  (And (Not (Is-none? (Get-var "cur")))
+                   (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))))
+              `(,(Set-var "cur" (Dereference "cur" "Node" "next"))))
+      ,(Single-branch
+        (Is-none? (Get-var "cur"))
+        `(,(Unlock 1)
+          ,(Return 0)))
+      ,(Unlock 1)
+      ,(Return (Dereference "cur" "Node" "val"))))
+  (define get (Method "get" '("Node" "int") "int" get-instrs))
+  (define i (make-interpreter '()))
+  (define trace (list get
+                      (Create-var 'ret 'int)
+                      (Run-method 'get
+                                  '((Node
+                                     (Node (None) 1 3 0)
+                                     2 4 0)
+                                    1)
+                                  'ret)))
+  (define result (i trace '()))
+  (pretty-display (hash-ref result reserved-trace-keyword)))
 
 (module+ test
   (require rackunit)

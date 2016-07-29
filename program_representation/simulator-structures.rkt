@@ -30,6 +30,8 @@
 
  (struct-out Branch)
  (struct-out Context-switch)
+
+ (struct-out Log)
  ; Extra constructors for instruction structs
  Run-Method
  Run-Method-instr-id
@@ -141,6 +143,9 @@
 ;; Contains a trace that has an ID which we will use to fuse traces together and make sketches more
 ;; efficient
 (struct Trace (trace-id t))
+
+; For logging traces in the interpreter.
+(struct Log (instruction) #:transparent)
 
 ;; Extra constructors allowing the thread-id field to be set.
 ;; The names are kind of confusing, but they can be used in place of the regular

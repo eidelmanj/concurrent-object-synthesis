@@ -113,13 +113,12 @@
      ;  linearizable, or we couldn't come up with arguments to make the trace
      ;  feasible.
      (define result (linearizable? trace mut client vars pointers lib interpreter))
-     (unless (equal? result #t)
-       (when (equal? result #f)
-         (set! traces (append traces (list trace))))
+     (unless (car result)
+       (set! traces (append traces (cdr result)))
        (fail)))
    (when (has-next?) (next)))
 
   (for-each
    (λ (trace)
-     (pretty-display (map transform trace)) (displayln ""))
+     (pretty-display trace) (displayln ""))
    traces))
