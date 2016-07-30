@@ -221,6 +221,16 @@
                                                                              (rest instr-list))
                                                                             to-return))))]
 
+      ;; Goto's work like C-style goto statements
+      ;; [(Goto? (first instr-list))
+      ;;  ;; We need the entire 
+      ;;  (let ([original-instr-list (Thread-list-instr-list t)])
+         
+
+
+       
+       
+
       ;; Loops must be unrolled into every possible execution up to a certain number
       [(Loop? (first instr-list)) ;; (display "looping\n")
        

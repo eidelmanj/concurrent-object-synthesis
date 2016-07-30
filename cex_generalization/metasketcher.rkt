@@ -1,5 +1,6 @@
 #lang racket
 (require "../program_representation/simulator-structures.rkt")
+(require "../utilities/utilities.rkt")
 
 (provide
  metasketch-announcement-strategy
@@ -11,6 +12,13 @@
 (define (new-optimistic-id)
   (set! optimistic-count (+ optimistic-count 1))
   optimistic-count)
+
+
+
+
+
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -153,7 +161,7 @@
 
 ;;;;;;;; Optimistic Concurrency repair protocol ;;;;;;;;;;;;;;;;;
 (define (metasketch-optimistic-strategy instr-list hole)
-  (metasketch-repair instr-list optimistic-repair-strt optimistic-repair-end hole))
+  (metasketch-repair instr-list optimistic-repair-strt optimistic-repair-end hole (new-meta-var)))
 
   
 ;; TODO: Have to actually interpret Optimistic-Condition
@@ -163,20 +171,32 @@
   
 
 
-(define (optimistic-repair-strt instr-list hole)
+(define (optimistic-repair-strt instr-list hole meta-var)
   (list
-   (first instr-list)
-   (Atomic-Start-Marker)
-   (generate-optimistic-check-expression (Hole-interruptor hole) "OPTIMISTIC")
-   (Single-branch (Get-var "OPTIMISTIC")
-                  (list
-                   (Goto "START")))))
 
-(define (optimistic-repair-end instr-list hole)
+   (Meta-branch
+    meta-var
+    (list
+     (first instr-list)
+     (Atomic-Start-Marker)
+     (generate-optimistic-check-expression (Hole-interruptor hole) "OPTIMISTIC")
+     (Single-branch (Get-var "OPTIMISTIC")
+                    (list
+                     (Goto "START"))))
+
+    (list (first instr-list)))))
+    
+
+(define (optimistic-repair-end instr-list hole meta-var)
+  
   (append
    (list
    (first (instr-list))
-   (Atomic-End-Marker))
+   (Meta-branch
+    meta-var
+    (list
+     (Atomic-End-Marker))
+    `()))
 
    (rest instr-list)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -185,7 +205,7 @@
 
 ;;;;;;;; Announcement repair protocol ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define (metasketch-announcement-strategy instr-list hole)
-  (metasketch-repair instr-list announcement-repair-strt announcement-repair-end hole))
+  (metasketch-repair instr-list announcement-repair-strt announcement-repair-end hole (new-meta-var)))
 
 
 ;; TODO: Decide how to check for an announcement that's been made
@@ -195,23 +215,35 @@
 ;; Tries to defend a given instr-list from a particular hole happening using
 ;; announcements
 ;; modify the base library
-(define (announcement-repair-strt instr-list hole)
+(define (announcement-repair-strt instr-list hole meta-var)
   (list
-   (first instr-list)
-   (Atomic-Start-Marker)
-   (generate-announcement-check (Hole-interruptor hole) "ANNOUNCE")
-   (Single-branch (Get-var "ANNOUNCE")
-                  (list
-                   (Goto  "START")))
-   ))
 
-(define (announcement-repair-end instr-list hole)
+   (Meta-branch
+    meta-var
+   (list
+    (first instr-list)
+    (Atomic-Start-Marker)
+    (generate-announcement-check (Hole-interruptor hole) "ANNOUNCE")
+    (Single-branch (Get-var "ANNOUNCE")
+                   (list
+                    (Goto  "START")))
+    )
+
+   (list (first instr-list)))))
+
+(define (announcement-repair-end instr-list hole meta-var)
   (append
-  (list
-   (first instr-list)
-   (Atomic-End-Marker))
-  (rest instr-list)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   (list
+    (first (instr-list))
+    (Meta-branch
+     meta-var
+     (list
+      (Atomic-End-Marker))
+     `()))
+   
+   (rest instr-list)))
+
+
 
 
 
@@ -219,7 +251,7 @@
 ;; as well as two functions, repair-strt and repair-end. These are the two
 ;; functions that define the repair that will be done. Repair functions take
 ;; the remaining instr-list, as well as the hole
-(define (metasketch-repair instr-list repair-strt repair-end hole)
+(define (metasketch-repair instr-list repair-strt repair-end hole meta-var)
 
   ;; This checks to see if we have entered a hole and have not exited at the end of the branch
   (define (check-branch-border b-instr-list)
@@ -244,11 +276,11 @@
           ;; (C-Instruction-instr-id (first instr-list))
 
           (Single-branch-condition (first instr-list))
-          (metasketch-repair (Single-branch-branch (first instr-list)) repair-strt repair-end hole)))
+          (metasketch-repair (Single-branch-branch (first instr-list)) repair-strt repair-end hole meta-var)))
 
         (if branch-ends-with-hole?
             (repair-end (rest instr-list) hole)
-            (metasketch-repair (rest instr-list) repair-strt repair-end hole))))]
+            (metasketch-repair (rest instr-list) repair-strt repair-end hole meta-var))))]
     
     [(Branch? (first instr-list))
      ;; Check to see if one of the branches ends with the beginning of the hole
@@ -265,14 +297,14 @@
           
           (Branch-condition (first instr-list))
           (metasketch-repair 
-           (Branch-branch1 (first instr-list)) repair-strt repair-end hole)
+           (Branch-branch1 (first instr-list)) repair-strt repair-end hole meta-var)
           (metasketch-repair
-           (Branch-branch2 (first instr-list)) repair-strt repair-end hole)))
+           (Branch-branch2 (first instr-list)) repair-strt repair-end hole meta-var)))
         
         ;; We may or may not have to complete the repair after the branch
         (if branch-ends-with-hole?
             (repair-end (rest instr-list) hole)
-            (metasketch-repair (rest instr-list) repair-strt repair-end hole))))]
+            (metasketch-repair (rest instr-list) repair-strt repair-end hole meta-var))))]
 
     [(Loop? (first instr-list))
      ;; Check to see if the loop body ends with the start of the hole - in which case
@@ -293,11 +325,11 @@
             ;; (C-Instruction-instr-id (first instr-list))
             
             (Loop-condition (first instr-list))
-            (metasketch-repair (Loop-instr-list (first instr-list)) repair-strt repair-end hole)))
+            (metasketch-repair (Loop-instr-list (first instr-list)) repair-strt repair-end hole meta-var)))
 
            (if ends-with-hole?
                (repair-end (rest instr-list) hole)
-               (metasketch-repair (rest instr-list) repair-strt repair-end hole)))]
+               (metasketch-repair (rest instr-list) repair-strt repair-end hole meta-var)))]
 
          ;; If the start of the loop completes the hole, then we have to close up the hole
          [(and loop-first-completes-hole? ends-with-hole?)
@@ -322,9 +354,9 @@
                ;; (C-Instruction-instr-id (first instr-list))
                
                (Loop-condition (first instr-list))
-               (metasketch-repair loop-body repair-strt repair-end hole)))
+               (metasketch-repair loop-body repair-strt repair-end hole meta-var)))
              
-             (metasketch-repair (rest instr-list) repair-strt repair-end hole)))]))]
+             (metasketch-repair (rest instr-list) repair-strt repair-end hole meta-var)))]))]
             
 
            
@@ -341,5 +373,112 @@
     [else
      ;; (display "didn't find hole, found: ") (displayln (C-Instruction-instr-id (first instr-list)))
      (append (list (first instr-list))
-     (metasketch-repair (rest instr-list) repair-strt repair-end hole))
+     (metasketch-repair (rest instr-list) repair-strt repair-end hole meta-var))
      ]))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;; Expansion of error traces to match new sketch extension ;;;;;;;;;;
+
+;; Takes a trace t and a method m and returns the set of traces equivalent to
+;; t that are runnable using m
+(define (expand-error-trace original-t m)
+
+  (define (expand-error-trace-helper t instr-list)
+    (cond
+      [(or (empty? t) (empty? instr-list))
+       (list)]
+
+      [(Meta-branch? (first instr-list))
+
+       (append
+        (map
+         (append-item (Assume-meta (Meta-branch-condition (first instr-list))))
+         (expand-error-trace-helper t (append (Meta-branch-branch1 (first instr-list)) (rest instr-list))))
+        (map
+         (append-item (Assume-meta (Not (Meta-branch-condition (first instr-list)))))
+         (expand-error-trace-helper t (append (Meta-branch-branch2 (first instr-list)) (rest instr-list)))))]
+
+      ;; If the composed method has a real program branch, then we need to figure out
+      ;; if the branch is from the original error trace, in which case we must follow
+      ;; the branch taken by the original program
+      [(Single-branch? (first instr-list))
+       (cond
+
+         ;; If in the original trace, this condition failed - it still fails
+         [(and (Assume-simulation? (first t)) (Not? (Assume-simulation-condition (first t))))
+          (map
+           (append-item (first t))
+           (expand-error-trace-helper (rest t) (rest instr-list)))]
+
+         ;; If in the original trace, this condition succeeded- it succeeds
+         [(and (Assume-simulation? (first t)) (not (Not? (Assume-simulation-condition (first t)))))
+          (map
+           (append-item (first t))
+           (expand-error-trace-helper (rest t) (append (Single-branch-branch (first instr-list)) (rest instr-list))))]
+
+         ;; If this was not a condition that appeared in the original interleaving
+         ;; - we must explore both branches
+         [(not (Assume-simulation? (first t)))
+          (append
+           (map 
+            (append-item (Assume-simulation (Single-branch-condition (first instr-list))))
+            (expand-error-trace-helper t (append (Single-branch-branch (first instr-list)))))
+
+           (map
+            (append-item (Assume-simulation (Not (Single-branch-condition (first instr-list)))))
+            (expand-error-trace-helper t (rest instr-list))))])]
+
+      ;; TODO - Branch implementation
+      [(Branch? (first instr-list))
+       (displayln "TODO: Branch implementation missing")]
+
+      [(Goto? (first instr-list))
+
+       (let
+           ([original-m-instr-list (Method-instr-list m)])
+
+         (expand-error-trace-helper
+          (find-goto-starting-point-trace original-t (Goto-goto-addr (first instr-list)))
+          (find-goto-starting-point original-m-instr-list (Goto-goto-addr (first instr-list)))))]))
+
+
+               
+          
+       
+
+       
+
+
+  
+  (let
+      ([m-instr-list (Method-instr-list m)])
+    (expand-error-trace-helper original-t m-instr-list)))
+
+
+
+;; This takes an instruction list and finds the point addressed by Goto
+;; TODO: This assumes that composed method has a Label "start" 
+(define (find-goto-starting-point instr-list goto-addr)
+  (cond
+    [(empty? instr-list) `()]
+    [(and (Label? (first instr-list)) (equal? (Label-id (first instr-list)) goto-addr))
+     instr-list]
+    [else
+     (find-goto-starting-point (rest instr-list) goto-addr)]))
+
+;; This takes a trace and finds the point addressed by Goto
+;; TODO: Right now this will just go in infinite circles.
+;; what is still yet to do is that we need to exclude the same interruption
+;; when we go back around
+(define (find-goto-starting-point-trace instr-list goto-addr)
+  (cond
+    [(empty? instr-list) `()]
+    [(and (Label? (first instr-list)) (equal? (Label-id (first instr-list)) goto-addr))
+     instr-list]
+    [else
+     (find-goto-starting-point-trace (rest instr-list) goto-addr)]))
+
+  
+  

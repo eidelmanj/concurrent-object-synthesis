@@ -7,6 +7,11 @@
  (struct-out Thread-list)
  (struct-out Instruction)
 
+
+ (struct-out Trace)
+ (struct-out Invalid-Trace)
+
+
  ; C Instructions
  (struct-out C-Instruction)
 
@@ -62,7 +67,7 @@
  (struct-out Goto)
 
 
-
+ (struct-out Label)
  (struct-out Atomic-Start-Marker)
  (struct-out Atomic-End-Marker)
 
@@ -202,10 +207,11 @@
 ;; (struct Single-branch C-Instruction (condition branch))
 
 
-(struct Goto C-Instruction (goto-addr [unroll-count #:auto #:mutable]) #:transparent #:auto-value null)
+(struct Goto C-Instruction (goto-addr [unroll-count #:auto #:mutable]) #:transparent #:auto-value 0)
 
 
 
+(struct Label (id))
 (struct Atomic-Start-Marker C-Instruction ())
 (struct Atomic-End-Marker C-Instruction ())
 
@@ -383,6 +389,8 @@
 (define-struct Meta-branch (condition branch1 branch2))
 (define-struct Meta-single-branch (condition branch))
 
+
+(struct Invalid-Trace ())
 
 
 (define-struct Sketch-placeholder (name))
