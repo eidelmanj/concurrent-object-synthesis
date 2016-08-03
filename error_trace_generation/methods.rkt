@@ -2,13 +2,18 @@
 
 (require (submod "../program_representation/simulator-structures.rkt" C-structs)
          (only-in racket/function curry curryr)
-         (only-in racket/list append-map cartesian-product first rest)
+         (only-in racket/list append-map cartesian-product first rest filter-map)
          (only-in "interpret.rkt" transform)
          "vars.rkt"
          (only-in "utils.rkt" pick-at-most-n)
          (only-in racket/match match match-lambda))
 
-(provide get-method conflicting-ops return-type number-lines pick-arguments)
+(provide get-method
+         conflicting-ops
+         return-type
+         number-lines
+         make-pointers-table
+         pick-arguments)
 
 ; Given a method name and a library, return the corresponding Method struct in library.
 (define (get-method method-name library)
@@ -164,6 +169,75 @@
      ,(Unlock 1)
      ,(Return 'result))))
 
+; Return a copy of L with value v added to the end.
+(define (cons-end L v)
+  (append L (list v)))
+
+(module+ test
+  (check-equal? (cons-end '(1 2) 3) '(1 2 3))
+  (check-equal? (cons-end '() 'a) '(a)))
+
+; Given a list of pairs and a hash table accum to store results in, merge the pairs
+;  as in the following example and update accum with the results.
+; Can have weird results if accum isn't empty when called non-recursively.
+;
+; Example:
+;  Input pairs:  '((6 . 2) (6 . 3)
+;                  (16 . 2) (16 . 4) (16 . 8))
+;  Merged pairs: '((6 . (2 3))
+;                  (16 . (2 4 8)))
+(define (gather-values pairs accum)
+  (match pairs
+    ['() accum]
+    [`((,type . ,id) . ,T) (hash-update! accum
+                                         type
+                                         (curryr cons-end id)
+                                         null)
+                           (gather-values T accum)]))
+
+(module+ test
+  (define result
+    (gather-values
+     '((int . x)
+       (char . y)
+       (int . z))
+     (make-hash)))
+
+  (check-equal? (hash-ref result 'int) '(x z))
+  (check-equal? (hash-ref result 'char) '(y))
+  (check-equal? (hash-count result) 2)
+
+  (define result-empty (gather-values '() (make-hash)))
+  (check-equal? (hash-count result-empty) 0)
+
+  (define result-one (gather-values '((int . x)) (make-hash)))
+  (check-equal? (hash-ref result-one 'int) '(x))
+  (check-equal? (hash-count result-one) 1))
+
+; Construct a hash table mapping pointer types to variable access statements
+;  to instances of that type.
+(define (make-pointers-table init)
+  (define vars
+    (filter-map
+     (match-lambda
+       [(Create-var _ _ id (? pointer? type)) (cons type (Get-var id))]
+       [_ #f])
+     init))
+
+  (gather-values vars (make-hash)))
+
+(module+ test
+  (define pointers
+    (make-pointers-table
+     `(,(Create-var "shared" "Node")
+       ,(Create-var "primitive" "int")
+       ,(Set-var "shared" (New-struct "Node" `(,(None) 0 0 0)))
+       ,(Run-method "push" `(,(Get-var "shared") 1 2) null)
+       ,(Run-method "push" `(,(Get-var "shared") 2 4) null))))
+
+  (check-equal? (hash-ref pointers "Node") `(,(Get-var "shared")))
+  (check-equal? (hash-count pointers) 1))
+
 ; Return a list of argument lists to use for testing instrumentations of mut
 ;  for linearizability. mut is an instance of struct Method, library is the
 ;  library for the shared data structure, pointers is a
@@ -198,7 +272,7 @@
      (hash-update!
       args-of-type
       (car arg-pair)
-      (λ (v) (append v `(,(cdr arg-pair))))))
+      (curryr cons-end (cdr arg-pair))))
    init-args)
 
   ; Arguments for a value that should be in the data structure
@@ -208,9 +282,4 @@
       [(member type primitive-types) (define values (hash-ref args-of-type type))
                                      (hash-set! args-of-type type (rest values))
                                      (first values)]
-      [else (first (hash-ref pointers type))]))
-#;
-  (for/list ([type (Method-args mut)])
-    (if (member type primitive-types)
-        (random-value-of-type type)
-        (first (hash-ref pointers type)))))
+      [else (first (hash-ref pointers type))])))

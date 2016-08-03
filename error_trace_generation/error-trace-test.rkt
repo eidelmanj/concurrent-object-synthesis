@@ -51,6 +51,6 @@
   (error-traces
    test-library
    "extension"
-   (make-hash `(("Node" . (,(Get-var "shared")))))))
+   test-init))
 
 (map lin-result-trace results)

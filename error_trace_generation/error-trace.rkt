@@ -16,7 +16,7 @@
          (only-in racket/list first split-at empty?)
          (only-in racket/function curryr))
 
-(provide bound error-traces)
+(provide bound error-traces test-init)
 
 ; The maximum number of non-commutative library calls to insert between each
 ;  pair of library calls in the mut when searching for linearizability errors.
@@ -131,14 +131,17 @@
 ; Temporary, to be removed once init is no longer hard-coded.
 (require (only-in "../program_representation/simulator-structures.rkt"
                   Set-var New-struct None Get-var Return))
-(define init
+(define test-init
   `(,(Create-var "shared" "Node")
     ,(Set-var "shared" (New-struct "Node" `(,(None) 0 0 0)))
     ,(Run-method "push" `(,(Get-var "shared") 1 2) null)
     ,(Run-method "push" `(,(Get-var "shared") 2 4) null)))
 
-(define (error-traces library method-name pointers)
+(define (error-traces library method-name init)
   (define mut (get-method method-name library))
+
+  ; Construct a pointer table from init
+  (define pointers (make-pointers-table init))
 
   ; Set up the interpreter
   (define lib (remove mut library))

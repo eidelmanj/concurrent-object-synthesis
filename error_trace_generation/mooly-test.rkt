@@ -115,7 +115,7 @@
   (error-traces
    library
    "extension"
-   (make-hash `(("Node" . (,(Get-var "shared")))))))
+   test-init))
 
 (for-each
  (λ (trace)
