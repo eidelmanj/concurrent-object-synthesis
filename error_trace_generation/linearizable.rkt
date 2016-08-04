@@ -12,7 +12,7 @@
 
 (provide linearizable (struct-out lin-result))
 
-(struct lin-result (result trace client))
+(struct lin-result (t/f trace client args correct-results) #:transparent)
 
 ; args is a list of instruction structures representing arguments. pe-args is a
 ;  list of the same arguments, partially evaluated.
@@ -36,10 +36,12 @@
   (match mut
     [(Method id args ret-type instr-list)
 
-     (define mut-ret (fresh-var))
+     (define mut-ret 'mut-result)
+     ; Instructions that will be simulated
      (define instrs (list (Create-var mut-ret ret-type)
                           (Method id args ret-type trace)
                           (Run-method id arguments mut-ret)))
+     ; Declarations of variables for client calls to return to
      (define declarations (for/list ([var variables])
                             (Create-var (car var) (cdr var))))
      (define vars (cons mut-ret (map car variables)))
@@ -70,19 +72,24 @@
                             op))
                 result-trace))
 
+     ; If some client methods were never run, we say our trace is infeasible.
+     ; Client methods that were never run will have void as their return value.
      (define infeasible-witnesses (filter-hash void? results))
 
      (cond
        [(empty? infeasible-witnesses)
         ; Generate all possible interleavings of mut (as an atomic unit) with client.
         ;  (i.e. try inserting mut before, between each pair of instructions, and after.)
+        (define correct-results '())
         (define linearizable?
           (ormap
            (λ (split-index)
              (let-values ([(before after) (split-at pe-client split-index)])
+               ; Remove the trace, since it interferes with comparisons.
                (define this-result
                  (hash-remove
                   (interpret
+                   ; Full list of instructions to run
                    (append init
                            declarations
                            `(,(Create-var mut-ret ret-type)
@@ -97,10 +104,13 @@
                    vars)
                   reserved-trace-keyword))
 
+               ; Keep track of results of linearizable executions for future testing
+               (set! correct-results (append correct-results (list this-result)))
+
                (equal? this-result compare-results)))
            (range (add1 (length pe-client)))))
 
-        (lin-result linearizable? result-trace client)]
+        (lin-result linearizable? result-trace client arguments correct-results)]
 
        ; Couldn't find a good variable assignment.
-       [else (lin-result #f null null)])]))
+       [else (lin-result #f null null null null)])]))

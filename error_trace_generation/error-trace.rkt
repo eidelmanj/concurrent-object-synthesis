@@ -163,7 +163,7 @@
      ;  feasible.
      (define result
        (linearizable trace mut client vars pointers lib interpreter arguments init))
-     (unless (lin-result-result result)
+     (unless (lin-result-t/f result)
        (unless (null? (lin-result-trace result))
          (set! results (append results (list result))))
        (fail)))

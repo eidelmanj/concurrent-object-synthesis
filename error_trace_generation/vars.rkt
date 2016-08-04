@@ -3,7 +3,7 @@
 (require racket/match)
 (require (only-in racket/function negate))
 
-(provide primitive-types primitive-type? pointer? random-value-of-type fresh-var)
+(provide primitive-types primitive-type? pointer? random-value-of-type)
 
 ; Primitive C types that this generator works for.
 (define primitive-types '("int" "char"))
@@ -41,6 +41,3 @@
   (check-pred number? (random-value-of-type "int"))
   (check-pred char? (random-value-of-type "char"))
   (check-pred null? (random-value-of-type "Node")))
-
-; Return an as-yet unused variable name.
-(define (fresh-var) (gensym))
