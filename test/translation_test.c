@@ -2,7 +2,13 @@ struct bob {
     int x;
     char y;
 
-}; 
+};
+
+int access()
+{
+    struct bob a; a.x = 1;
+}
+
 int compare(int x, char y, int z) {
     if(x > z) {
         char y = 1;
