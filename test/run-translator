@@ -6,17 +6,17 @@
          parser-tools/lex
          (prefix-in re- parser-tools/lex-sre)
          parser-tools/yacc)
-;currently not working
+
 (define args (vector->list (current-command-line-arguments)))
 
-;We don't want the input file hardcoded in
-(define in (port->string (open-input-file (first args))))
-;(display in)
-
+(define in (open-input-file (first args)))
+(define program (port->string in))
+(close-input-port in)
 
 (define lst (let*
-                ((test-program in)
+                ((test-program program)
                  (input (open-input-string test-program)))
               (translate (simple-math-parser (lex-this simple-math-lexer input)))))
 
 (display (translate-to-c lst))
+
