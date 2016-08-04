@@ -6,8 +6,6 @@
  (struct-out Thread-list)
  (struct-out Instruction)
 
- (struct-out Trace)
-
  ; C Instructions
  (struct-out C-Instruction)
  (struct-out Repeat-meta)
@@ -21,9 +19,6 @@
  (struct-out Get-argument)
  (struct-out Run-method)
  (struct-out Single-branch)
- (struct-out Added-CAS-Marker)
-
- RW-operation
 
  (struct-out Loop)
  (struct-out Maybe-loop)
@@ -66,6 +61,7 @@
  (struct-out Set-pointer)
  (struct-out And)
  (struct-out Arguments)
+ (struct-out Argument)
  (struct-out History)
  (struct-out Operation)
  (struct-out Interval)
@@ -121,11 +117,6 @@
 (struct Run-method C-Instruction (method args ret))
 (struct Single-branch C-Instruction (condition branch))
 
-(define (RW-operation o)
-  (or (CAS? o) (Set-pointer? o) (Set-var? o)))
-
-(struct Added-CAS-Marker C-Instruction ())
-
 (struct Assume-meta C-Instruction (condition))
 (struct Assume-not-meta C-Instruction (condition))
 (struct Assume-simulation C-Instruction (condition))
@@ -138,9 +129,7 @@
 (struct Branch C-Instruction (condition branch1 branch2))
 (struct Context-switch C-Instruction () #:transparent)
 
-;; Contains a trace that has an ID which we will use to fuse traces together and make sketches more
-;; efficient
-(struct Trace (trace-id t))
+
 
 ;; Extra constructors allowing the thread-id field to be set.
 ;; The names are kind of confusing, but they can be used in place of the regular
@@ -171,7 +160,8 @@
 (define-struct Or (expr1 expr2))
 (define-struct And (expr1 expr2))
 (define-struct Arguments (arg-list))
-(define-struct Get-var(id))
+(define-struct Argument (type id))
+(define-struct Get-var (id))
 (define-struct Add (expr1 expr2))
 (define-struct Subtract (expr1 expr2))
 (define-struct Divide (expr1 expr2))
@@ -182,7 +172,7 @@
 (define-struct Greater-than-equal (expr1 expr2))
 (define-struct Constant (value))
 (struct Is-none? (val))
-(struct Structure (fields))
+(struct Structure (id fields))
 (struct Field (name type))
 
 

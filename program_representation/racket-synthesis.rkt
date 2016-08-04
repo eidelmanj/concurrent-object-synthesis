@@ -2,9 +2,12 @@
 (require "simulator-structures.rkt"
          "concurrent-object-lib.rkt"
          "../parser/parser.rkt"
+         racket/port
          parser-tools/lex
          (prefix-in re- parser-tools/lex-sre)
          parser-tools/yacc)
+(provide translate
+         translate-to-c)
 #|
 Written by Mohdhar Noor for CSC494
         Computer Science Specialist, class of 2016
@@ -50,7 +53,9 @@ To this (Racket struct) - (Method "test"
                                     [(equal? nm "pthread_mutex_unlock") (cons nm (translate args))]
                                     [else (cons nm (translate args))])]
     [(struct-declaration-root struct) (translate struct)]
-    [(struct-declaration-node tp nm fields) (Structure nm (translate fields))]
+    [(struct-declaration-node name fields) (Structure name (translate fields))]
+    [(object-access var acc) (Dereference (translate var) "struct" (translate acc))]
+    [(dereference-node var) (translate var)]
     [(field-node type name next) (append (list (Field name type)) (translate next))]
     [(if-stmt c) (translate c)]
     [(if-root e) (translate e)]
@@ -61,13 +66,12 @@ To this (Racket struct) - (Method "test"
     [(var-node v next) (cons (translate v) (translate next))]
     [(var-add-node v next) (cons (translate v) (translate next))]
     ; TODO: change instr-id arg to a counter
-    [(var-decl tp id) (Create-var id tp)]
+    [(var-decl tp id) (Argument tp id)]
     [(arg-node v next) (Arguments (append (list (translate v)) (translate next)))]
     [(arg-add-node v next) (append (list (translate v)) (translate next))]
     [(arg-decl id) (Get-var id)]
     [(decl-node tp v) (Create-var (translate v) tp)]
-    
-    [(assign-stmt var exp) (Set-var var (translate exp))]
+    [(assign-stmt var exp) (Set-var (translate var) (translate exp))]
     [(num-exp n) (Constant n)]
     [(var-exp i) (Get-var i)]
     [(loop-root loop) (translate loop)]
@@ -122,32 +126,36 @@ To this (Racket struct) - (Method "test"
       ""
       (let ((curr-instr (first lst)))
         (match curr-instr
+          [(Arguments arg-list) (translate-to-c arg-list)]
+          [(Argument type id) (if (empty? (rest lst))
+                                  (string-append type " " id)
+                                  (string-append type " " id ", " (translate-to-c (rest lst))))]
           [(Constant val) (tostring val)]
           [(Method id args ret-type instr-list)
-           (string-append ret-type " " id "(" (translate-to-c args) ") { " (translate-to-c instr-list) "} " (translate-to-c (rest lst)))]
+           (string-append "\n" ret-type " " id "(" (translate-to-c args) ") {" "\n" (translate-to-c instr-list) "}" "\n" (translate-to-c (rest lst)))]
           [(Create-var _ _ id type)
            (string-append type " " (translate-to-c (list id)) "; " (translate-to-c (rest lst)))]
           [(Set-var _ _ id assignment)
-           (string-append id " = " (translate-to-c (list assignment)) "; " (translate-to-c (rest lst)))]
+           (string-append (translate-to-c (list id)) " = " (translate-to-c (list assignment)) "; " (translate-to-c (rest lst)))]
           [(Create-var _ _ id type)
-           (string-append type " " id "; " (translate-to-c (rest lst)))]
+           (string-append type "\t" id "; " "\n" (translate-to-c (rest lst)))]
           [(Lock _ _ id)
-           (string-append "pthhread_mutex_lock(&" id "); ")]
+           (string-append "pthhread_mutex_lock(" (translate-to-c (list id)) ");" "\n" (translate-to-c (rest lst)))]
           [(Unlock _ _ id)
-           (string-append "pthhread_mutex_unlock(&" id "); ")]
+           (string-append "pthhread_mutex_unlock(" (translate-to-c (list id)) ");" "\n" (translate-to-c (rest lst)))]
           [(Run-method _ _ method args ret)
-           (if (equal? ret null)
-               (string-append method "(" (apply string-append args) ")")
-               (string-append (translate-to-c (list ret)) " = " method "(" (apply string-append args) ")"))]
-          [(Get-var var) var]
-          [(Structure fields)
-           (string-append "{ " (translate fields) " };")]
+           (if (equal? (translate-to-c (list ret)) null)
+               (string-append method "(" (translate-to-c (list args)) ")")
+               (string-append (translate-to-c (list ret)) " = " method "(" (translate-to-c (list args)) ")"))]
+          [(Get-var id) id]
+          [(Structure id fields)
+           (string-append  id " {" "\n" (translate-to-c fields) "\n" "}; " "\n" (translate-to-c (rest lst)))]
           [(Field name type)
-           (string-append type " " name "; " (translate-to-c (rest lst)))]
+           (string-append type " " name ";" "\n" (translate-to-c (rest lst)))]
           [(Single-branch _ _ condition branch)
            (string-append "if(" (translate-to-c (list condition)) ") { " (translate-to-c branch) " }")]
           [(Branch _ _ c p1 p2)
-           (string-append "if(" (translate-to-c (list c)) ") { " (translate-to-c p1) " } else { " (translate-to-c p2) " }")]
+           (string-append "if(" (translate-to-c (list c)) ") {" "\n" (translate-to-c p1) "\n" "} else {" "\n" (translate-to-c p2) "\n" "}")]
           [(Loop _ _ expression body)
            (string-append "while(" (translate-to-c (list expression)) "){ " (translate-to-c body) " }")]
           [(Equal expr1 expr2)
@@ -174,11 +182,11 @@ To this (Racket struct) - (Method "test"
           [(Greater-than expr1 expr2)
            (string-append (translate-to-c (list expr1)) " >= " (translate-to-c (list expr2)))]
           [(Return C-Instruction-instr-id Return-val exp)
-           (string-append "return "(translate-to-c (list exp)) "; ")]
+           (string-append "return "(translate-to-c (list exp)) ";" "\n")]
+          [(Dereference id type offset) (string-append "\n" id "." offset)]
           [v (if (string? v)
-           v
-           null)]
-          ;[(Dereference)]
+                 v
+                 null)]
           ))))
 ;(let*
 ;      ((test-program "int test (int x, bool y ) {int z; z = putIfAbsent(m, key, val);}")
@@ -187,3 +195,15 @@ To this (Racket struct) - (Method "test"
 
 ;; (let ((input (open-input-string "int test (int x, bool y ) {int z = putIfAbsent(m, key, val);}")))
 ;;   (display (translate (simple-math-parser (lex-this simple-math-lexer input)))))
+
+;; testing
+(define in (port->string (open-input-file "../test/translation_test.c")))
+;(display in)
+
+
+(define lst (let*
+                ((test-program in)
+                 (input (open-input-string test-program)))
+              (translate (simple-math-parser (lex-this simple-math-lexer input)))))
+
+(display (translate-to-c lst))

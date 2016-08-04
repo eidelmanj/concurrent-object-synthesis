@@ -37,6 +37,8 @@
          method-node
          struct-declaration-node
          struct-declaration-root
+         object-access
+         dereference-node
          field-node
          loop-root
          while-node
@@ -62,7 +64,7 @@
 ;; Make a tostring operator for objects
 (define-syntax-rule (tostring a) (format "~a" a))
 
-(define-tokens a (NUM VAR TYPE ADDRESS))
+(define-tokens a (NUM VAR CHAR TYPE ADDRESS))
 (define-empty-tokens b (~ \. \, NULL BOOL RETURN SHARED GETTERS SETTERS ELSE LOOP WHILE FOR DO \; = + -  < > & AND OR NOT EQUAL EOF LET IN IF \( \) \{ \} ))
 
 (define-lex-trans number
@@ -80,10 +82,12 @@
   (number10 (number digit10))
   (identifier-characters (re-or (char-range "A" "z")
                                 "?" "!" ":" "$" "%" "^" "&"))
-  (basic-types (re-or "void" "int" "char" "Node" "Integer" "pthread_mutex_t" "pthread_mutex_t*" "int*" "char*" "struct"))
+  (basic-types (re-or "void" "int" "char" "Node" "Integer" "pthread_mutex_t" "pthread_mutex_t*" "int*" "char*" (re-: "struct" " " (re-+ identifier-characters))))
   (identifier (re-+ identifier-characters))
   (loop (re-or "while" "for"))
-  (truth-values (re-or "true" "false")))
+  (truth-values (re-or "true" "false"))
+  (character (re-: "'" (re-or (char-range "A" "z")) "'"))
+  )
 
 (define simple-math-lexer
   (lexer
@@ -117,9 +121,12 @@
    ("do" (token-DO))
    ("while" (token-WHILE))
    ("for" (token-FOR))
+
    ((re-+ basic-types) (token-TYPE lexeme))
    ((re-+ number10) (token-NUM (string->number lexeme)))
    (identifier      (token-VAR lexeme))
+   (character (token-CHAR))
+
    ((re-: (re-? "&") basic-types) (token-ADDRESS lexeme))
    (loop (token-LOOP))
    ;; recursively calls the lexer which effectively skips whitespace
@@ -149,8 +156,9 @@
 (define-struct arg-decl (id))
 (define-struct arg-node (v next))
 (define-struct arg-add-node (v next))
-(define-struct struct-declaration-node (tp nm fields))
+(define-struct struct-declaration-node (name fields))
 (define-struct struct-declaration-root (struct))
+(define-struct dereference-node (var))
 (define-struct field-node (type name next))
 (define-struct single-var (v))
 (define-struct loop-root (loop))
@@ -230,6 +238,7 @@
     (statement 
                ((VAR = function-call \;) (make-function-call-root $3 $1))
                ((VAR = exp \;) (make-assign-stmt $1 $3))
+               ((VAR \. object-access = exp \;) (make-assign-stmt (make-object-access $1 $3) $5))
                ((TYPE VAR = exp \;) (make-decl-node $1 (make-assign-stmt $2 $4)))
                ((method-declaration) (make-method-root $1))
                ((function-call \;) (make-function-call-root $1 null))
@@ -249,8 +258,8 @@
     (field-members (() make-empty-node)
                    ((TYPE VAR \; field-members) (make-field-node $1 $2 $4)))
 
-    (object-access ((VAR) (make-single-var $1))
-                   ((function-call) (function-call-root $1 null)))
+    (object-access ((VAR) (make-dereference-node $1))
+                   ((function-call) (make-dereference-node (function-call-root $1 null))))
     
     (method-declaration ((TYPE VAR \( var-list \) \{ program \} ) (make-method-node $1 $2 $4 $7) ))
     
@@ -270,8 +279,8 @@
               ((& VAR add-arg) (make-arg-node (make-arg-decl $2) $3))
               ((VAR add-arg) (make-arg-node (make-arg-decl $1) $2)))
     
-    (struct-declaration ((TYPE VAR \{ field-members \} \;) 
-      (make-struct-declaration-node $1 $2 $4)))
+    (struct-declaration ((TYPE \{ field-members \} \;) 
+      (make-struct-declaration-node $1 $3)))
 
     ;; function calls
     (function-call (( VAR \( arg-list \) ) (function-call-node $1 $3)))
