@@ -1,0 +1,22 @@
+#! /usr/bin/env racket
+#lang racket/base
+(require "../parser/parser.rkt"
+         "../program_representation/racket-synthesis.rkt"
+         racket/port
+         parser-tools/lex
+         (prefix-in re- parser-tools/lex-sre)
+         parser-tools/yacc)
+;currently not working
+;(args (vector->string (current-command-line-arguments)))
+
+;We don't want the input file hardcoded in
+(define in (port->string (open-input-file "translation_test.c")))
+;(display in)
+
+
+(define lst (let*
+                ((test-program in)
+                 (input (open-input-string test-program)))
+              (translate (simple-math-parser (lex-this simple-math-lexer input)))))
+
+(display (translate-to-c lst))
