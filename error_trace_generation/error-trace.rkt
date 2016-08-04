@@ -1,120 +1,172 @@
-#lang racket
+#lang racket/base
 
 (require (only-in "../program_representation/simulator-structures.rkt"
-                  Method Method-ret-type Method-instr-list
-                  Run-method Run-method? Run-method-method Run-method-ret
-                  C-Instruction-thread-id
-                  Create-var
-                  None
-                  Thread-list)
-         (only-in "../cex_generalization/c-program-representation.rkt"
-                  interleaving-to-sketch)
+                  Method-args Method-instr-list
+                  Run-method
+                  C-Instruction
+                  Single-branch Branch Loop
+                  Create-var)
+         "backtracking.rkt"
+         "interpret.rkt"
+         "linearizable.rkt"
          "methods.rkt"
-         "utils.rkt"
+         "traces.rkt"
          "vars.rkt"
-         (only-in racket/hash hash-union))
+         (only-in racket/match match)
+         (only-in racket/list first split-at empty?)
+         (only-in racket/function curryr))
 
-(provide bound error-traces)
+(provide bound error-traces test-init)
 
 ; The maximum number of non-commutative library calls to insert between each
 ;  pair of library calls in the mut when searching for linearizability errors.
 (define bound (make-parameter 2))
 
-(define in-mut (compose null? C-Instruction-thread-id))
+(define (one-of L)
+  (match L
+    ['() (fail)]
+    [`(,H . ,T) (-< H (one-of T))]))
 
-(define (linearizable? mut variables pointers library)
-  ; Simulate each possible interleaving of mut with the instructions of client.
-  ; If the result of running the trace matches the result of one of those simulations,
-  ;  return #t. Otherwise return #f.
-  
-  (match mut
-    [(Method id args ret-type instr-list)
-     (define-values (mut-instrs client) (partition in-mut instr-list))
-     
-     (define arguments (for/list ([type args])
-                         (if (member type primitive-types)
-                             (random-value-of-type type)
-                             (first (hash-ref pointers type)))))
-     
-     (define mut-ret (fresh-var))
-     (define trace (list (Create-var mut-ret ret-type (None))
-                         (Run-method id args mut-ret)))
-     (define declarations (for/list ([(id type) variables])
-                            (Create-var id type (None))))
-     (define old-mut (Method id args ret-type mut-instrs))
-     (define vars (cons mut-ret (hash-keys variables)))
-     
-     (displayln instr-list)
-     
-     ; Run the instrumented method and get the results.
-     (pretty-display
-      (interleaving-to-sketch
-       (Thread-list (append declarations trace))
-       vars
-       (cons mut library)))
-     
-     (displayln pointers)
-     
-     (error "pls stop")
-     
-     
-     ; Generate all possible interleavings of mut (as an atomic unit) with client.
-     ;  (i.e. try inserting mut before, between each pair of instructions, and after.)
-     #;(for/list ([i (add1 (length client))])
-         (let-values ([(before after) (split-at client i)])
-           (interleaving-to-sketch
-            (Thread-list (append declarations before trace after))
-            vars
-            (cons old-mut library))))])
-  
-  #f)
+; Stop values for the generator.
+(define (stop-value) (values (void) (void) (void)))
+(define (stop-value? x y z) (void? x))
 
-(define (instr-update method instr-list)
-  (match method
-    [(Method id args ret-type old-instrs) (Method id args ret-type instr-list)]))
+(require racket/generator)
+(define (instrumenter method library pointers)
+  (generator ()
+    (define (instrument mut breakpoint variables client)
+      (define-values (before after) (split-at mut breakpoint))
+      (match after
+        ; Fully instrumented the method
+        ['() (stop-value)]
 
-(define (error-traces library method-name pointers)
+        [`(,instr . ,tail)
+         (match instr
+           ; Library method call: add conflicting operations
+           [(Run-method _ _ method args ret)
+            (define ops (conflicting-ops (bound) instr library pointers))
+            (define op (one-of ops)) ; choice point
+            (define new-mut (append before (list instr) op tail))
+            (define new-vars (append variables
+                                     (map (curryr return-type library) op)))
+            (define new-client (append client op))
+            (unless (empty? op) (yield new-mut new-vars new-client))
+            (instrument new-mut (+ breakpoint (length op) 1) new-vars new-client)]
+
+           ; if without else: instrument the branch, then continue
+           [(Single-branch _ _ condition branch)
+            (define new-vars variables)
+            (define new-client client)
+            (for ([(trace vars ops)
+                   (in-producer (instrumenter branch library pointers)
+                                stop-value?)])
+              (set! mut
+                    (append before
+                            `(,(Single-branch condition trace))
+                            tail))
+              (set! new-vars (append variables vars))
+              (set! new-client (append client ops))
+              (yield mut new-vars new-client))
+            (instrument mut (add1 breakpoint) new-vars new-client)]
+
+           ; if with else: instrument a branch, then continue.
+           ;  Then come back and instrument the other branch, then continue.
+           [(Branch _ _ condition b1 b2)
+            (define new-mut mut)
+            (define new-vars variables)
+            (define new-client client)
+
+            ; We have to instrument both brances separately, otherwise we'll
+            ;  end up with infeasible traces.
+            (for ([(trace vars ops)
+                   (in-producer (instrumenter b1 library pointers)
+                                stop-value?)])
+              (set! new-mut
+                    (append before
+                            `(,(Branch condition trace b2))
+                            tail))
+              (set! new-vars (append variables vars))
+              (set! new-client (append client ops))
+              (yield new-mut new-vars new-client))
+            (instrument new-mut (add1 breakpoint) new-vars new-client)
+
+            ; Done with the first branch. Now try the second one.
+            (set! new-mut mut)
+            (set! new-vars variables)
+            (set! new-client client)
+
+            (for ([(trace vars ops)
+                   (in-producer (instrumenter b2 library pointers)
+                                stop-value?)])
+              (set! new-mut
+                    (append before
+                            `(,(Branch condition b1 trace))
+                            tail))
+              (set! new-vars (append variables vars))
+              (set! new-client (append client ops))
+              (yield new-mut new-vars new-client))
+            (instrument new-mut (add1 breakpoint) new-vars new-client)]
+
+           ; loop: instrument the loop body, then continue
+           [(Loop _ _ condition body)
+            (define new-vars variables)
+            (define new-client client)
+            (for ([(trace vars ops)
+                   (in-producer
+                    (instrumenter body library pointers) stop-value?)])
+              (set! mut
+                    (append before `(,(Loop condition trace)) tail))
+              (set! new-vars (append variables vars))
+              (set! new-client (append client ops))
+              (yield mut new-vars new-client))
+            (instrument mut (add1 breakpoint) new-vars new-client)]
+
+           ; Anything else: continue iteration through the method
+           [(C-Instruction _ _) (instrument mut (add1 breakpoint) variables client)])]))
+
+    (instrument method 0 '() '())))
+
+(require (only-in racket/control prompt))
+
+; Temporary, to be removed once init is no longer hard-coded.
+(require (only-in "../program_representation/simulator-structures.rkt"
+                  Set-var New-struct None Get-var Return))
+(define test-init
+  `(,(Create-var "shared" "Node")
+    ,(Set-var "shared" (New-struct "Node" `(,(None) 0 0 0)))
+    ,(Run-method "push" `(,(Get-var "shared") 1 2) null)
+    ,(Run-method "push" `(,(Get-var "shared") 2 4) null)))
+
+(define (error-traces library method-name init)
   (define mut (get-method method-name library))
+
+  ; Construct a pointer table from init
+  (define pointers (make-pointers-table init))
+
+  ; Set up the interpreter
   (define lib (remove mut library))
-  
-  (define (generate-error-traces-after mut breakpoint variables traces)
-    (define-values (before after)
-      (splitf-at-after-index (Method-instr-list mut) Run-method? breakpoint))
-    
-    (match after
-      ; Base case: no breakpoints left. Just return all accumulated traces.
-      ['() traces]
-      
-      ; Test all possible ways to insert a library call after the current method call
-      ;  (including not inserting anything).
-      [`(,method-call . ,tail)
-       (append-map
-        ; Instrument mut by inserting ops right after the current method call.
-        (λ (ops)
-          ; Update the variable type map with the new return variables.
-          (define new-vars
-            (hash-union
-             variables
-             (make-hash (map
-                         (λ (op)
-                           (cons (Run-method-ret op)                             ; var name
-                                 (Method-ret-type
-                                  (get-method (Run-method-method op) library)))) ; var type
-                         ops))))
-          (define new-before (append before (cons method-call ops)))
-          (define new-trace (append new-before tail))
-          (define new-mut (struct-copy Method mut [instr-list new-trace]))
-          
-          (if (linearizable? new-mut new-vars pointers library)
-              ; Trace linearizable: continue to instrument the rest of mut to try and
-              ;  produce an error trace.
-              (generate-error-traces-after new-mut
-                                           (length new-before)
-                                           new-vars
-                                           traces)
-              ; Trace not linearizable: add to the list of error traces and backtrack.
-              (cons new-trace traces)))
-        ; All possible ways to pick at most bound non-commutative library calls.
-        (pick-non-commutative-ops (bound) method-call lib pointers))]))
-  
-  (generate-error-traces-after mut 0 (make-immutable-hash) '()))
+  (define interpreter (make-interpreter lib))
+
+  ; Set up the instrumenter
+  (define g (instrumenter (number-lines (Method-instr-list mut)) lib pointers))
+
+  ; Pick some arguments for the MUT
+  (define arguments (pick-arguments mut lib pointers init))
+
+  (define results '())
+
+  ; why does this work?
+  (prompt
+   (for ([(trace vars client) (in-producer g stop-value?)])
+     ; Three possible results: the trace is linearizable, the trace is not
+     ;  linearizable, or we couldn't come up with arguments to make the trace
+     ;  feasible.
+     (define result
+       (linearizable trace mut client vars pointers lib interpreter arguments init))
+     (unless (lin-result-result result)
+       (unless (null? (lin-result-trace result))
+         (set! results (append results (list result))))
+       (fail)))
+   (when (has-next?) (next)))
+
+  (minimal-traces results))

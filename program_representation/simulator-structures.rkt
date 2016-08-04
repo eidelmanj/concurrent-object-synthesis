@@ -25,6 +25,8 @@
 
  (struct-out Branch)
  (struct-out Context-switch)
+
+ (struct-out Log)
  ; Extra constructors for instruction structs
  Run-Method
  Run-Method-instr-id
@@ -72,8 +74,7 @@
  (struct-out Is-none?)
  (struct-out Structure)
  (struct-out Field)
- (struct-out Binding-list)
- (struct-out Thread-Op))
+ (struct-out Binding-list))
 
 
 
@@ -104,32 +105,35 @@
 (struct C-Instruction ([thread-id #:auto #:mutable] [instr-id #:auto #:mutable]) #:transparent #:auto-value null)
 
 ;; Specific C instruction structures.
-(struct Set-pointer C-Instruction (id type offset val ))
+(struct Set-pointer C-Instruction (id type offset val ) #:transparent)
 (struct Repeat-meta C-Instruction (instr-list which-var))
 (struct Meta-addition C-Instruction (instr-list which-var))
-(struct CAS C-Instruction (v1 v2 new-val ret))
-(struct Create-var C-Instruction (id type))
-(struct Set-var C-Instruction (id assignment))
+(struct CAS C-Instruction (v1 v2 new-val ret) #:transparent)
+(struct Create-var C-Instruction (id type) #:transparent)
+(struct Set-var C-Instruction (id assignment) #:transparent)
 (struct Lock C-Instruction (id) #:transparent)
-(struct Unlock C-Instruction (id))
-(struct Return C-Instruction (val))
-(struct Get-argument C-Instruction (id))
-(struct Run-method C-Instruction (method args ret))
-(struct Single-branch C-Instruction (condition branch))
+(struct Unlock C-Instruction (id) #:transparent)
+(struct Return C-Instruction (val) #:transparent)
+(struct Get-argument C-Instruction (id) #:transparent)
+(struct Run-method C-Instruction (method args ret) #:transparent #:mutable)
+(struct Single-branch C-Instruction (condition branch) #:transparent)
 
 (struct Assume-meta C-Instruction (condition))
 (struct Assume-not-meta C-Instruction (condition))
-(struct Assume-simulation C-Instruction (condition))
+(struct Assume-simulation C-Instruction (condition) #:transparent)
 (struct Assume-loop C-Instruction (condition to-where))
 
 
-(struct Loop C-Instruction (condition instr-list))
+(struct Loop C-Instruction (condition instr-list) #:transparent)
 (struct Maybe-loop C-Instruction (meta-var condition instr-list1 instr-list2 original-instr-list hole))
 
-(struct Branch C-Instruction (condition branch1 branch2))
+(struct Branch C-Instruction (condition branch1 branch2) #:transparent)
 (struct Context-switch C-Instruction () #:transparent)
 
 
+
+; For logging traces in the interpreter.
+(struct Log (instruction) #:transparent)
 
 ;; Extra constructors allowing the thread-id field to be set.
 ;; The names are kind of confusing, but they can be used in place of the regular
@@ -151,32 +155,58 @@
 (define-tid-constructor Run-Method Run-method method args ret)
 (define-tid-instr-id-constructor Run-Method-instr-id Run-method method args ret)
 
+;; Make it easy to import just the C instruction structs.
+(module* C-structs #f
+  (provide
+   (struct-out C-Instruction)
+   (struct-out Repeat-meta)
+   (struct-out Meta-addition)
+   (struct-out CAS)
+   (struct-out Create-var)
+   (struct-out Set-var)
+   (struct-out Lock)
+   (struct-out Unlock)
+   (struct-out Return)
+   (struct-out Get-argument)
+   (struct-out Run-method)
+   (struct-out Single-branch)
+
+   (struct-out Loop)
+   (struct-out Maybe-loop)
+
+   (struct-out Branch)
+   (struct-out Context-switch)
+
+   (struct-out Method)
+   (struct-out Get-var)
+
+   Run-Method))
+
 
 (struct New-struct (type arg-list))
 
-(define-struct Dereference (id type offset))
-(define-struct Equal (expr1 expr2))
-(define-struct Not (expr))
-(define-struct Or (expr1 expr2))
-(define-struct And (expr1 expr2))
-(define-struct Arguments (arg-list))
-(define-struct Argument (type id))
-(define-struct Get-var (id))
-(define-struct Add (expr1 expr2))
-(define-struct Subtract (expr1 expr2))
-(define-struct Divide (expr1 expr2))
-(define-struct Multiply (expr1 expr2))
-(define-struct Less-than (expr1 expr2))
-(define-struct Less-than-equal (expr1 expr2))
-(define-struct Greater-than (expr1 expr2))
-(define-struct Greater-than-equal (expr1 expr2))
+(define-struct Dereference (id type offset) #:transparent)
+(define-struct Equal (expr1 expr2) #:transparent)
+(define-struct Not (expr) #:transparent)
+(define-struct Or (expr1 expr2) #:transparent)
+(define-struct And (expr1 expr2) #:transparent)
+(define-struct Arguments (arg-list) #:transparent)
+(define-struct Get-var(id) #:transparent)
+(define-struct Add (expr1 expr2) #:transparent)
+(define-struct Subtract (expr1 expr2) #:transparent)
+(define-struct Divide (expr1 expr2) #:transparent)
+(define-struct Multiply (expr1 expr2) #:transparent)
+(define-struct Less-than (expr1 expr2) #:transparent)
+(define-struct Less-than-equal (expr1 expr2) #:transparent)
+(define-struct Greater-than (expr1 expr2) #:transparent)
+(define-struct Greater-than-equal (expr1 expr2) #:transparent)
+(struct Is-none? (val) #:transparent)
 (define-struct Constant (value))
-(struct Is-none? (val))
 (struct Structure (id fields))
 (struct Field (name type))
 
 
-(struct None ())
+(struct None () #:transparent)
 
 (define-struct Hole (method1 interruptor  method2))
 
@@ -184,7 +214,7 @@
 (define-struct Client-pre (instr-list))
 
 ;; Data structure for method
-(define-struct Method (id args ret-type instr-list))
+(define-struct Method (id args ret-type instr-list) #:transparent)
 ;; id - name of method
 ;; instr-list - for now just list of Instruction structures
 
@@ -237,11 +267,6 @@
   (cond
     [(Assume-meta? a) (Assume-meta-condition a)]
     [(Assume-simulation? a) (Assume-simulation-condition a)]))
-
-;; A representation of an operation in a trace.
-;;  tid: a symbol identifying a particular thread.
-;;  mid: a symbol identifying a particular operation within a thread.
-(struct Thread-Op (tid mid) #:transparent)
 
 
 (define (Get-instr-id x)

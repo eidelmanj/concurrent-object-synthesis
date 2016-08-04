@@ -1,78 +1,56 @@
 #lang racket
 
-(require (only-in "../cex_generalization/c-program-representation.rkt"
-                  create-announcement-version)
-         "../program_representation/simulator-structures.rkt"
-         "error-trace.rkt")
+(require "../program_representation/simulator-structures.rkt"
+         "error-trace.rkt"
+         (only-in "linearizable.rkt" lin-result-trace))
 
 (define test-library
   (list
    (Method
-    "get"
-    (list "Node" "int")
+    "push"
+    '("Node" "int" "int")
     "int"
-    (create-announcement-version 
-     `(,(Lock 1 (None))
-       ,(Create-var "cur" "Node" (None))
-       ,(Set-var "cur" (Get-argument 0) (None))
-       ,(Loop (And (Not (Is-none? (Get-var "cur")))
-                   (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))))
-              `(,(Set-var "cur" (Dereference "cur" "Node" "next") (None))))
-       ,(Single-branch (Is-none? (Get-var "cur"))
-                       `(,(Unlock 1 (None)) ,(Return 0 (None))))
-       ,(Unlock 1 (None))
-       ,(Return (Dereference "cur" "Node" "val") (None)))))     
-   
-   (Method
-    "contains"
-    (list "Node" "int")
-    "int"
-    `(,(Create-var "valu" "int" (None))
-      ,(Run-method "get" `(,(Get-argument 0) ,(Get-argument 1)) "valu")
-      ,(Return (Equal (Get-var "valu") 0) (None))))
-   
-   #;
-   (Method
-    "remove"
-    (list "Node" "int")
-    "int"
-    `(,(Lock 1 (None))
-      ,(Create-var "cur" "Node" (None))
-      ,(Create-var "prevNode" "Node" (None))
-      ,(Create-var "oldVal" "Node" (None))
-      
-      ,(Set-var "cur" (Get-argument 0) (None))
-      ,(Single-branch (Equal (Get-var "cur") 0)
-                      `(,(Unlock 1 (None)) ,(Return 0 (None))))
-      
-      ,(Set-var "oldVal" (Dereference "cur" "Node" "val") (None))
-      ,(Set-var "prevNode" (Get-argument 0) (None))
-      
-      ,(Loop (And (Not (Equal (Dereference (Dereference "cur" "Node" "next") "Node" "key")
-                              (Get-argument 1)))
-                  (Not (Equal (Get-var "cur") 0)))
-             `(,(Set-var "oldVal" (Dereference "cur" "Node" "val") (None))
-               ,(Set-var "prevNode" (Get-var "cur") (None))           
-               ,(Set-var "cur" (Dereference "cur" "Node" "next") (None))))
-      ,(Single-branch (Equal (Get-var "cur") 0)
-                      `(,(Unlock 1 (None)) ,(Return 0 (None))))
-      
-      ,(Set-var "oldVal" (Dereference "cur" "Node" "val") (None))
-      ,(Set-pointer "prevNode" "Node" "next" (Dereference "cur" "Node" "next") (None))
-      ,(Unlock 1 (None))
-      ,(Return (Get-var "oldVal") (None))))
-   
+    `(,(Lock 1)
+      ,(Create-var "cur" "Node")
+      ,(Create-var "prev" "Node")
+      ,(Create-var 'result "int")
+      ,(Set-var "cur" (Get-argument 0))
+      ,(Set-var "prev" (Get-argument 0))
+      ,(Set-var 'result 0)
+      ,(Loop (And (Not (Is-none? (Get-var "cur")))
+                  (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))))
+             `(,(Set-var "prev" (Get-var "cur"))
+               ,(Set-var "cur" (Dereference "cur" "Node" "next"))))
+      ,(Single-branch
+        (Is-none? (Get-var "cur"))
+        `(,(Set-pointer "prev" "Node" "next"
+                        (New-struct "Node" `(,(None)
+                                             ,(Get-argument 1)
+                                             ,(Get-argument 2)
+                                             ,(None))))
+          ,(Unlock 1)
+          ,(Return 'result)))
+      ,(Set-var 'result (Dereference 'cur 'Node 'val))
+      ,(Set-pointer "cur" "Node" "val" (Get-argument 2))
+      ,(Unlock 1)
+      ,(Return 'result)))
+
    (Method
     "extension"
-    (list "Node" "int")
+    '("Node" "int")
     "int"
-    `(,(Create-var "val" "int" (None))
-      ,(Create-var "found" "int" (None))
-      ,(Set-var "val" 0 (None))
-      ,(Run-method "contains" `(,(Get-argument 0) ,(Get-argument 1)) "found")
-      ,(Single-branch (Equal (Get-var "found") 0)
-                      `(,(Run-method "get" `(,(Get-argument 0) ,(Get-argument 1)) "val")
-                        ,(Run-method "get" `(,(Get-argument 0) ,(Get-argument 1)) "")))
-      ,(Return (Get-var "val") (None))))))
+    (list
+     (Create-var 'val1 "int")
+     (Create-var 'val2 "int")
+     (Run-method "push" `(,(Get-argument 0) 1 10) 'val1)
+     (Run-method "push" `(,(Get-argument 0) 1 20) 'val2)
+     (Return (Add (Get-var 'val1) (Get-var 'val2)))))))
 
-(error-traces test-library "extension" (make-hash `(("Node" . (,(Get-var "shared"))))))
+(bound 1)
+(define results
+  (error-traces
+   test-library
+   "extension"
+   test-init))
+
+(map lin-result-trace results)

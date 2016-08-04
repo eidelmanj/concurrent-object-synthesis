@@ -2,29 +2,33 @@
 
 (require (only-in racket
                   make-hash hash-ref! hash-values hash->list
-                  symbol->string string->symbol
-                  dropf-right
-                  set set-add
-                  for/list)
+                  dropf-right)
          rosette/lib/match
+         (rename-in (only-in racket/match match) [match match/racket])
          (only-in "../program_representation/simulator-structures.rkt"
-                  Thread-Op Thread-Op-tid))
+                  C-Instruction C-Instruction-thread-id
+                  Run-method
+                  Assume-simulation?)
+         (only-in "../error_trace_generation/utils.rkt"
+                  filter-hash))
 
 (current-bitwidth #f)
 
 ; Returns a fresh symbolic boolean variable.
 (define (dynamic) (define-symbolic* b boolean?) b)
 
-; Returns a symbol representation of op in the form 'tid/mid.
-(define (op->symbol op)
-  (match op
-    [(Thread-Op tid mid) (string->symbol
-                   (format "~a/~a" (symbol->string tid) (symbol->string mid)))]))
+; Returns an identifier for op:
+;  - op's instruction id, if op belongs to thread main-tid,
+;  - op's method id, if op is a method call not belonging to thread main-tid.
+(define (op->id op main-tid)
+  (match/racket op
+    [(C-Instruction tid iid) #:when (equal? tid main-tid) iid]
+    [(Run-method _ _ mid _ _) mid]))
 
 ; Returns true if op has thread id tid, false otherwise.
 ; op must be an instance of struct Thread-Op.
 (define (in-thread? op tid)
-  (equal? (Thread-Op-tid op) tid))
+  (equal? (C-Instruction-thread-id op) tid))
 
 ; Returns a copy of trace truncated after the last operation by thread tid.
 ; PRECONDITION: trace contains at least one operation by thread tid.
@@ -38,16 +42,16 @@
 ; removed. All covers returned have a minimal number of edges assigned to #f.
 (define (optimal-cover interleavings main-tid)
   ; Global hash table of symbolic variables representing a pair of
-  ; a set of completed operations and a pending operation.
+  ; a the most recent completed operation in the MUT and a pending operation.
   (define vars (make-hash))
-  
+
   ; Assert a disjunction of literals for each interleaving.
   (for-each
    (λ (trace)
      (assert
       (apply ||
              ; Accumulate a list of literals for the edges in this trace.
-             (let loop ([completed (set)]
+             (let loop ([last-mut -1]
                         [trace (truncate trace main-tid)]
                         [literals (list)])
                (match trace
@@ -55,16 +59,19 @@
                  ['() (remove* '(#f) literals)]
                  [`(,op . ,tail)
                   (loop
-                   (set-add completed (op->symbol op))
+                   ; Ignore Assume-simulation structures, as they're not instructions.
+                   (if (or (not (in-thread? op main-tid)) (Assume-simulation? op))
+                       last-mut
+                       (op->id op main-tid))
                    tail
                    ; Add symbolic variables only for operations of the client thread.
                    (cons (and (not (in-thread? op main-tid))
                               (! (hash-ref! vars
-                                            (cons completed (op->symbol op))
+                                            (cons last-mut (op->id op main-tid))
                                             (dynamic))))
                          literals))])))))
    interleavings)
-  
+
   ; Enumerate all minimal solutions.
   (let loop ([covers '()])
     ; If we start with the smallest possible solutions and work our way up,
@@ -78,26 +85,19 @@
              ; In each future solution, at least one of the variables set to false
              ; in this solution should take on a different value.
              ; (i.e. give me a different solution next time.)
-             (apply || (for/list ([(var value) (model solution)]
-                                  #:unless value)
-                         var)))
+             (apply || (filter-hash false? (model solution))))
             ; Look for the next solution.
-            (loop (cons (evaluate (hash->list vars) solution) covers))])))
+            (define cover
+              (filter-hash
+               false?
+               ; Unfortunately evaluate doesn't work directly on a hash table,
+               ; so we have to convert to a list and back.
+               (make-hash (evaluate (hash->list vars) solution))))
+            (loop (cons cover covers))])))
 
-; Convenience form for testing optimal-cover.
-(define-syntax-rule (opt-cover-test
-                     ((tid mid) ...)
-                     ...
-                     main-tid)
-  (optimal-cover
-   (list (list (Thread-Op 'tid 'mid) ...)
-         ...)
-   'main-tid))
+(module+ test
+  (require "../error_trace_generation/mooly-test.rkt")
 
-; Example of using the convenience form:
-#;
-(opt-cover-test
- ((t1 m1) (t1 m2) (t2 m1) (t1 m3) (t2 m2) (t1 m4))
- ((t1 m1) (t1 m2) (t2 m1) (t1 m3) (t1 m4))
- ((t1 m1) (t1 m2) (t1 m3) (t2 m1) (t2 m2) (t1 m4))
- t1)
+  (unless (null? mooly-test-traces)
+    (define opt-cover (optimal-cover mooly-test-traces null))
+    (for-each pretty-print opt-cover)))
