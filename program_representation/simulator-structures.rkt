@@ -191,6 +191,7 @@
 (define-struct Or (expr1 expr2) #:transparent)
 (define-struct And (expr1 expr2) #:transparent)
 (define-struct Arguments (arg-list) #:transparent)
+(define-struct Argument (type id) #:transparent)
 (define-struct Get-var(id) #:transparent)
 (define-struct Add (expr1 expr2) #:transparent)
 (define-struct Subtract (expr1 expr2) #:transparent)
