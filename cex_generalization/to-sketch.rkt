@@ -12,10 +12,28 @@
  retrieve-code
  new-scope-num
 
+ generate-optimistic-condition-sketches
+ get-interfering-ret-vars
  generate-library-code
  trace-list-to-sketch
  instr-list-to-sketch)
 
+
+
+
+;; Find all the return variables of interfering methods
+;; so that we can initialize them in sketch
+(define (get-interfering-ret-vars t)
+  (let ([interfering-lines
+         (filter
+          (lambda (ti)
+            (and (Run-method? ti) (boolean? (C-Instruction-thread-id ti))))
+          t)])
+    (unique
+     equal?
+     (map
+     (lambda (ti) (Run-method-ret ti))
+     interfering-lines))))
 
 
 
@@ -81,9 +99,11 @@
 
 
 (define (print-non-sketch-simulation instr-list library arg-store ret-store scope-num parent-scope)
+
   (cond
     [(empty? instr-list) ""]
     [else
+     ;; (display "FIRST INSTR: ") (displayln instr-list)
      (let ([elem (first instr-list)])
        (cond
          [(Loop? elem)
@@ -173,7 +193,9 @@
 
           (string-append
            "(set! " (Run-method-ret elem) " "
-           "(METHOD-" (Run-method-method elem) " " (to-string-instr (Run-method-args elem) arg-store scope-num parent-scope) "))\n")]
+           "(METHOD-" (Run-method-method elem) " " (to-string-instr (Run-method-args elem) arg-store scope-num parent-scope) "))\n"
+
+           (print-non-sketch-simulation (rest instr-list) library arg-store ret-store scope-num parent-scope))]
            
           
           
@@ -247,8 +269,8 @@
            ;; "(set! " ret-store ;; (~v (get-most-recent-binding ret-store scope-num parent-scope))
            ;; " " (to-string-instr (Return-val elem) arg-store scope-num parent-scope) ")\n"
            "(set! method-exit #t)\n"
-
-           (to-string-instr (Return-val elem) arg-store scope-num parent-scope)
+           "(set! TO-RETURN " (to-string-instr (Return-val elem) arg-store scope-num parent-scope) " )\n"
+           ;; (to-string-instr (Return-val elem) arg-store scope-num parent-scope)
           )]
            ;; (print-non-sketch-simulation (rest instr-list) library arg-store ret-store))]
                          
@@ -277,6 +299,14 @@
 (define (to-string-instr instr arg-store scope-num parent-scope)
   ;; (display "to-string: ") (display instr) (display "\n")
   (cond
+
+    [(Optimistic-Condition? instr)
+     ;; TODO Need to deal with optimistic condition
+     (string-append
+      "(OPT" (~v (Optimistic-Condition-meta-var instr)) ")")]
+
+
+    
     [(Dereference? instr)
      (cond
        [(Dereference? (Dereference-id instr))
@@ -527,9 +557,12 @@
    (map
     (lambda (method)
       (string-append
-       "(define (METHOD-" (Method-id method) " arg-list)"
+       "\n\n(define (METHOD-" (Method-id method) " arg-list)"
+       "(define TO-RETURN (void))\n"
        (all-instrs-to-sketch (retrieve-code library (Method-id method)) library)
-       ")\n"))
+       "(set! method-exit #f)\n"
+       "TO-RETURN"
+       ")\n\n\n\n"))
 
     library)))
 
@@ -571,7 +604,7 @@
             (string-append
              "(displayln \"running method: " (Run-method-method instr) "\")"
              "(set! current-thread " (~v (C-Instruction-thread-id instr)) ")\n"
-             "(set! method-exit #f)\n"
+             ;; "(set! method-exit #f)\n"
              "(METHOD-" (Run-method-method instr) " " (to-string-instr (Run-method-args instr) arg-store scope-num parent-scope) ")\n"
              ;; "(define " args-list " (void))\n"
              ;; "(set! " args-list " " (to-string-instr (Run-method-args instr) arg-store scope-num parent-scope) ")\n"
@@ -589,7 +622,10 @@
            " " (to-string-instr (Set-var-assignment instr)  arg-store scope-num parent-scope) ")\n")]
 
 
+
+
          [(Assume-simulation? instr)
+
           (string-append
            "(if (not " (to-string-instr (Assume-simulation-condition instr)  arg-store scope-num parent-scope) ")\n (set! POSSIBLE #f)\n (begin (void)))\n")]
 
@@ -685,9 +721,10 @@
        (cond
          [(Create-var? elem)
           ;; (display "create-var-id: ") (display (Create-var-id elem)) (display "\n")
-          (new-binding (Create-var-id elem) scope-num parent-scope)
+          ;; (new-binding (Create-var-id elem) scope-num parent-scope)
           (string-append
-           "(define " (Create-var-id elem) (~v (get-most-recent-binding (Create-var-id elem) scope-num parent-scope)) " (void))\n"
+           "(define " (Create-var-id elem) ;; (~v (get-most-recent-binding (Create-var-id elem) scope-num parent-scope))
+           " (void))\n"
            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope))]
 
 
@@ -704,12 +741,17 @@
          [(Run-method? elem) 
           (let ([args-list (new-arg-list-id)]
                 [new-scope (new-scope-num)])
-            (add-binding-parent new-scope scope-num)
+            ;; (add-binding-parent new-scope scope-num)
             (string-append
              "(displayln \"running method: " (Run-method-method elem) "\")"
              "(set! current-thread " (~v (C-Instruction-thread-id elem)) ")\n"
              "(set! method-exit #f)\n"
-             "(METHOD-" (Run-method-method elem) " " (to-string-instr (Run-method-args elem) arg-store scope-num parent-scope) ")\n"
+
+             "(display \"result: \")"
+
+             "(set! TMP-RET (METHOD-" (Run-method-method elem) " " (to-string-instr (Run-method-args elem) arg-store scope-num parent-scope) "))\n"
+             "(displayln TMP-RET)\n"
+             "(set! " (format "~a" (Run-method-ret elem)) " TMP-RET)\n"
              ;; "(define " args-list " (void))\n"
              ;; "(set! " args-list " " (to-string-instr (Run-method-args elem) arg-store scope-num parent-scope) ")\n"
              ;; "(begin\n"
@@ -723,10 +765,12 @@
           ;; "todo\n"]
           ;; (display "found set var\n")
           (string-append
-           "(set! " (Set-var-id elem) (~v (get-most-recent-binding (Set-var-id elem) scope-num parent-scope)) " " (to-string-instr (Set-var-assignment elem)  arg-store scope-num parent-scope) ")\n"
+           "(set! " (Set-var-id elem) ;; (~v (get-most-recent-binding (Set-var-id elem) scope-num parent-scope))
+           " " (to-string-instr (Set-var-assignment elem)  arg-store scope-num parent-scope) ")\n"
            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope))]
 
          [(Assume-simulation? elem)
+          ;; (display "printing out assume simulation: ") (displayln elem)
           (string-append
            "(if (not " (to-string-instr (Assume-simulation-condition elem)  arg-store scope-num parent-scope) ")\n (set! POSSIBLE #f)\n (begin \n"
            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope) ""
@@ -741,7 +785,8 @@
 
          [(Set-pointer? elem)
           (string-append
-           "(set-" (Set-pointer-type elem) "-" (Set-pointer-offset elem) "! " (Set-pointer-id elem)  (~v (get-most-recent-binding (Set-pointer-id elem) scope-num parent-scope)) " "  (to-string-instr (Set-pointer-val elem)  arg-store scope-num parent-scope) ")\n"
+           "(set-" (Set-pointer-type elem) "-" (Set-pointer-offset elem) "! " (Set-pointer-id elem)  ;; (~v (get-most-recent-binding (Set-pointer-id elem) scope-num parent-scope))
+           " "  (to-string-instr (Set-pointer-val elem)  arg-store scope-num parent-scope) ")\n"
            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope))]
 
          [(Assume-meta? elem)
@@ -751,7 +796,7 @@
 
          [(Assume-not-meta? elem)
           (string-append
-           "(if meta-var" (~v (Assume-not-meta-condition elem)) "\n (set! POSSIBLE)\n (begin\n"
+           "(if meta-var" (~v (Assume-not-meta-condition elem)) "\n (set! POSSIBLE #f)\n (begin\n"
            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope) "))\n")]
 
          [(Repeat-meta? elem)
@@ -787,9 +832,11 @@
            "(if  (not (equal? " (to-string-instr (CAS-v1 elem)  arg-store scope-num parent-scope) " " (to-string-instr (CAS-v2 elem) arg-store scope-num parent-scope) "))\n"
            "(begin\n "
            "(set! " (to-string-instr (CAS-v1 elem)  arg-store scope-num parent-scope) " " (to-string-instr (CAS-new-val elem) arg-store scope-num parent-scope) ")\n"
-           "(set! " (CAS-ret elem) (~v (get-most-recent-binding (CAS-ret elem) scope-num parent-scope)) " 1))"
+           "(set! " (CAS-ret elem) ;; (~v (get-most-recent-binding (CAS-ret elem) scope-num parent-scope))
+           " 1))"
            "(begin\n "
-           "(set! " (CAS-ret elem) (~v (get-most-recent-binding (CAS-ret elem) scope-num parent-scope)) " 0)))\n"
+           "(set! " (CAS-ret elem) ;; (~v (get-most-recent-binding (CAS-ret elem) scope-num parent-scope))
+           " 0)))\n"
 
            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope))]
            
@@ -799,6 +846,9 @@
             ;; (display (Continue-to-where elem)) (display "\n")
             (instr-list-to-sketch where-to library arg-store scope-num parent-scope))]
 
+         [(Return? elem)
+          (string-append "(set! RETURN-VAL " (to-string-instr (Return-val elem) arg-store scope-num parent-scope) ")\n"
+                         (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope))]
 
 
          [else
@@ -823,5 +873,43 @@
        [else
         (find-continue-sublist (rest instr-list) to-where)])]
     [else (find-continue-sublist (rest instr-list) to-where)]))
+
+
+
+
+;; Optimistic Concurrency condition grammar generated for each Optimistic-Condition
+;; object given.
+(define (generate-optimistic-condition-sketches opt-conds depth)
+  (reduce
+   string-append
+   (map
+    (lambda (opt-cond)
+      (string-append
+      "
+
+  (define-synthax (optimistic-condition" (~v (Optimistic-Condition-meta-var opt-cond)) "  depth)
+    #:base (choose  (METHOD-contains (list (list-ref first-args 0) (list-ref first-args 1)))
+                    (! (METHOD-contains (list (list-ref first-args 0) (list-ref first-args 1)))))
+
+    #:else (choose
+              (METHOD-contains (list (list-ref first-args 0) (list-ref first-args 1)))
+              (! (METHOD-contains (list (list-ref first-args 0) (list-ref first-args 1))))
+              ((choose && ||) (optimistic-condition" (~v (Optimistic-Condition-meta-var opt-cond)) " (- depth 1))
+                              (optimistic-condition" (~v (Optimistic-Condition-meta-var opt-cond)) " (- depth 1)))))
+
+ (define OPT1"
+
+                              " (lambda () (optimistic-condition" (~v (Optimistic-Condition-meta-var opt-cond)) " 2)))"))
+
+ ;; (~v (Optimistic-Condition-meta-var opt-cond)) " (lambda () (optimistic-condition" (~v (Optimistic-Condition-meta-var opt-cond)) " 1)))\n"))
+
+    
+
+opt-conds)))
+
+
+
+
+
 
 

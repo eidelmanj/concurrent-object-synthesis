@@ -5,6 +5,12 @@
 (provide
  metasketch-announcement-strategy
  metasketch-library-add-announcement
+ expand-traces-to-sketch-lib
+ metasketch-optimistic-strategy
+ modify-library-for-optimistic
+ meta-vars-consistent?
+ collect-all-optimistic-expressions
+ optimistic-stopped-hole?
  )
 
 (define optimistic-count (void))
@@ -159,11 +165,28 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;; Metasketch for Composed Method ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+(define (modify-library-for-optimistic library method-name hole)
+  (let ([matching-method (get-lib-method library method-name)])
+    (cond
+      [(null? matching-method)
+       (displayln "Warning: Asked to modify a library method that doesn't exist. This is probably a mistake")]
+      [else
+       (let ([fixed-method (metasketch-optimistic-strategy (Method-instr-list matching-method)
+                           hole)])
+         (replace-lib-method library method-name
+                             (Method (Method-id matching-method) (Method-args matching-method) (Method-ret-type matching-method) fixed-method)))])))
+
+
+
 ;;;;;;;; Optimistic Concurrency repair protocol ;;;;;;;;;;;;;;;;;
 (define (metasketch-optimistic-strategy instr-list hole)
   (metasketch-repair instr-list optimistic-repair-strt optimistic-repair-end hole (new-meta-var)))
 
   
+
+
+
 ;; TODO: Have to actually interpret Optimistic-Condition
 (define (generate-optimistic-check-expression interruptor output-var)
   (Set-var output-var (Optimistic-Condition (new-optimistic-id))))
@@ -180,25 +203,28 @@
      (first instr-list)
      (Atomic-Start-Marker)
      (generate-optimistic-check-expression (Hole-interruptor hole) "OPTIMISTIC")
-     (Single-branch (Get-var "OPTIMISTIC")
+     (Single-branch-counter (Get-var "OPTIMISTIC")
                     (list
                      (Goto "START"))))
+
 
     (list (first instr-list)))))
     
 
 (define (optimistic-repair-end instr-list hole meta-var)
+
   
   (append
+
+   
    (list
-   (first (instr-list))
    (Meta-branch
     meta-var
     (list
      (Atomic-End-Marker))
     `()))
 
-   (rest instr-list)))
+   instr-list))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -239,9 +265,9 @@
      meta-var
      (list
       (Atomic-End-Marker))
-     `()))
+     `()))))
    
-   (rest instr-list)))
+
 
 
 
@@ -269,6 +295,7 @@
     [(empty? instr-list) instr-list]
 
     [(Single-branch? (first instr-list))
+
      (let ([branch-ends-with-hole? (check-branch-border (Single-branch-branch (first instr-list)))])
        (append
         (list
@@ -360,7 +387,10 @@
             
 
            
-    
+    [(Label? (first instr-list))
+     (append
+      (list (first instr-list))
+      (metasketch-repair (rest instr-list) repair-strt repair-end hole meta-var))]
        
        
          
@@ -368,8 +398,16 @@
     [(equal? (C-Instruction-instr-id (first instr-list)) (Hole-method1 hole)) ;; We've found our hole
      ;; (displayln "Found hole")
      (append
-      (repair-strt instr-list hole) ;; Add whatever needs to be added to the first instruction
-      (repair-end (rest instr-list) hole))]
+      (repair-strt instr-list hole meta-var) ;; Add whatever needs to be added to the first instruction
+      (metasketch-repair (rest instr-list) repair-strt repair-end hole meta-var))]
+
+    [(equal? (C-Instruction-instr-id (first instr-list)) (Hole-method2 hole))
+     ;; (displayln "Found end of hole")
+     (append
+      (repair-end instr-list hole meta-var)
+      (metasketch-repair (rest instr-list) repair-strt repair-end hole meta-var))]
+
+    
     [else
      ;; (display "didn't find hole, found: ") (displayln (C-Instruction-instr-id (first instr-list)))
      (append (list (first instr-list))
@@ -381,80 +419,242 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;; Expansion of error traces to match new sketch extension ;;;;;;;;;;
 
-;; Takes a trace t and a method m and returns the set of traces equivalent to
-;; t that are runnable using m
-(define (expand-error-trace original-t m)
+(define (expand-traces-to-sketch-lib traces library composed-method-name)
+  (let ([composed-sketch-methods
+         (filter (lambda (m) (equal? (Method-id m) composed-method-name)) library)])
+    (if (empty? composed-sketch-methods)
+        (displayln "ERROR: You've asked for a method that does not exist in the library")
 
-  (define (expand-error-trace-helper t instr-list)
+        (let ([composed-sketch-method (first composed-sketch-methods)])
+          ;; (display "COMPOSED METHOD FOUND: ") (displayln composed-sketch-method)
+          (reduce
+           append
+           (map (lambda (t) (expand-error-trace t composed-sketch-method)) traces))))))
+  
+
+
+
+
+;; Takes a trace t and a method m and returns the set of traces equivalent to
+;; t that are runnable using m 
+(define (expand-error-trace original-t m )
+
+  ;; Note: Keeps running list of all interrupting method calls
+  ;; we see along the way, so that when we do restarts, we don't repeat the same calls
+  (define (expand-error-trace-helper t instr-list interceptors-seen)
+    ;; (display "FIRST: ")
+    ;; (displayln (first t))
     (cond
       [(or (empty? t) (empty? instr-list))
-       (list)]
+       (list (list))]
 
       [(Meta-branch? (first instr-list))
+       ;; (displayln "Reached meta-branch")
 
        (append
         (map
          (append-item (Assume-meta (Meta-branch-condition (first instr-list))))
-         (expand-error-trace-helper t (append (Meta-branch-branch1 (first instr-list)) (rest instr-list))))
+         (expand-error-trace-helper t (append (Meta-branch-branch1 (first instr-list)) (rest instr-list)) interceptors-seen))
         (map
-         (append-item (Assume-meta (Not (Meta-branch-condition (first instr-list)))))
-         (expand-error-trace-helper t (append (Meta-branch-branch2 (first instr-list)) (rest instr-list)))))]
+         (append-item (Assume-not-meta  (Meta-branch-condition (first instr-list))))
+         (expand-error-trace-helper t (append (Meta-branch-branch2 (first instr-list)) (rest instr-list)) interceptors-seen)))]
+
+
+
+
+      [(Single-branch-counter? (first instr-list))
+       ;; (display "Counter: ") (display (Single-branch-counter-counter (first instr-list))) (display "- ")
+       ;; (displayln "Reached single branch ")
+       (cond
+
+
+         [(>= (Single-branch-counter-counter (first instr-list)) 1)
+          (map
+           (append-item (Assume-simulation (Single-branch-counter-condition (first instr-list))))
+           (expand-error-trace-helper t (rest instr-list) interceptors-seen))]
+          
+         [else
+          (set-Single-branch-counter-counter! (first instr-list) (+ (Single-branch-counter-counter (first instr-list)) 1))
+          (append
+           (map 
+            (append-item (Assume-simulation (Single-branch-counter-condition (first instr-list))))
+            (expand-error-trace-helper t (append (Single-branch-counter-branch (first instr-list))) interceptors-seen))
+
+           (map
+            (append-item (Assume-simulation (Not (Single-branch-counter-condition (first instr-list)))))
+            (expand-error-trace-helper t (rest instr-list) interceptors-seen)))])]
+
+           
+         
+          
+         
+         ;; ;; If in the original trace, this condition failed - it still fails
+         ;; [(and (Assume-simulation? (first t)) (Not? (Assume-simulation-condition (first t))))
+         ;;  (displayln "Assume - NOT")
+         ;;  (map
+         ;;   (append-item (first t))
+         ;;   (expand-error-trace-helper (rest t) (rest instr-list) interceptors-seen))]
+
+         ;; ;; If in the original trace, this condition succeeded- it succeeds
+         ;; [(and (Assume-simulation? (first t)) (not (Not? (Assume-simulation-condition (first t)))))
+         ;;  (displayln "Assume - NOT NOT")
+         ;;  (map
+         ;;   (append-item (first t))
+         ;;   (expand-error-trace-helper (rest t) (append (Single-branch-counter-branch (first instr-list)) (rest instr-list))
+         ;;                              interceptors-seen))]
+
+         ;; ;; If this was not a condition that appeared in the original interleaving
+         ;; ;; - we must explore both branches
+         ;; [(not (Assume-simulation? (first t)))
+         ;;  (displayln "Other assume")
+         ;;  (append
+         ;;   (map 
+         ;;    (append-item (Assume-simulation (Single-branch-counter-condition (first instr-list))))
+         ;;    (expand-error-trace-helper t (append (Single-branch-counter-branch (first instr-list))) interceptors-seen))
+
+         ;;   (map
+         ;;    (append-item (Assume-simulation (Not (Single-branch-counter-condition (first instr-list)))))
+         ;;    (expand-error-trace-helper t (rest instr-list) interceptors-seen)))])]
+
+
+
 
       ;; If the composed method has a real program branch, then we need to figure out
       ;; if the branch is from the original error trace, in which case we must follow
       ;; the branch taken by the original program
       [(Single-branch? (first instr-list))
+       ;; (displayln "Reached single branch")
        (cond
 
+
+
+         
          ;; If in the original trace, this condition failed - it still fails
-         [(and (Assume-simulation? (first t)) (Not? (Assume-simulation-condition (first t))))
+         [(and (Assume-simulation? (first t))
+               (Not? (Assume-simulation-condition (first t)))
+               (not (Assume-simulation-seen-before (first t))))
+                                                       
+          (set-Assume-simulation-seen-before! (first t) #t)
+          ;; (displayln "Assume - NOT")
           (map
            (append-item (first t))
-           (expand-error-trace-helper (rest t) (rest instr-list)))]
+           (expand-error-trace-helper (rest t) (rest instr-list) interceptors-seen))]
 
          ;; If in the original trace, this condition succeeded- it succeeds
-         [(and (Assume-simulation? (first t)) (not (Not? (Assume-simulation-condition (first t)))))
+         [(and
+           (Assume-simulation? (first t))
+           (not (Assume-simulation-seen-before (first t)))
+           (not (Not? (Assume-simulation-condition (first t)))))
+          ;; (displayln "Assume - NOT NOT")
+          (set-Assume-simulation-seen-before! (first t) #t)
           (map
            (append-item (first t))
-           (expand-error-trace-helper (rest t) (append (Single-branch-branch (first instr-list)) (rest instr-list))))]
+           (expand-error-trace-helper (rest t) (append (Single-branch-branch (first instr-list)) (rest instr-list))
+                                      interceptors-seen))]
 
          ;; If this was not a condition that appeared in the original interleaving
          ;; - we must explore both branches
-         [(not (Assume-simulation? (first t)))
+         [else
+          ;; (displayln "Other assume")
           (append
            (map 
             (append-item (Assume-simulation (Single-branch-condition (first instr-list))))
-            (expand-error-trace-helper t (append (Single-branch-branch (first instr-list)))))
+            (expand-error-trace-helper t (append (Single-branch-branch (first instr-list))) interceptors-seen))
 
            (map
             (append-item (Assume-simulation (Not (Single-branch-condition (first instr-list)))))
-            (expand-error-trace-helper t (rest instr-list))))])]
+            (expand-error-trace-helper t (rest instr-list) interceptors-seen)))])]
 
       ;; TODO - Branch implementation
       [(Branch? (first instr-list))
        (displayln "TODO: Branch implementation missing")]
 
+
+      ;; Follow Goto statement in the obvious way.
+      ;; TODO: find-goto-starting-point-trace ensures that we do
+      ;; recheck the same interference as last time
       [(Goto? (first instr-list))
+       ;; (displayln "Reached goto case")
+
 
        (let
            ([original-m-instr-list (Method-instr-list m)])
+         ;; (display "original trace: ") (displayln original-t)
+         ;; (display "Trace goto call: ") (displayln           (find-goto-starting-point-trace original-t (Goto-goto-addr (first instr-list)) interceptors-seen))
+
+         ;; (display "normal call: ") (displayln           (find-goto-starting-point original-m-instr-list (Goto-goto-addr (first instr-list))))
+
 
          (expand-error-trace-helper
-          (find-goto-starting-point-trace original-t (Goto-goto-addr (first instr-list)))
-          (find-goto-starting-point original-m-instr-list (Goto-goto-addr (first instr-list)))))]))
+          (find-goto-starting-point-trace original-t (Goto-goto-addr (first instr-list)) interceptors-seen)
+          (find-goto-starting-point original-m-instr-list (Goto-goto-addr (first instr-list)))
+          interceptors-seen))]
+
+      [(Label? (first instr-list))
+       (expand-error-trace-helper
+        t (rest instr-list) interceptors-seen)]
+
+      [(Label? (first t))
+       (expand-error-trace-helper
+        (rest t) instr-list interceptors-seen)]
 
 
-               
-          
-       
+      ;; If this is an incerceptor method - then it obviously won't
+      ;; be in the original method instructions
+      [(not (null? (C-Instruction-thread-id (first t))))
+       ;; (displayln "Found interceptor!")
+       ;; (displayln (first t))
+       ;; (displayln (rest t))
+       ;; (displayln instr-list)
+       (map
+        (append-item (first t))
+        (expand-error-trace-helper (rest t) instr-list (append (list (first t)) interceptors-seen)))]
+        
+      
+      [(equal? (C-Instruction-instr-id (first t)) (C-Instruction-instr-id (first instr-list)))
+       ;; (displayln "Found matching instructions!")
 
-       
+       (map
+        (append-item (first t))
+        (expand-error-trace-helper (rest t) (rest instr-list) interceptors-seen))]
+
+      [else
+       ;; (displayln "Reached else case")
+       ;; (displayln (first t))
+       ;; (displayln (rest t))
+       ;; (displayln instr-list)
+       (map
+
+        
+        (append-item (first instr-list))
+
+        (if (not (null? (C-Instruction-thread-id (first t))))
+            (expand-error-trace-helper t (rest instr-list) (append (list (first t)) interceptors-seen))
+            (expand-error-trace-helper t (rest instr-list) interceptors-seen)))]))
+            
+                     
 
 
   
   (let
       ([m-instr-list (Method-instr-list m)])
-    (expand-error-trace-helper original-t m-instr-list)))
+
+    ;; (displayln "Running helper for the first time")
+    (expand-error-trace-helper original-t m-instr-list `())))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -472,13 +672,140 @@
 ;; TODO: Right now this will just go in infinite circles.
 ;; what is still yet to do is that we need to exclude the same interruption
 ;; when we go back around
-(define (find-goto-starting-point-trace instr-list goto-addr)
+(define (find-goto-starting-point-trace instr-list goto-addr seen-before)
+
+  (define (contains-instruction l i)
+    (cond
+      [(empty? l) #f]
+      [(not (C-Instruction-instr-id i)) #f]
+      [(null? (C-Instruction-instr-id i)) #f]
+      [(not (C-Instruction-instr-id (first l))) (contains-instruction (rest l) i)]
+      [(equal? (C-Instruction-instr-id (first l)) (C-Instruction-instr-id i))
+       #t]
+      [else
+       (contains-instruction (rest l) i)]))
+  
+  (define (remove-seen-before instr-list seen-before)
+    (cond
+      [(empty? instr-list) `()]
+      [(not (C-Instruction? (first instr-list)))
+       (append (list (first instr-list))
+               (remove-seen-before (rest instr-list) seen-before))]
+      [(not (C-Instruction-instr-id (first instr-list)))
+       (append (list instr-list)
+               (remove-seen-before (rest instr-list) seen-before))]
+      [(contains-instruction seen-before (first instr-list))
+       ;; (displayln "") (display "Found seen before: ") (displayln (first instr-list))
+       (remove-seen-before (rest instr-list) seen-before)]
+      [else
+       (append
+        (list (first instr-list))
+        (remove-seen-before (rest instr-list) seen-before))]))
+
+    
+
+    
+
+  
   (cond
     [(empty? instr-list) `()]
     [(and (Label? (first instr-list)) (equal? (Label-id (first instr-list)) goto-addr))
-     instr-list]
+     (remove-seen-before instr-list seen-before)]
     [else
-     (find-goto-starting-point-trace (rest instr-list) goto-addr)]))
+     (find-goto-starting-point-trace (rest instr-list) goto-addr seen-before)]))
 
   
+
+
+;; Takes a trace and returns #f if the trace chooses meta-vars inconsistently
+;; and is obviously infeasible, true if the trace may be feasible
+(define (meta-vars-consistent? t)
+  (define (check-for-contradictions t-prime meta-var truth-val)
+    (cond
+      [(empty? t-prime) #t]
+      [(Assume-meta? (first t-prime))
+       (and
+        (or (not (equal? (Assume-meta-condition (first t-prime)) meta-var))
+           truth-val)
+        (check-for-contradictions (rest t-prime) meta-var truth-val))]
+      [(Assume-not-meta? (first t-prime))
+       (and
+        (or (not (equal? (Assume-not-meta-condition (first t-prime)) meta-var))
+            (not truth-val))
+        (check-for-contradictions (rest t-prime) meta-var truth-val))]
+      [else
+       (check-for-contradictions (rest t-prime) meta-var truth-val)]))
+                     
   
+  (cond
+    [(empty? t) #t]
+    [(Assume-meta? (first t))
+     (and
+      (check-for-contradictions (rest t)
+                                (Assume-meta-condition (first t))
+                                #t)
+      (meta-vars-consistent? (rest t)))]
+    [(Assume-not-meta? (first t))
+     (and
+      (check-for-contradictions (rest t)
+                                (Assume-not-meta-condition (first t))
+                                #f)
+      (meta-vars-consistent? (rest t)))]
+    [else
+     (meta-vars-consistent? (rest t))]))
+
+
+
+
+
+;; Returns whether we had to do a restart for a given hole,
+;; or if we just blasted through
+(define (optimistic-stopped-hole? t hole)
+  (define (find-next-assume-sim t)
+    (cond
+      [(empty? t) t]
+      [(Assume-simulation? (first t)) (first t)]
+      [else
+       (find-next-assume-sim (rest t))]))
+
+  
+  (cond
+    [(empty? t) #f]
+    [(equal? (C-Instruction-instr-id (first t)) (Hole-method1 hole))
+     (let ([next-assume-sim (find-next-assume-sim t)])
+       (and
+        (Assume-simulation? next-assume-sim)
+        (not (Not? (Assume-simulation-condition next-assume-sim)))))]
+
+    [else
+     (optimistic-stopped-hole? (rest t) hole)]))
+     
+     
+     
+
+
+;; Takes a trace and returns a list of all of the optimistic conditions
+(define (collect-all-optimistic-expressions t-list)
+
+  (unique
+   (lambda (opt-cond1 opt-cond2)
+     (equal? (Optimistic-Condition-meta-var opt-cond1) (Optimistic-Condition-meta-var opt-cond2)))
+  
+   (reduce
+    append
+    (map (lambda (t)
+           (map (lambda (ti)
+                  (Set-var-assignment ti))
+                (filter (lambda (ti)
+                          (and
+                           (Set-var? ti)
+                           
+                           (Optimistic-Condition? (Set-var-assignment ti))))
+                        t)))
+         t-list))))
+  
+
+
+
+
+
