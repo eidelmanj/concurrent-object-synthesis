@@ -131,6 +131,8 @@
      (list
       (Create-var "val" "int" )
       (Create-var "found" "int" )
+      (Create-var "throwaway" "int")
+      (Label "START")
       (Set-var "val" (None) )
       (Run-method "contains" (list (Get-argument 0) (Get-argument 1)) "found")
       (Single-branch 

@@ -16,6 +16,7 @@
  (struct-out C-Instruction)
 
 
+
  (c-struct-out Repeat-meta)
  (c-struct-out Meta-addition)
  (c-struct-out CAS)
@@ -63,6 +64,9 @@
  ;; (struct-out Single-branch)
 
  
+
+ (struct-out Single-branch-counter)
+>>>>>>> Successfully resolves optimistic concurrency example
  (struct-out Added-CAS-Marker)
  (struct-out Goto)
 
@@ -185,6 +189,8 @@
 (c-struct Get-argument (id) #:transparent)
 (c-struct Run-method (method args ret) #:transparent #:mutable)
 (c-struct Single-branch (condition branch) #:transparent)
+(c-struct Single-branch-counter (condition branch [counter #:auto #:mutable]) #:transparent #:auto-value 0)
+(c-struct Goto (goto-addr [unroll-count #:auto #:mutable]) #:transparent #:auto-value 0)
 
 
 (c-struct Assume-meta (condition))
@@ -207,7 +213,16 @@
 ;; (struct Single-branch C-Instruction (condition branch))
 
 
-(struct Goto C-Instruction (goto-addr [unroll-count #:auto #:mutable]) #:transparent #:auto-value 0)
+;; (struct Lock C-Instruction (id) #:transparent)
+;; (struct Unlock C-Instruction (id) #:transparent)
+;; (struct Return C-Instruction (val) #:transparent)
+;; (struct Get-argument C-Instruction (id) #:transparent)
+;; (struct Run-method C-Instruction (method args ret) #:transparent #:mutable)
+;; (struct Single-branch C-Instruction (condition branch) #:transparent)
+;; (struct Single-branch-counter C-Instruction (condition branch [counter #:auto #:mutable]) #:transparent #:auto-value 0)
+;; >>>>>>> Successfully resolves optimistic concurrency example
+
+;; (struct Goto C-Instruction (goto-addr [unroll-count #:auto #:mutable]) #:transparent #:auto-value 0)
 
 
 
@@ -252,6 +267,7 @@
 
 
 (struct Added-CAS-Marker C-Instruction ())
+
 
 
 

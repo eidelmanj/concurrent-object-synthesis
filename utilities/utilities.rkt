@@ -10,7 +10,38 @@
  retrieve-code
  list-multiply
  range
+ get-lib-method
+ replace-lib-method
+ transform-to-traces
  reduce)
+
+
+;; Takes in a list of lists of C-Instructions, and returns a list of traces each with an ID   
+(define (transform-to-traces l)
+  (define (helper l n)
+    (cond
+      [(empty? l)
+       `()]
+      [else
+       (append
+        (list (Trace n (first l)))
+        (helper (rest l) (+ n 1)))]))
+      (helper l 0))
+     
+
+
+
+         
+(define (get-lib-method library method-name)
+  (let ([method-matches (filter (lambda (m) (equal? (Method-id m) method-name)) library)])
+    (cond
+      [(empty? method-matches) null]
+      [else (first method-matches)])))
+
+(define (replace-lib-method library method-name new-method)
+  (let ([non-matches (filter (lambda (m) (not (equal? (Method-id m) method-name))) library)])
+    (append (list new-method) non-matches)))
+
 
 
 (define (list-multiply instr-list num)
