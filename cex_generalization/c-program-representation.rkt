@@ -11,7 +11,11 @@
 
 (provide interleaving-to-sketch
          create-announcement-version
+         get-lib-method
+         replace-lib-method
+
          )
+
 
 
 (define (line-ids) (void))  
@@ -457,18 +461,6 @@
 
 
 
-;; Takes in a list of lists of C-Instructions, and returns a list of traces each with an ID   
-(define (transform-to-traces l)
-  (define (helper l n)
-    (cond
-      [(empty? l)
-       `()]
-      [else
-       (append
-        (list (Trace n (first l)))
-        (helper (rest l) (+ n 1)))]))
-      (helper l 0))
-     
 
 
 
@@ -670,8 +662,18 @@
               thread2-possibilities)))])))
 
 
-         
 
+
+         
+(define (get-lib-method library method-name)
+  (let ([method-matches (filter (lambda (m) (equal? (Method-id m) method-name)) library)])
+    (cond
+      [(empty? method-matches) null]
+      [else (first method-matches)])))
+
+(define (replace-lib-method library method-name new-method)
+  (let ([non-matches (filter (lambda (m) (not (equal? (Method-id m) method-name))) library)])
+    (append (list new-method) non-matches)))
 
 
 (define (give-ids-to instr-list n)
@@ -702,4 +704,4 @@
 ;; (displayln sketch-output)
 ;; ;; (displayln (interleaving-to-sketch (convert-trace-to-interleavings (first all-runs) library (list "remove"))))
 
-(Method-instr-list (first (metasketch-library-add-announcement library "get")))
+
