@@ -1,7 +1,7 @@
 #lang racket/base
 
 (require (only-in "../program_representation/simulator-structures.rkt"
-                  Method-args Method-instr-list
+                  Method Method-args Method-instr-list
                   Run-method
                   C-Instruction
                   Single-branch Branch Loop
@@ -148,7 +148,8 @@
   (define interpreter (make-interpreter lib))
 
   ; Set up the instrumenter
-  (define g (instrumenter (number-lines (Method-instr-list mut)) lib pointers))
+  (define numbered-mut (number-lines (Method-instr-list mut)))
+  (define g (instrumenter numbered-mut lib pointers))
 
   ; Pick some arguments for the MUT
   (define arguments (pick-arguments mut lib pointers init))
@@ -169,4 +170,9 @@
        (fail)))
    (when (has-next?) (next)))
 
-  (minimal-traces results))
+  (values
+   ; error traces
+   (minimal-traces results)
+   ; extension method with line numbers added
+   (match mut
+     [(Method id args ret-type _) (Method id args ret-type numbered-mut)])))

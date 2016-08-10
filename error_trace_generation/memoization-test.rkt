@@ -112,7 +112,7 @@
       ,(Return (Get-var "result"))))))
 
 (bound 1)
-(define result
+(define-values (result numbered-mut)
   (error-traces
    library
    "extension"

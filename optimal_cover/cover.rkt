@@ -12,6 +12,8 @@
          (only-in "../error_trace_generation/utils.rkt"
                   filter-hash))
 
+(provide optimal-cover)
+
 (current-bitwidth #f)
 
 ; Returns a fresh symbolic boolean variable.

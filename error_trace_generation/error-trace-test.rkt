@@ -47,7 +47,7 @@
      (Return (Add (Get-var 'val1) (Get-var 'val2)))))))
 
 (bound 1)
-(define results
+(define-values (results numbered-mut)
   (error-traces
    test-library
    "extension"

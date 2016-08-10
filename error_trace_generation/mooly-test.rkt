@@ -5,7 +5,9 @@
          "linearizable.rkt"
          "interpret.rkt")
 
-(provide mooly-test-traces)
+(provide (rename-out [numbered-mut mooly-mut]
+                     [traces mooly-test-traces]
+                     [library mooly-library]))
 
 (define library
   (list
@@ -111,15 +113,16 @@
       ,(Return (Get-var "val"))))))
 
 (bound 1)
-(define result
+(define-values (result numbered-mut)
   (error-traces
    library
    "extension"
    test-init))
 
+#;
 (for-each
  (λ (trace)
    (pretty-print (lin-result-trace trace)) (displayln ""))
  result)
 
-(define mooly-test-traces (map lin-result-trace result))
+(define traces (map lin-result-trace result))
