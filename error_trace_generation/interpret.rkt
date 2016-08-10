@@ -77,15 +77,19 @@
                                       `(cons (quote ,var-name) ,var-name))
                                     vars-of-interest))))
 
-    (eval
-     ; Use block instead of begin so variables will be defined in a new
-     ;  scope. This is necessary because otherwise calling eval would
-     ;  transform the namespace.
-     `(block
-       (define ,reserved-trace-keyword (list))
-       ,@(transform-and-instrument ast)
-       ,var-hash)
-     lib-namespace)))
+    (define to-eval
+      ; Use block instead of begin so variables will be defined in a new
+      ;  scope. This is necessary because otherwise calling eval would
+      ;  transform the namespace.
+      `(block
+        (define ,reserved-trace-keyword (list))
+        ,@(transform-and-instrument ast)
+        ,var-hash))
+    (call-with-exception-handler
+     (λ (exn)
+       (displayln to-eval)
+       (raise exn))
+     (λ () (eval to-eval lib-namespace)))))
 
 ; For now, assume name is either a string or a symbol.
 ; This is just for backwards compatibility with the old format.
