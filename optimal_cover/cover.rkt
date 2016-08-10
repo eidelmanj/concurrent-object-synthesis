@@ -13,10 +13,14 @@
          (only-in "../error_trace_generation/utils.rkt"
                   filter-hash))
 
+
 (provide optimal-cover (struct-out hole))
 
 ; Structure containing information about a hole in a cover.
 (struct hole (before interrupt [after #:mutable]) #:transparent)
+
+
+
 
 (current-bitwidth #f)
 
