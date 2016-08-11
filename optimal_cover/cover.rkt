@@ -57,7 +57,7 @@
       (apply ||
              ; Accumulate a list of literals for the edges in this trace.
              (let loop ([last-mut -1] ; id of the last important mut operation
-                        [needs-after '()] ; hole structs needed a value for after
+                        [needs-after '()] ; hole structs needing a value for after
                         [trace (truncate trace main-tid)]
                         [literals (list)])
                (match trace
