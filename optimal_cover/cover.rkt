@@ -2,17 +2,21 @@
 
 (require (only-in racket
                   make-hash hash-ref! hash-values hash->list
-                  dropf-right)
+                  dropf-right
+                  values)
          rosette/lib/match
          (rename-in (only-in racket/match match) [match match/racket])
          (only-in "../program_representation/simulator-structures.rkt"
-                  C-Instruction C-Instruction-thread-id
+                  C-Instruction C-Instruction-thread-id C-Instruction-instr-id
                   Run-method
                   Assume-simulation?)
          (only-in "../error_trace_generation/utils.rkt"
                   filter-hash))
 
-(provide optimal-cover)
+(provide optimal-cover (struct-out hole))
+
+; Structure containing information about a hole in a cover.
+(struct hole (before interrupt [after #:mutable]) #:transparent)
 
 (current-bitwidth #f)
 
@@ -39,13 +43,12 @@
 
 ; Given a list of lists of Thread-Ops, each representing an error trace,
 ; and the tid of the thread running the method under test, returns a list of
-; "covers" for the interleavings. A cover is a list of pairs of edges and
-; a boolean which is #t if the edge can be kept, #f if the edge should be
-; removed. All covers returned have a minimal number of edges assigned to #f.
+; "covers" for the interleavings. A cover is a list of hole structs. All covers
+; returned have a minimal number of edges.
 (define (optimal-cover interleavings main-tid)
-  ; Global hash table of symbolic variables representing a pair of
-  ; a the most recent completed operation in the MUT and a pending operation.
+  ; Global hash table of symbolic variables representing a hole.
   (define vars (make-hash))
+  (define (negated-literal hole) (! (hash-ref! vars hole (dynamic))))
 
   ; Assert a disjunction of literals for each interleaving.
   (for-each
@@ -53,25 +56,42 @@
      (assert
       (apply ||
              ; Accumulate a list of literals for the edges in this trace.
-             (let loop ([last-mut -1]
+             (let loop ([last-mut -1] ; id of the last important mut operation
+                        [needs-after '()] ; hole structs needed a value for after
                         [trace (truncate trace main-tid)]
                         [literals (list)])
                (match trace
-                 ; Remove the extra #f literals, just in case it speeds up the solver.
-                 ['() (remove* '(#f) literals)]
+                 ; Done; add any holes waiting on after instructions and return.
+                 ['() (append literals (map negated-literal needs-after))]
+
+                 ; Process the next instruction.
                  [`(,op . ,tail)
-                  (loop
-                   ; Ignore Assume-simulation structures, as they're not instructions.
-                   (if (or (not (in-thread? op main-tid)) (Assume-simulation? op))
-                       last-mut
-                       (op->id op main-tid))
-                   tail
-                   ; Add symbolic variables only for operations of the client thread.
-                   (cons (and (not (in-thread? op main-tid))
-                              (! (hash-ref! vars
-                                            (cons last-mut (op->id op main-tid))
-                                            (dynamic))))
-                         literals))])))))
+                  (define op-id (op->id op main-tid))
+                  (define-values (new-last-mut new-needs-after new-literals)
+                    (cond
+                      ; Important main-thread operations.
+                      [(not (null? (C-Instruction-instr-id op)))
+                       (values
+                        op-id
+                        '() ; we're going to process all these in the next line
+                        ; Update all the holes waiting on this operation.
+                        (append literals
+                                (map (λ (h)
+                                       (set-hole-after! h op-id)
+                                       (negated-literal h))
+                                     needs-after)))]
+
+                      ; Client operations; create a hole struct for them.
+                      [(not (in-thread? op main-tid))
+                       (values
+                        last-mut
+                        (append needs-after `(,(hole last-mut op-id null)))
+                        literals)]
+
+                      ; Unimportant main thread instructions; just ignore them.
+                      [else (values last-mut needs-after literals)]))
+
+                  (loop new-last-mut new-needs-after tail new-literals)])))))
    interleavings)
 
   ; Enumerate all minimal solutions.

@@ -136,38 +136,25 @@
          [(Branch _ _ condition b1 b2) (Branch condition
                                                (number-lines-helper b1)
                                                (number-lines-helper b2))]
-         [(C-Instruction _ _) (set-C-Instruction-instr-id! instr (new-line-number!))
-                              instr]))
+         [(Run-method _ _ _ _ _) (set-C-Instruction-instr-id! instr (new-line-number!))
+                                 instr]
+         [_ instr]))
      instrs))
 
   (number-lines-helper instrs))
 
 (module+ test
   (number-lines
-   `(,(Lock 1)
-     ,(Create-var "cur" "Node")
-     ,(Create-var "prev" "Node")
-     ,(Create-var 'result "int")
-     ,(Set-var "cur" (Get-argument 0))
-     ,(Set-var "prev" (Get-argument 0))
-     ,(Set-var 'result 0)
-     ,(Loop (And (Not (Is-none? (Get-var "cur")))
-                 (Not (Equal (Dereference "cur" "Node" "key") (Get-argument 1))))
-            `(,(Set-var "prev" (Get-var "cur"))
-              ,(Set-var "cur" (Dereference "cur" "Node" "next"))))
+   `(,(Create-var "val" "int")
+     ,(Create-var "found" "int")
+     ,(Create-var "throwaway" "int")
+     ,(Set-var "val" (None))
+     ,(Run-method "contains" `(,(Get-argument 0) ,(Get-argument 1)) "found")
      ,(Single-branch
-       (Is-none? (Get-var "cur"))
-       `(,(Set-pointer "prev" "Node" "next"
-                       (New-struct "Node" `(,(None)
-                                            ,(Get-argument 1)
-                                            ,(Get-argument 2)
-                                            ,(None))))
-         ,(Unlock 1)
-         ,(Return 'result)))
-     ,(Set-var 'result (Dereference 'cur 'Node 'val))
-     ,(Set-pointer "cur" "Node" "val" (Get-argument 2))
-     ,(Unlock 1)
-     ,(Return 'result))))
+       (Get-var "found")
+       `(,(Run-method "get" `(,(Get-argument 0) ,(Get-argument 1)) "val")
+         ,(Run-method "remove" `(,(Get-argument 0) ,(Get-argument 1)) "throwaway")))
+     ,(Return (Get-var "val")))))
 
 ; Return a copy of L with value v added to the end.
 (define (cons-end L v)

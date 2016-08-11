@@ -5,6 +5,10 @@
          "linearizable.rkt"
          "interpret.rkt")
 
+(provide (rename-out [numbered-mut memo-mut]
+                     [traces memo-traces]
+                     [library memo-library]))
+
 (define library
   (list
    (Method
@@ -125,3 +129,5 @@
  (λ (trace)
    (pretty-print (lin-result-trace trace)) (displayln ""))
  result)
+
+(define traces (map lin-result-trace result))
