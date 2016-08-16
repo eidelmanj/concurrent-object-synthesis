@@ -2,7 +2,8 @@
 
 (require "../program_representation/simulator-structures.rkt"
          (only-in racket/match match match-lambda define-match-expander)
-         (only-in racket/list append-map))
+         (only-in racket/list append-map)
+         (only-in racket/pretty pretty-display))
 
 (provide make-interpreter transform reserved-trace-keyword)
 
@@ -87,7 +88,7 @@
         ,var-hash))
     (call-with-exception-handler
      (λ (exn)
-       (displayln to-eval)
+       (pretty-display to-eval)
        (raise exn))
      (λ () (eval to-eval lib-namespace)))))
 
