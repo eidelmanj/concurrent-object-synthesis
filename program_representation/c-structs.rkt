@@ -16,7 +16,9 @@
    This solves some of the problems created by using #:auto for default values.
 |#
 
-(require "simulator-structures.rkt")
+(provide c-struct c-struct-out (struct-out C-Instruction))
+
+(struct C-Instruction (thread-id instr-id) #:mutable #:transparent)
 
 (require (for-syntax racket/syntax))
 (define-syntax (c-struct stx)
@@ -51,6 +53,12 @@
                (syntax-id-rules ()
                  [(_ args (... ...)) (make-id args (... ...))]
                  [id alt-id])))))]))
+
+(require racket/provide-syntax)
+(define-provide-syntax (c-struct-out stx)
+  (syntax-case stx ()
+    [(_ struct-id) (with-syntax ([alt-id (format-id stx "alt-~a" #'struct-id)])
+                     #'(struct-out alt-id))]))
 
 (module+ test
   (require rackunit)

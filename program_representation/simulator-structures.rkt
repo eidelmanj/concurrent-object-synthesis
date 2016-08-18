@@ -1,5 +1,6 @@
 #lang racket
-(require racket/match)
+(require racket/match
+         "c-structs.rkt")
 (provide
  (struct-out Client-pre)
  (struct-out Method)
@@ -8,23 +9,23 @@
 
  ; C Instructions
  (struct-out C-Instruction)
- (struct-out Repeat-meta)
- (struct-out Meta-addition)
- (struct-out CAS)
- (struct-out Create-var)
- (struct-out Set-var)
- (struct-out Lock)
- (struct-out Unlock)
- (struct-out Return)
- (struct-out Get-argument)
- (struct-out Run-method)
- (struct-out Single-branch)
+ (c-struct-out Repeat-meta)
+ (c-struct-out Meta-addition)
+ (c-struct-out CAS)
+ (c-struct-out Create-var)
+ (c-struct-out Set-var)
+ (c-struct-out Lock)
+ (c-struct-out Unlock)
+ (c-struct-out Return)
+ (c-struct-out Get-argument)
+ (c-struct-out Run-method)
+ (c-struct-out Single-branch)
 
- (struct-out Loop)
- (struct-out Maybe-loop)
+ (c-struct-out Loop)
+ (c-struct-out Maybe-loop)
 
- (struct-out Branch)
- (struct-out Context-switch)
+ (c-struct-out Branch)
+ (c-struct-out Context-switch)
 
  (struct-out Log)
  ; Extra constructors for instruction structs
@@ -36,10 +37,10 @@
  ;; (struct-out Assume)
  Assume?
  Assume-condition
- (struct-out Assume-loop)
- (struct-out Assume-meta)
+ (c-struct-out Assume-loop)
+ (c-struct-out Assume-meta)
  (struct-out None)
- (struct-out Assume-simulation)
+ (c-struct-out Assume-simulation)
  (struct-out Continue)
  (struct-out Empty)
  (struct-out Meta-information)
@@ -60,7 +61,7 @@
  (struct-out Greater-than-equal)
  (struct-out Constant)
  (struct-out New-struct)
- (struct-out Set-pointer)
+ (c-struct-out Set-pointer)
  (struct-out And)
  (struct-out Arguments)
  (struct-out Argument)
@@ -69,7 +70,7 @@
  (struct-out Interval)
  (struct-out Info)
  (struct-out Mystery-const)
- (struct-out Assume-not-meta)
+ (c-struct-out Assume-not-meta)
  (struct-out Sketch-placeholder)
  (struct-out Is-none?)
  (struct-out Structure)
@@ -98,37 +99,31 @@
 
 #| C INSTRUCTION STRUCTS |#
 
-;; Parent struct for all the C instructions.
-;; Racket doesn't let you actually specify a value for an optional field,
-;;  so it has to be mutable and set using a separate constructor if you want
-;;  something other than the default.
-(struct C-Instruction ([thread-id #:auto #:mutable] [instr-id #:auto #:mutable]) #:transparent #:auto-value null)
-
 ;; Specific C instruction structures.
-(struct Set-pointer C-Instruction (id type offset val ) #:transparent)
-(struct Repeat-meta C-Instruction (instr-list which-var))
-(struct Meta-addition C-Instruction (instr-list which-var))
-(struct CAS C-Instruction (v1 v2 new-val ret) #:transparent)
-(struct Create-var C-Instruction (id type) #:transparent)
-(struct Set-var C-Instruction (id assignment) #:transparent)
-(struct Lock C-Instruction (id) #:transparent)
-(struct Unlock C-Instruction (id) #:transparent)
-(struct Return C-Instruction (val) #:transparent)
-(struct Get-argument C-Instruction (id) #:transparent)
-(struct Run-method C-Instruction (method args ret) #:transparent #:mutable)
-(struct Single-branch C-Instruction (condition branch) #:transparent)
+(c-struct Set-pointer (id type offset val ) #:transparent)
+(c-struct Repeat-meta (instr-list which-var))
+(c-struct Meta-addition (instr-list which-var))
+(c-struct CAS (v1 v2 new-val ret) #:transparent)
+(c-struct Create-var (id type) #:transparent)
+(c-struct Set-var (id assignment) #:transparent)
+(c-struct Lock (id) #:transparent)
+(c-struct Unlock (id) #:transparent)
+(c-struct Return (val) #:transparent)
+(c-struct Get-argument (id) #:transparent)
+(c-struct Run-method (method args ret) #:transparent #:mutable)
+(c-struct Single-branch (condition branch) #:transparent)
 
-(struct Assume-meta C-Instruction (condition))
-(struct Assume-not-meta C-Instruction (condition))
-(struct Assume-simulation C-Instruction (condition) #:transparent)
-(struct Assume-loop C-Instruction (condition to-where))
+(c-struct Assume-meta (condition))
+(c-struct Assume-not-meta (condition))
+(c-struct Assume-simulation (condition) #:transparent)
+(c-struct Assume-loop (condition to-where))
 
 
-(struct Loop C-Instruction (condition instr-list) #:transparent)
-(struct Maybe-loop C-Instruction (meta-var condition instr-list1 instr-list2 original-instr-list hole))
+(c-struct Loop (condition instr-list) #:transparent)
+(c-struct Maybe-loop (meta-var condition instr-list1 instr-list2 original-instr-list hole))
 
-(struct Branch C-Instruction (condition branch1 branch2) #:transparent)
-(struct Context-switch C-Instruction () #:transparent)
+(c-struct Branch (condition branch1 branch2) #:transparent)
+(c-struct Context-switch () #:transparent)
 
 
 
@@ -159,23 +154,23 @@
 (module* C-structs #f
   (provide
    (struct-out C-Instruction)
-   (struct-out Repeat-meta)
-   (struct-out Meta-addition)
-   (struct-out CAS)
-   (struct-out Create-var)
-   (struct-out Set-var)
-   (struct-out Lock)
-   (struct-out Unlock)
-   (struct-out Return)
-   (struct-out Get-argument)
-   (struct-out Run-method)
-   (struct-out Single-branch)
+   (c-struct-out Repeat-meta)
+   (c-struct-out Meta-addition)
+   (c-struct-out CAS)
+   (c-struct-out Create-var)
+   (c-struct-out Set-var)
+   (c-struct-out Lock)
+   (c-struct-out Unlock)
+   (c-struct-out Return)
+   (c-struct-out Get-argument)
+   (c-struct-out Run-method)
+   (c-struct-out Single-branch)
 
-   (struct-out Loop)
-   (struct-out Maybe-loop)
+   (c-struct-out Loop)
+   (c-struct-out Maybe-loop)
 
-   (struct-out Branch)
-   (struct-out Context-switch)
+   (c-struct-out Branch)
+   (c-struct-out Context-switch)
 
    (struct-out Method)
    (struct-out Get-var)
