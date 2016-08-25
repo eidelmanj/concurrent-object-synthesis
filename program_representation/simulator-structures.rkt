@@ -226,7 +226,7 @@
 
 
 
-(struct Label (id))
+(struct Label C-Instruction (id))
 (struct Atomic-Start-Marker C-Instruction ())
 (struct Atomic-End-Marker C-Instruction ())
 
