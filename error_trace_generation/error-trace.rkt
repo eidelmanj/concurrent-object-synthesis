@@ -20,7 +20,7 @@
 
 ; The maximum number of non-commutative library calls to insert between each
 ;  pair of library calls in the mut when searching for linearizability errors.
-(define bound (make-parameter 2))
+(define bound (make-parameter 1))
 
 (define (one-of L)
   (match L
