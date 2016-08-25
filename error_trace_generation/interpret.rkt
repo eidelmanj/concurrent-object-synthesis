@@ -158,18 +158,18 @@
        [else
         (match instr
           [(Single-branch _ _ condition branch)
-           `(,(Single-branch condition (cons (Log (Assume-simulation condition))
+           `(,(Single-branch condition (cons (Log (Assume-simulation condition #f))
                                              (add-log-statements branch))))]
 
           [(Branch _ _ condition b1 b2)
            `(,(Branch condition
-                      (cons (Log (Assume-simulation condition))
+                      (cons (Log (Assume-simulation condition #f))
                             (add-log-statements b1))
-                      (cons (Log (Assume-simulation (Not condition)))
+                      (cons (Log (Assume-simulation (Not condition) #f))
                             (add-log-statements b2))))]
 
           [(Loop _ _ condition body)
-           `(,(Loop condition (cons (Log (Assume-simulation condition))
+           `(,(Loop condition (cons (Log (Assume-simulation condition #f))
                                     (add-log-statements body))))]
 
           ; Leave everything else alone
