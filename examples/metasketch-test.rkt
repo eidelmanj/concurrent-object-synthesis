@@ -8,6 +8,12 @@
 (require "../cex_generalization/to-sketch.rkt")
 (require "../cex_generalization/metasketcher.rkt")
 
+(require "../error_trace_generation/error-trace.rkt")
+(require (only-in "../error_trace_generation/linearizable.rkt" lin-result-trace))
+(require (only-in "../error_trace_generation/methods.rkt" number-lines))
+(require (only-in "../optimal_cover/cover.rkt" optimal-cover))
+
+
 
 (define metasketch-lib ;; (metasketch-library-add-announcement library "extension"))
   library)
@@ -16,6 +22,98 @@
   ;;  "extension"
   ;;  (Hole 6 `() 7)))
   
+
+
+
+
+
+;; (bound 1)
+(define results
+  (error-traces
+   metasketch-lib
+   "extension"
+   (make-hash `(("Node" . (,(Get-var "shared")))))))
+
+
+;; (define num-lines (number-lines (Method-instr-list (first (filter (lambda (l) (equal? "extension" (Method-id l))) metasketch-lib)))))
+
+;; (first (filter (lambda (l) (equal? "extension" (Method-id l))) metasketch-lib))
+;; (length (map lin-result-trace results))
+(define hole-set (optimal-cover (map lin-result-trace results) null))
+
+;; (define hole-set '(((6 . "get") (5 . "remove") (6 . "remove") (6 . "contains")) ((5 . "remove") (5 . "push"))))
+
+
+
+(define (hole-found? instr-list hole)
+  (cond
+    [(empty? instr-list) #f]
+    [(equal? (C-Instruction-instr-id (first instr-list)) (Hole-method1 hole))
+     #t]
+    [else
+     (hole-found? (rest instr-list) hole)]))
+
+
+;; Takes a hole along with a library and the name of a target method in the library
+;; Returns a witness trace to that hole
+(define (find-witness library method-name hole)
+
+  (define (find-witness-helper instr-list)
+    (cond
+      [(empty? instr-list) `()]
+      [(Single-branch? (first instr-list))
+       (if (hole-found? (Single-branch-branch (first instr-list)) hole)
+           (append (list (Assume-simulation (Single-branch-condition (first instr-list))))
+                   (find-witness-helper (append (Single-branch-branch (first instr-list)) (rest instr-list))))
+           (append (list (Assume-simulation (Not (Single-branch-condition (first instr-list)))))
+                   (find-witness-helper (rest instr-list))))]
+      [(Branch? (first instr-list))
+       ;; TODO
+       (displayln "UH OH - haven't done branches yet")]
+
+      [else
+       (if (equal? (C-Instruction-instr-id (first instr-list)) (Hole-method1 hole))
+           (append (list (first instr-list)) (Hole-interruptor hole) (rest instr-list))
+           (append (list (first instr-list)) (find-witness-helper (rest instr-list))))]
+       ;; (display "Found: ") (displayln (first instr-list))
+       ;; (displayln "UNEXPECTED: REACHED ELSE CASES")]
+      
+
+    
+    )
+
+    (let ([method-instr-list (Method-instr-list (get-lib-method library method-name))])
+      (find-witness-helper method-instr-list)))
+
+  (let ([m (Method-instr-list (get-lib-method library method-name))])
+    (find-witness-helper  m)))
+    
+
+    
+
+
+
+
+  
+
+
+
+
+;; (find-witness library "extension" (first (first hole-set)))
+
+
+
+
+
+
+
+
+
+
+
+(exit)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 (define error-trace-example
 
@@ -241,7 +339,7 @@
 
   (displayln (reduce
    string-append
-   (map (lambda (i) (string-append "(define POSSIBLE" (~v i) " (void))\n (set! POSSIBLE" (~v i) " #t)\n"))
+   (map (lambda (i) (string-append "(define POSSIBLE" (~v i) " (void))\n (set! POSSIBLE" (~v i) " #t)\n(define META-CHOICE" (~v i) " #t)"))
         (range (length traces)))))
 
 
@@ -272,19 +370,15 @@
 
 
 
-         (display (string-replace (instr-list-to-sketch which-trace optimistic-lib "first-args" 0  0) "POSSIBLE" (string-append "POSSIBLE" (~v trace-counter))))
+         (displayln
+          (string-replace
+          (string-replace (instr-list-to-sketch which-trace optimistic-lib "first-args" 0  0) "POSSIBLE" (string-append "POSSIBLE" (~v trace-counter)))
+          "META-CHOICE" (string-append "META-CHOICE" (~v trace-counter))))
+          
 
          ;; (display "(display \"POSSIBLE: \") (displayln POSSIBLE)\n")
 
 
-         (if (optimistic-stopped-hole? which-trace hole)
-             (begin (displayln ";; THIS TRACE IS MANDATORY")
-             (displayln (string-append "(assert POSSIBLE" (~v trace-counter) ")")))
-             (displayln ""))
-         (displayln (string-append "(display \"POSSIBLE" (~v trace-counter) ":\" ) (displayln POSSIBLE" (~v trace-counter) ")"))
-         (displayln (string-append "(assert (or (not POSSIBLE" (~v trace-counter)")"))
-         (displayln (linearizable-solutions-to-assertions lin-solutions))
-         (displayln "))")
          (displayln "]")
 
        )
@@ -295,6 +389,12 @@
 
   (displayln (string-append "(assert (and (> pick-trace 0) (< pick-trace " (~v (+ 1 trace-counter)) ")))"))
 
+
+
+  (displayln (string-append "(display \"POSSIBLE"  ":\" ) (displayln POSSIBLE" (~v trace-counter) ")"))
+  (displayln (string-append "(assert (or (not POSSIBLE" ")"))
+  (displayln (linearizable-solutions-to-assertions lin-solutions))
+  (displayln "))")
 
 
   
