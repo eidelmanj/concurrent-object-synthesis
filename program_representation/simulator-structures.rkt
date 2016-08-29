@@ -17,6 +17,7 @@
 
 
 
+ (c-struct-out Meta-addition-choice)
  (c-struct-out Repeat-meta)
  (c-struct-out Meta-addition)
  (c-struct-out CAS)
@@ -65,15 +66,15 @@
 
  
 
- (struct-out Single-branch-counter)
->>>>>>> Successfully resolves optimistic concurrency example
- (struct-out Added-CAS-Marker)
- (struct-out Goto)
+ (c-struct-out Single-branch-counter)
+
+ (c-struct-out Added-CAS-Marker)
+ (c-struct-out Goto)
 
 
- (struct-out Label)
- (struct-out Atomic-Start-Marker)
- (struct-out Atomic-End-Marker)
+ (c-struct-out Label)
+ (c-struct-out Atomic-Start-Marker)
+ (c-struct-out Atomic-End-Marker)
 
  command-equality-check
  trace-ids-equal?
@@ -108,6 +109,7 @@
  (c-struct-out Assume-meta)
  (struct-out None)
  (c-struct-out Assume-simulation)
+ Assume-simulation-cnstr
  (struct-out Continue)
  (struct-out Empty)
  (struct-out Meta-information)
@@ -146,7 +148,7 @@
  (struct-out Field)
 
  (struct-out Binding-list)
- (struct-out Thread-Op)
+ ;; (struct-out Thread-Op)
 
  freshvar
  new-meta-var
@@ -189,19 +191,26 @@
 (c-struct Get-argument (id) #:transparent)
 (c-struct Run-method (method args ret) #:transparent #:mutable)
 (c-struct Single-branch (condition branch) #:transparent)
-(c-struct Single-branch-counter (condition branch [counter #:auto #:mutable]) #:transparent #:auto-value 0)
-(c-struct Goto (goto-addr [unroll-count #:auto #:mutable]) #:transparent #:auto-value 0)
+
+(c-struct Single-branch-counter (condition branch counter) #:transparent #:mutable)
+(c-struct Goto (goto-addr unroll-count) #:transparent #:mutable)
+;; (c-struct Single-branch-counter (condition branch [counter #:auto #:mutable]) #:transparent #:auto-value 0)
+;; (c-struct Goto (goto-addr [unroll-count #:auto #:mutable]) #:transparent #:auto-value 0)
 
 
 (c-struct Assume-meta (condition))
 (c-struct Assume-not-meta (condition))
-(c-struct Assume-simulation (condition) #:transparent)
+(c-struct Assume-simulation (condition seen-before) #:transparent #:mutable)
+(define (Assume-simulation-cnstr condition)
+  (make-Assume-simulation condition #f))
+
+
 (c-struct Assume-loop (condition to-where))
 
 ;; (struct Set-pointer C-Instruction (id type offset val ))
 ;; (struct Repeat-meta C-Instruction (instr-list which-var))
 ;; (struct Meta-addition C-Instruction (instr-list which-var))
-;; (struct Meta-addition-choice C-Instruction (instr-list which-var))
+(c-struct Meta-addition-choice  (instr-list which-var))
 ;; (struct CAS C-Instruction (v1 v2 new-val ret))
 ;; (struct Create-var C-Instruction (id type))
 ;; (struct Set-var C-Instruction (id assignment))
@@ -226,9 +235,9 @@
 
 
 
-(struct Label C-Instruction (id))
-(struct Atomic-Start-Marker C-Instruction ())
-(struct Atomic-End-Marker C-Instruction ())
+(c-struct Label  (id))
+(c-struct Atomic-Start-Marker  ())
+(c-struct Atomic-End-Marker  ())
 
 (define (RW-operation o)
   (or (CAS? o) (Set-pointer? o) (Set-var? o)))
@@ -266,7 +275,7 @@
              (Dereference-type (Set-var-assignment (first all-reads))))])))
 
 
-(struct Added-CAS-Marker C-Instruction ())
+(c-struct Added-CAS-Marker ())
 
 
 
@@ -358,7 +367,7 @@
 
 (struct None () #:transparent)
 
-(define-struct Hole (method1 interruptor  method2))
+(define-struct Hole (method1 interruptor  method2) #:transparent)
 
 ;; Data structure for client
 (define-struct Client-pre (instr-list))
@@ -407,6 +416,7 @@
 
 
 (struct Invalid-Trace ())
+(struct Trace (trace-id t))
 
 
 (define-struct Sketch-placeholder (name))

@@ -107,7 +107,7 @@
              (Set-var "prevNode" (Get-var "cur"))           
              (Set-var "cur" (Dereference "cur" "Node" "next"))))
 
-      (Added-CAS-Marker)
+      ;; (Added-CAS-Marker)
       (Single-branch 
        (Is-none? (Get-var "cur"))
        (list

@@ -44,7 +44,7 @@
     (Create-var "found" "int" )
     (Set-var "val" 0 )
     (Run-Method "contains" (list (Get-argument 0) (Get-argument 1)) "found" 0)
-    (Assume-simulation (Not (Equal (Get-var "found") 0)))
+    (Assume-simulation-cnstr (Not (Equal (Get-var "found") 0)))
 
     
     (Run-Method "get" (list (Get-argument 0) (Get-argument 1)) "val" 0)
@@ -62,7 +62,7 @@
     (Create-var "found" "int" )
     (Set-var "val" 0 )
     (Run-Method "contains" (list (Get-argument 0) (Get-argument 1)) "found" 0)
-    (Assume-simulation (Not (Equal (Get-var "found") 0)))
+    (Assume-simulation-cnstr (Not (Equal (Get-var "found") 0)))
 
     (Meta-branch 0
                  (list
