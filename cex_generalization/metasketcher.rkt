@@ -157,7 +157,14 @@
 
           
           
-  
+
+
+(define (add-start-label instr-list)
+  (cond
+    [(empty? instr-list) `()]
+    [(Create-var? (first instr-list)) (append (list (first instr-list)) (add-start-label (rest instr-list)))]
+    [else
+     (append (list (Label "START")) instr-list)]))
 
 
 
@@ -173,9 +180,10 @@
        (displayln "Warning: Asked to modify a library method that doesn't exist. This is probably a mistake")]
       [else
        (let ([fixed-method (metasketch-optimistic-strategy (Method-instr-list matching-method)
-                           hole)])
-         (replace-lib-method library method-name
-                             (Method (Method-id matching-method) (Method-args matching-method) (Method-ret-type matching-method) fixed-method)))])))
+                                                           hole)])
+         (let ([fixed-method-with-start-label (add-start-label fixed-method)])
+           (replace-lib-method library method-name
+                               (Method (Method-id matching-method) (Method-args matching-method) (Method-ret-type matching-method) fixed-method-with-start-label))))])))
 
 
 
@@ -201,30 +209,35 @@
     meta-var
     (list
      (first instr-list)
-     (Atomic-Start-Marker)
+     ;; (Atomic-Start-Marker)
      (generate-optimistic-check-expression (Hole-interruptor hole) "OPTIMISTIC")
      (Single-branch-counter (Get-var "OPTIMISTIC")
                     (list
-                     (Goto "START"))))
+                     (Goto "START" 0))
+
+                    0))
 
 
     (list (first instr-list)))))
     
 
+
 (define (optimistic-repair-end instr-list hole meta-var)
+  (list (first instr-list)))
+;; (define (optimistic-repair-end instr-list hole meta-var)
 
   
-  (append
+;;   (append
 
    
-   (list
-   (Meta-branch
-    meta-var
-    (list
-     (Atomic-End-Marker))
-    `()))
+;;    (list
+;;    (Meta-branch
+;;     meta-var
+;;     (list
+;;      (Atomic-End-Marker))
+;;     `()))
 
-   instr-list))
+;;    instr-list))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -401,7 +414,8 @@
       (repair-strt instr-list hole meta-var) ;; Add whatever needs to be added to the first instruction
       (metasketch-repair (rest instr-list) repair-strt repair-end hole meta-var))]
 
-    [(equal? (C-Instruction-instr-id (first instr-list)) (Hole-method2 hole))
+    [(and (not (null? (Hole-method2 hole)))
+          (equal? (C-Instruction-instr-id (first instr-list)) (Hole-method2 hole)))
      ;; (displayln "Found end of hole")
      (append
       (repair-end instr-list hole meta-var)
@@ -420,6 +434,8 @@
 ;;;;;;;;; Expansion of error traces to match new sketch extension ;;;;;;;;;;
 
 (define (expand-traces-to-sketch-lib traces library composed-method-name)
+  ;; (display "traces: ")
+  ;; (displayln traces)
   (let ([composed-sketch-methods
          (filter (lambda (m) (equal? (Method-id m) composed-method-name)) library)])
     (if (empty? composed-sketch-methods)
@@ -439,17 +455,28 @@
 ;; t that are runnable using m 
 (define (expand-error-trace original-t m )
 
+  ;; (displayln "Expanding error trace...") (displayln original-t) 
+
+  
   ;; Note: Keeps running list of all interrupting method calls
   ;; we see along the way, so that when we do restarts, we don't repeat the same calls
   (define (expand-error-trace-helper t instr-list interceptors-seen)
     ;; (display "FIRST: ")
     ;; (displayln (first t))
+
+    ;; (display "Method: ") (displayln instr-list)
+    ;; (display "trace: ") (displayln t)
+
+    
     (cond
       [(or (empty? t) (empty? instr-list))
        (list (list))]
 
       [(Meta-branch? (first instr-list))
        ;; (displayln "Reached meta-branch")
+       ;; (display "branch1: ")
+       ;; (displayln (append (Meta-branch-branch1 (first instr-list)) (rest instr-list)))
+
 
        (append
         (map
@@ -470,18 +497,18 @@
 
          [(>= (Single-branch-counter-counter (first instr-list)) 1)
           (map
-           (append-item (Assume-simulation (Single-branch-counter-condition (first instr-list))))
+           (append-item (Assume-simulation (Single-branch-counter-condition (first instr-list)) #f))
            (expand-error-trace-helper t (rest instr-list) interceptors-seen))]
           
          [else
           (set-Single-branch-counter-counter! (first instr-list) (+ (Single-branch-counter-counter (first instr-list)) 1))
           (append
            (map 
-            (append-item (Assume-simulation (Single-branch-counter-condition (first instr-list))))
+            (append-item (Assume-simulation (Single-branch-counter-condition (first instr-list)) #f))
             (expand-error-trace-helper t (append (Single-branch-counter-branch (first instr-list))) interceptors-seen))
 
            (map
-            (append-item (Assume-simulation (Not (Single-branch-counter-condition (first instr-list)))))
+            (append-item (Assume-simulation (Not (Single-branch-counter-condition (first instr-list))) #f))
             (expand-error-trace-helper t (rest instr-list) interceptors-seen)))])]
 
            
@@ -558,11 +585,11 @@
           ;; (displayln "Other assume")
           (append
            (map 
-            (append-item (Assume-simulation (Single-branch-condition (first instr-list))))
+            (append-item (Assume-simulation (Single-branch-condition (first instr-list)) #f))
             (expand-error-trace-helper t (append (Single-branch-branch (first instr-list))) interceptors-seen))
 
            (map
-            (append-item (Assume-simulation (Not (Single-branch-condition (first instr-list)))))
+            (append-item (Assume-simulation (Not (Single-branch-condition (first instr-list))) #f))
             (expand-error-trace-helper t (rest instr-list) interceptors-seen)))])]
 
       ;; TODO - Branch implementation
