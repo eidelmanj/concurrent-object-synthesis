@@ -136,9 +136,8 @@
          [(Branch _ _ condition b1 b2) (Branch condition
                                                (number-lines-helper b1)
                                                (number-lines-helper b2))]
-         [(Run-method _ _ _ _ _) (set-C-Instruction-instr-id! instr (new-line-number!))
-                                 instr]
-         [_ instr]))
+         [_ (set-C-Instruction-instr-id! instr (new-line-number!))
+                                 instr]))
      instrs))
 
   (number-lines-helper instrs))
@@ -267,6 +266,7 @@
     (cond
       ; "Pop" a variable of type type off the list of values of that type
       [(member type primitive-types) (define values (hash-ref args-of-type type))
+                                     (when (null? values) (error "your test case sucks"))
                                      (hash-set! args-of-type type (rest values))
                                      (first values)]
       [else (first (hash-ref pointers type))])))

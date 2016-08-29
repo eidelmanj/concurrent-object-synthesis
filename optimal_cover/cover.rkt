@@ -7,8 +7,8 @@
          rosette/lib/match
          (rename-in (only-in racket/match match) [match match/racket])
          (only-in "../program_representation/simulator-structures.rkt"
-                  C-Instruction C-Instruction-thread-id C-Instruction-instr-id
-                  Run-method
+                  C-Instruction C-Instruction-thread-id
+                  Run-method Run-method?
                   Assume-simulation?)
          (only-in "../error_trace_generation/utils.rkt"
                   filter-hash))
@@ -69,8 +69,15 @@
                   (define op-id (op->id op main-tid))
                   (define-values (new-last-mut new-needs-after new-literals)
                     (cond
+                      ; Client operations; create a hole struct for them.
+                      [(not (in-thread? op main-tid))
+                       (values
+                        last-mut
+                        (append needs-after `(,(hole last-mut op-id null)))
+                        literals)]
+
                       ; Important main-thread operations.
-                      [(not (null? (C-Instruction-instr-id op)))
+                      [(Run-method? op)
                        (values
                         op-id
                         '() ; we're going to process all these in the next line
@@ -80,13 +87,6 @@
                                        (set-hole-after! h op-id)
                                        (negated-literal h))
                                      needs-after)))]
-
-                      ; Client operations; create a hole struct for them.
-                      [(not (in-thread? op main-tid))
-                       (values
-                        last-mut
-                        (append needs-after `(,(hole last-mut op-id null)))
-                        literals)]
 
                       ; Unimportant main thread instructions; just ignore them.
                       [else (values last-mut needs-after literals)]))
