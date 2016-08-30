@@ -29,6 +29,7 @@
  (c-struct-out Get-argument)
  (c-struct-out Run-method)
  (c-struct-out Single-branch)
+ (c-struct-out Trace-Type)
 
  (c-struct-out Loop)
  (c-struct-out Maybe-loop)
@@ -238,6 +239,7 @@
 (c-struct Label  (id))
 (c-struct Atomic-Start-Marker  ())
 (c-struct Atomic-End-Marker  ())
+(c-struct Trace-Type (tp))
 
 (define (RW-operation o)
   (or (CAS? o) (Set-pointer? o) (Set-var? o)))
