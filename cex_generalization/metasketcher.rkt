@@ -497,18 +497,30 @@
 
          [(>= (Single-branch-counter-counter (first instr-list)) 1)
           (map
-           (append-item (Assume-simulation (Single-branch-counter-condition (first instr-list)) #f))
+           (lambda (l)
+             (append (list (Trace-Type "broke-out")
+                           (Assume-simulation (Not (Single-branch-counter-condition (first instr-list))) #f)) l))
+
+
            (expand-error-trace-helper t (rest instr-list) interceptors-seen))]
           
          [else
           (set-Single-branch-counter-counter! (first instr-list) (+ (Single-branch-counter-counter (first instr-list)) 1))
           (append
            (map 
-            (append-item (Assume-simulation (Single-branch-counter-condition (first instr-list)) #f))
+            ;; (append-item (Assume-simulation (Single-branch-counter-condition (first instr-list)) #f))
+            (lambda (l)
+              (append (list (Trace-Type "optimistic-restart")
+                            (Assume-simulation (Single-branch-counter-condition (first instr-list)) #f))
+                      l))
             (expand-error-trace-helper t (append (Single-branch-counter-branch (first instr-list))) interceptors-seen))
 
            (map
-            (append-item (Assume-simulation (Not (Single-branch-counter-condition (first instr-list))) #f))
+            ;; (append-item (Assume-simulation (Not (Single-branch-counter-condition (first instr-list))) #f))
+            (lambda (l)
+              (append (list (Trace-Type "no-optimistic-restart")
+                            (Assume-simulation (Not (Single-branch-counter-condition (first instr-list))) #f))
+                      l))
             (expand-error-trace-helper t (rest instr-list) interceptors-seen)))])]
 
            
@@ -734,12 +746,15 @@
     
 
   
-  (cond
-    [(empty? instr-list) `()]
-    [(and (Label? (first instr-list)) (equal? (Label-id (first instr-list)) goto-addr))
-     (remove-seen-before instr-list seen-before)]
-    [else
-     (find-goto-starting-point-trace (rest instr-list) goto-addr seen-before)]))
+  ;; (cond
+  ;;   [(empty? instr-list) `()]
+  ;;   ;; [(and (Label? (first instr-list)) (equal? (Label-id (first instr-list)) goto-addr))
+  ;;   ;;  (remove-seen-before instr-list seen-before)]
+  ;;   [else
+  (let ([trace-from-goto (find-goto-starting-point instr-list goto-addr)])
+    (remove-seen-before instr-list seen-before)))
+
+  ;; ]))
 
   
 

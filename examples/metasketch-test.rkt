@@ -200,6 +200,9 @@
 (define POSSIBLE (void))
 (set! POSSIBLE #t)
 
+(define TRACE-TYPE (void))
+(set! TRACE-TYPE \"no-optimistic-restart\")
+
 
 
 (define RETURN-VAL (void))
@@ -217,7 +220,14 @@
 ;; (display "All equivalent: ") (displayln (first all-equivalent-traces))
 
 (define feasible-traces (filter meta-vars-consistent? all-equivalent-traces))
-
+;; (display "Number of traces: ") (displayln (length feasible-traces))
+;; (displayln (first feasible-traces))
+;; (displayln "")
+;; (displayln (second feasible-traces))
+;; (displayln "")
+;; (displayln (third feasible-traces))
+;; (displayln "")
+;; (displayln (fourth feasible-traces))
 
 
 
@@ -311,6 +321,8 @@
          
          (displayln (string-append "[(equal? pick-trace " (~v trace-counter) ")"))
 
+         (displayln "(display \"Trace: \")(displayln pick-trace)")
+
 
 
 
@@ -323,14 +335,19 @@
 
          (displayln
           (string-replace
-          (string-replace (instr-list-to-sketch which-trace optimistic-lib "first-args" 0  0) "POSSIBLE" (string-append "POSSIBLE" (~v trace-counter)))
+           (instr-list-to-sketch which-trace optimistic-lib "first-args" 0 0) 
+          ;; (string-replace (instr-list-to-sketch which-trace optimistic-lib "first-args" 0  0) "POSSIBLE" (string-append "POSSIBLE" (~v trace-counter)))
           "META-CHOICE" (string-append "META-CHOICE" (~v trace-counter))))
           
 
          ;; (display "(display \"POSSIBLE: \") (displayln POSSIBLE)\n")
 
 
-         (displayln "]")
+         (displayln "
+(display \"possible: \") (displayln POSSIBLE)
+(display \"TRACE-TYPE: \") (displayln TRACE-TYPE)
+
+]")
 
        )
        traces)
@@ -342,17 +359,26 @@
   (displayln (string-append "(assert (and (> pick-trace 0) (< pick-trace " (~v (+ 1 trace-counter)) ")))"))
 
 
+(displayln (string-append "
+(define (things-to-assert)
+  (assert (or
+           (equal? TRACE-TYPE \"optimistic-restart\")
+           (equal? TRACE-TYPE \"broke-out\")
+           (equal? TRACE-TYPE \"no-optimistic-restart\")))
+  (assert
+   (or
+    (or (not (equal? TRACE-TYPE \"optimistic-restart\")) POSSIBLE)
+    (or (not (equal? TRACE-TYPE \"broke-out\")) POSSIBLE)))
+  (assert (or (not (equal? TRACE-TYPE \"no-optimistic-restart\")) (not POSSIBLE))))"))
 
-  (displayln (string-append "(display \"POSSIBLE"  ":\" ) (displayln POSSIBLE" (~v trace-counter) ")"))
-  (displayln (string-append "(assert (or (not POSSIBLE" ")"))
-  ;; (displayln (linearizable-solutions-to-assertions lin-solutions))
-  (displayln "))")
+
+
 
 
 
   
   (displayln "(print-forms (synthesize #:forall (list pick-trace)
-                          #:guarantee (asserts)))")
+                          #:guarantee (things-to-assert)))")
 
   )
 
@@ -371,13 +397,13 @@
 
 
 
-;; (define spit-out (spit-out-traces ;; (list (second feasible-traces))
-;;                   feasible-traces
-;;                   (Hole 1 (list) 2)
+(define spit-out (spit-out-traces ;; (list (second feasible-traces))
+                  feasible-traces
+                  (Hole 1 (list) 2)
                   
-;;                   (list
-;;                    (list (cons "RETURN-VAL" 5) (cons "push5-1" (None)))
-;;                    (list (cons "RETURN-VAL" (None)) (cons "push5-1" 5)))))
+                  (list
+                   (list (cons "RETURN-VAL" 5) (cons "push5-1" (None)))
+                   (list (cons "RETURN-VAL" (None)) (cons "push5-1" 5)))))
 
 
  

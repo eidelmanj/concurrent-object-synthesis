@@ -706,7 +706,7 @@
           ;; (display "todo case\n")
           (string-append
            ;; "TODO\n"
-           ";;TODO:"
+           ";;TODO-single-instr:"
            (~v instr) "\n")]))
 
 
@@ -791,12 +791,12 @@
 
          [(Assume-meta? elem)
           (string-append
-           "(if (not meta-var" (~v (Assume-meta-condition elem)) ")\n (set! META-CHOICE #f) (begin  \n"
+           "(if (not meta-var" (~v (Assume-meta-condition elem)) ")\n (set! POSSIBLE #f) (begin  \n"
            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope) "))\n")]
 
          [(Assume-not-meta? elem)
           (string-append
-           "(if meta-var" (~v (Assume-not-meta-condition elem)) "\n (set! META-CHOICE #f)\n (begin\n"
+           "(if meta-var" (~v (Assume-not-meta-condition elem)) "\n (set! POSSIBLE #f)\n (begin\n"
            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope) "))\n")]
 
          [(Repeat-meta? elem)
@@ -850,12 +850,15 @@
           (string-append "(set! RETURN-VAL " (to-string-instr (Return-val elem) arg-store scope-num parent-scope) ")\n"
                          (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope))]
 
+         [(Trace-Type? elem)
+          (string-append "(set! TRACE-TYPE " (to-string-instr (Trace-Type-tp elem) arg-store scope-num parent-scope) ")\n"
+                         (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope))]
 
          [else
           ;; (display "todo case\n")
           (string-append
            ;; "TODO\n"
-           ";;TODO:"
+           ";;TODO-instr-list-to-sketch:"
            (~v (first instr-list)) "\n"
            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope))]))]))
            
