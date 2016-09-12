@@ -1,3 +1,0 @@
-#!/bin/bash
-
-./benchmark -a $1 -n $2
