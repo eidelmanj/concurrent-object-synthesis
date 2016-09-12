@@ -19,8 +19,10 @@
          program-node
          assign-obj
          single-var
-         function-call-root
-         function-call-node
+         (struct-out cast-exp)
+         (struct-out cast-exp-ptr)
+         (struct-out function-call-root)
+         (struct-out function-call-node)
          expr-stmt
          assign-stmt
          expr
@@ -48,6 +50,7 @@
          un-bool-exp
          empty-node
          return-node
+         decl-ptr-node
          bool-const
          null-node
          tostring)
@@ -65,7 +68,7 @@
 (define-syntax-rule (tostring a) (format "~a" a))
 
 (define-tokens a (NUM VAR CHAR TYPE ADDRESS))
-(define-empty-tokens b (~ \. \, NULL BOOL RETURN SHARED GETTERS SETTERS ELSE LOOP WHILE FOR DO \; = + -  < > & AND OR NOT EQUAL EOF LET IN IF \( \) \{ \} ))
+(define-empty-tokens b (~ \. \, NULL BOOL RETURN SHARED GETTERS SETTERS ELSE LOOP WHILE FOR DO \; * -> = + -  < > & AND OR NOT EQUAL EOF LET IN IF \( \) \{ \} ))
 
 (define-lex-trans number
   (syntax-rules ()
@@ -82,7 +85,7 @@
   (number10 (number digit10))
   (identifier-characters (re-or (char-range "A" "z")
                                 "?" "!" ":" "$" "%" "^" "&"))
-  (basic-types (re-or "void" "int" "char" "Node" "Integer" "pthread_mutex_t" "pthread_mutex_t*" "int*" "char*" (re-: "struct" " " (re-+ identifier-characters))))
+  (basic-types (re-or "void" "int" "char"  "Integer" "pthread_mutex_t" "pthread_mutex_t*" "int*" "char*" (re-: "struct" " " (re-+ identifier-characters))))
   (identifier (re-+ identifier-characters))
   (loop (re-or "while" "for"))
   (truth-values (re-or "true" "false"))
@@ -114,6 +117,8 @@
    ("else" (token-ELSE))
    ("return" (token-RETURN))
    ("." (token-\.))
+   ("->" (token-->))
+   ("*" (token-*))
    ("shared" (token-SHARED))
    ("getters" (token-GETTERS))
    ("setters" (token-SETTERS))
@@ -170,6 +175,11 @@
 (define-struct bool-const (const))
 (define-struct return-node (v))
 (define-struct null-node ())
+(define-struct obj-acc-exp (var acc))
+(define-struct obj-deref-exp (var deref))
+(define-struct object-deref (var deref))
+
+(define-struct decl-ptr-node (tp var))
 ;; Structure for object accesses ie x.get()
 (define-struct object-access (var acc))
 (define-struct assign-obj (v1 v2 o id-num type) #:transparent)
@@ -181,6 +191,8 @@
 (define-struct user-input-node (s g p))
 
 (define-struct decl-node (tp v))
+(define-struct cast-exp (tp e))
+(define-struct cast-exp-ptr (tp e))
 
 
 (define global-id-cnt (void))
@@ -221,6 +233,7 @@
          ((exp + exp) (make-arith-exp '+ $1 $3))
          ((exp - exp) (make-arith-exp '- $1 $3))
          ((exp EQUAL exp) (make-arith-exp '= $1 $3))
+         ((exp NOT = exp) (make-arith-exp '!= $1 $4))
          ((exp < exp) (make-comparison-exp '< $1 $3))
          ((exp < = exp) (make-comparison-exp '<= $1 $4))
          ((exp > exp) (make-comparison-exp '> $1 $3))
@@ -228,7 +241,12 @@
          ((exp AND exp) (make-bin-bool-exp '&& $1 $3))
          ((exp OR exp) (make-bin-bool-exp '|| $1 $3))
          ((NOT exp) (make-un-bool-exp '! $2))
+         ((VAR \. VAR) (make-obj-acc-exp $1 $3))
+         ((VAR -> VAR) (make-obj-deref-exp $1 $3))
+         (( \( TYPE  \) exp) (make-cast-exp $2 $4 ))
+         (( \( TYPE * \) exp) (make-cast-exp-ptr $2 $5))
          ((& VAR) (make-empty-node))
+
          ((function-call) (make-function-call-root $1 null)))
     
     (single-line-if ((IF \( exp \) \{ program \} ) (make-if-node $3 $6 (make-empty-node))))
@@ -239,7 +257,9 @@
                ((VAR = function-call \;) (make-function-call-root $3 $1))
                ((VAR = exp \;) (make-assign-stmt $1 $3))
                ((VAR \. object-access = exp \;) (make-assign-stmt (make-object-access $1 $3) $5))
+               ((VAR -> VAR = exp \;) (make-assign-stmt (make-object-deref $1 $3) $5))
                ((TYPE VAR = exp \;) (make-decl-node $1 (make-assign-stmt $2 $4)))
+               ((TYPE * VAR = exp \;) (make-decl-ptr-node $1 (make-assign-stmt $3 $5)))
                ((method-declaration) (make-method-root $1))
                ((function-call \;) (make-function-call-root $1 null))
                ((VAR \. object-access \;) (make-object-access $1 $3))
@@ -247,6 +267,7 @@
                ((RETURN exp \;) (make-return-node $2))
                ((single-line-if ) (make-if-stmt (make-if-root $1)))
                ((TYPE VAR \;) (make-decl-node $1 $2))
+               ((TYPE * VAR \;) (make-decl-ptr-node $1 $3))
                ((struct-declaration) (make-struct-declaration-root $1))
                ((if-else) (make-if-stmt (make-if-root $1)))
                ((loop) (make-loop-root $1)))
@@ -278,12 +299,20 @@
     (arg-list (() (make-empty-node))
               ((& VAR add-arg) (make-arg-node (make-arg-decl $2) $3))
               ((VAR add-arg) (make-arg-node (make-arg-decl $1) $2)))
+
+    (exp-list (() (make-empty-node))
+              ((& exp add-exp) (make-arg-node (make-arg-decl $2) $3))
+              ((exp add-exp) (make-arg-node (make-arg-decl $1) $2)))
+    (add-exp (() (make-empty-node))
+              ((\, & exp add-exp) (make-arg-node (make-arg-decl $3) $4))
+             ((\, exp add-exp) (make-arg-add-node (make-arg-decl $2) $3)))
+
     
     (struct-declaration ((TYPE \{ field-members \} \;) 
       (make-struct-declaration-node $1 $3)))
 
     ;; function calls
-    (function-call (( VAR \( arg-list \) ) (function-call-node $1 $3)))
+    (function-call (( VAR \( exp-list \) ) (function-call-node $1 $3)))
     
     
     ;; Main program
