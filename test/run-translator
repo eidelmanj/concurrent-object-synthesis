@@ -1,7 +1,9 @@
 #! /usr/bin/env racket
 #lang racket
 (require "../parser/parser.rkt"
+
          "../program_representation/racket-synthesis.rkt"
+         "../program_representation/simulator-structures.rkt"
          racket/port
          parser-tools/lex
          (prefix-in re- parser-tools/lex-sre)
@@ -18,5 +20,38 @@
                  (input (open-input-string test-program)))
               (translate (simple-math-parser (lex-this simple-math-lexer input)))))
 
-(display (translate-to-c lst))
+
+
+
+;; (display (translate-to-c lst))
+
+(define (display-each-line l)
+  (cond
+    [(empty? l) (void)]
+    [(Single-branch? (first l))
+     (display "if (") (display (Single-branch-condition (first l))) (displayln ") {")
+     (display-each-line (Single-branch-branch (first l)))
+     (displayln "}")
+     (display-each-line (rest l))]
+    [(Loop? (first l))
+     (display "while (") (display (Loop-condition (first l))) (displayln ") {")
+     (display-each-line (Loop-instr-list (first l)))
+     (displayln "}")
+     (display-each-line (rest l))]
+    [else
+     (displayln (first l))
+     (display-each-line (rest l))]))
+
+
+
+    
+(map
+ (lambda (l) (displayln "__________________")
+
+         (cond
+           [(Method? l) (display-each-line (Method-instr-list l))]
+           [else
+            (displayln "something else")])
+         (displayln "") (displayln ""))
+ lst)
 
