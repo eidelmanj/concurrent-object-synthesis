@@ -121,6 +121,7 @@
  (struct-out Get-var)
  (struct-out Dereference)
  (struct-out Equal)
+ (struct-out Not-equal)
  (struct-out Not)
  (struct-out Or)
  (struct-out Add)
@@ -346,6 +347,7 @@
 
 (define-struct Dereference (id type offset) #:transparent)
 (define-struct Equal (expr1 expr2) #:transparent)
+(define-struct Not-equal (expr1 expr2) #:transparent)
 (define-struct Not (expr) #:transparent)
 (define-struct Or (expr1 expr2) #:transparent)
 (define-struct And (expr1 expr2) #:transparent)

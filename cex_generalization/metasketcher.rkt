@@ -385,6 +385,9 @@
 
              (repair-end (rest instr-list hole))))]
 
+
+          
+
          ;; Otherwise we can just be safe in recursing our repair into the loop body
          [else
           (let ([loop-body (Loop-instr-list (first instr-list))])
@@ -406,6 +409,10 @@
       (metasketch-repair (rest instr-list) repair-strt repair-end hole meta-var))]
        
        
+    [(Meta-branch? (first instr-list)) ;; TODO: For now we assume that the hole can't be in a previously patched section
+     ;;                                         so we actually ignore Meta-branches
+
+     (append (list (first instr-list)) (metasketch-repair (rest instr-list) repair-strt repair-end hole meta-var))]
          
       
     [(equal? (C-Instruction-instr-id (first instr-list)) (Hole-method1 hole)) ;; We've found our hole
@@ -445,8 +452,54 @@
           ;; (display "COMPOSED METHOD FOUND: ") (displayln composed-sketch-method)
           (reduce
            append
-           (map (lambda (t) (expand-error-trace t composed-sketch-method)) traces))))))
+           (map (lambda (t)
+                  (set-all-counters-to-zero (Method-instr-list composed-sketch-method))
+                  (expand-error-trace t composed-sketch-method)) traces))))))
   
+
+
+
+
+(define (set-all-counters-to-zero instr-list)
+  (cond
+    [(empty? instr-list) instr-list]
+
+    [(Single-branch? (first instr-list))
+     (set-all-counters-to-zero (Single-branch-branch (first instr-list)))
+     (set-all-counters-to-zero (rest instr-list))]
+
+
+    
+    [(Branch? (first instr-list))
+     (set-all-counters-to-zero (Branch-branch1 (first instr-list)))
+     (set-all-counters-to-zero (Branch-branch2 (first instr-list)))
+     (set-all-counters-to-zero (rest instr-list))]
+
+    [(Loop? (first instr-list))
+     (set-all-counters-to-zero (Loop-instr-list (first instr-list)))
+     (set-all-counters-to-zero (rest instr-list))]
+    
+            
+
+           
+    [(Label? (first instr-list))
+     (set-all-counters-to-zero (rest instr-list))]
+       
+       
+    [(Meta-branch? (first instr-list))
+     (set-all-counters-to-zero (Meta-branch-branch1 (first instr-list)))
+     (set-all-counters-to-zero (Meta-branch-branch2 (first instr-list)))
+     (set-all-counters-to-zero (rest instr-list))]
+
+
+    [(Single-branch-counter? (first instr-list))
+     (set-Single-branch-counter-counter! (first instr-list) 0)
+     (set-all-counters-to-zero (Single-branch-counter-branch (first instr-list)))
+     (set-all-counters-to-zero (rest instr-list))]
+    
+    [else
+     (set-all-counters-to-zero (rest instr-list))]))
+         
 
 
 
@@ -496,6 +549,7 @@
 
 
          [(>= (Single-branch-counter-counter (first instr-list)) 1)
+
           (map
            (lambda (l)
              (append (list (Trace-Type "broke-out")

@@ -102,15 +102,24 @@
       
 
 
-;; (display "Hole: ") (displayln (first (second hole-set)))
+;; (display "Hole: ") (displayln  (first hole-set))
 
 ;; To repair a hole we need a witness to that hole
 (define witness-trace (find-matching-trace result-trace-lists (first (second hole-set))))
+;; (define witness-trace2 (find-matching-trace result-trace-lists (fourth (first hole-set))))
+
+;; (displayln "found witness traces")
+;; (display "witness-trace: ") (displayln witness-trace)
+;; (display "witness-trace2: ") (displayln witness-trace2)
 
 ;; We then need to get a concrete instance of the hole - confusingly called a Hole
 (define concrete-hole (convert-abstract-hole-to-concrete witness-trace (first (second hole-set))))
+;; (define concrete-hole2 (convert-abstract-hole-to-concrete witness-trace2 (fourth (first hole-set))))
 
+;; (displayln "found concrete holes from: ")
+;; (display "original set: ") (displayln (first hole-set))
 ;; (display "concrete hole: ") (displayln concrete-hole)
+;; (display "concrete hole2: ") (displayln concrete-hole2)
 
 
 (define optimistic-lib
@@ -119,8 +128,19 @@
    "extension"
    concrete-hole))
 
+;; (displayln "patched hole1")
+;; (define optimistic-two-hole
+;;   (modify-library-for-optimistic
+;;    optimistic-lib
+;;    "extension"
+;;    concrete-hole2))
+   
+;; (displayln "patched hole2")
+
+
+
 ;; (display "Optimistic method: ")
-;; (map (lambda (l) (displayln l))  (Method-instr-list (get-lib-method optimistic-lib "extension")))
+;; (map (lambda (l) (displayln l))  (Method-instr-list (get-lib-method optimistic-two-hole "extension")))
 
 
 
@@ -134,10 +154,12 @@
 
 
 ;; (display "Original traces: ") (displayln (length result-trace-lists))
+
+(define witness-trace-set (list witness-trace)) ;; witness-trace2))
 (define all-equivalent-traces
 
   (expand-traces-to-sketch-lib
-   (list witness-trace)
+   witness-trace-set
    optimistic-lib
    "extension"))
 
