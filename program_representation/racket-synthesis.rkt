@@ -71,16 +71,34 @@ To this (Racket struct) - (Method "test"
     [(arg-add-node v next) (append (list (translate v)) (translate next))]
     [(arg-decl id) (Get-var id)]
     [(decl-node tp v) (Create-var (translate v) tp)]
-    [(assign-stmt var exp) (Set-var (translate var) (translate exp))]
-    [(num-exp n) (Constant n)]
+    [(decl-ptr-node tp v) (Create-var (translate v) (string-replace tp "struct " ""))]
+    
+    [(assign-stmt var exp)
+
+
+
+     (cond
+       [(and
+         (cast-exp-ptr? exp)
+         (function-call-root? (cast-exp-ptr-e exp))
+         (equal? (function-call-node-nm (function-call-root-f (cast-exp-ptr-e exp))) "malloc"))
+        
+        (Set-pointer (translate var) `() `()  (New-struct `() `()))]
+       [else
+             (Set-var (translate var) (translate exp))])]
+    [(num-exp n)  n]
     [(var-exp i) (Get-var i)]
     [(loop-root loop) (translate loop)]
     [(while-node exp body) (Loop (translate exp) (translate body))]
     [(for-node init condition incr body)
      (Loop (translate condition) (append (list init condition) (translate body)))]
-    [(comparison-exp op expr1 expr2) (bin-op-struct op (translate expr1) (translate expr2))]
-    [(bin-bool-exp op expr1 expr2) (bin-op-struct op (translate expr1) (translate expr2))]
-    [(arith-exp op expr1 expr2) (bin-op-struct op (translate expr1) (translate expr2))]
+    [(comparison-exp op expr1 expr2)
+     (bin-op-struct op (translate expr1) (translate expr2))]
+    [(bin-bool-exp op expr1 expr2)
+     (displayln op) (displayln (translate expr1)) (displayln (translate expr2)) (exit) 
+     (bin-op-struct op (translate expr1) (translate expr2))]
+    [(arith-exp op expr1 expr2)
+     (bin-op-struct op (translate expr1) (translate expr2))]
     [(return-node v) (Return (translate v))]
     [(bool-const const) (Constant const)]
     [v (if (string? v)
@@ -98,6 +116,7 @@ To this (Racket struct) - (Method "test"
                         (cons '> Greater-than)
                         (cons '>= Greater-than-equal)
                         (cons '&& And)
+                        (cons '!= Not-equal)
                         (cons '|| Or)
                         (cons '! Not)))
 
@@ -206,4 +225,4 @@ To this (Racket struct) - (Method "test"
                  (input (open-input-string test-program)))
               (translate (simple-math-parser (lex-this simple-math-lexer input)))))
 
-(display (translate-to-c lst))
+;; (display (translate-to-c lst))
