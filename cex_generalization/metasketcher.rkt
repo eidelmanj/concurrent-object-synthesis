@@ -11,6 +11,7 @@
  meta-vars-consistent?
  collect-all-optimistic-expressions
  optimistic-stopped-hole?
+ minimal-lock
  )
 
 (define optimistic-count (void))
@@ -854,6 +855,12 @@
 
 
 
+
+
+
+
+
+
 ;; Returns whether we had to do a restart for a given hole,
 ;; or if we just blasted through
 (define (optimistic-stopped-hole? t hole)
@@ -905,3 +912,165 @@
 
 
 
+
+
+(define (hole-start-match hole-list instr-id)
+  (filter
+   (lambda (h) (equal? (Hole-method1 h) instr-id))
+   hole-list))
+
+(define (hole-end-match hole-list instr-id)
+  (filter
+   (lambda (h) (equal? (Hole-method2 h) instr-id))
+   hole-list))
+
+
+(define new-lock-count (void))
+(set! new-lock-count 0)
+(define (new-lock)
+  (set! new-lock-count (+ new-lock-count 1))
+  new-lock-count)
+
+(define (new-locks match-starts)
+  (map
+   (lambda (h) (cons h (new-lock)))
+   match-starts))
+
+
+(define (create-acquire-statements start-locks)
+  (map
+   (lambda (pair) (Lock (cdr pair)))
+   start-locks))
+
+
+(define (create-release-statements match-ends acquired-list)
+  (filter
+   (lambda (a) (not (null? a)))
+   (map
+    (lambda (pair)
+
+      (let ([matching-pairs
+             (filter (lambda (h) (and
+                                  (equal? (Hole-method1 (car h)) (Hole-method1 pair))
+                                  (equal? (Hole-interruptor (car h)) (Hole-interruptor pair))
+                                  (equal? (Hole-method2 (car h)) (Hole-method2 pair))))
+                     acquired-list)])
+        
+        (cond
+          [(empty? matching-pairs) null]
+          [else
+           (let ([lock-to-release
+                  (cdr
+                   
+                   (first matching-pairs))])
+
+             (Unlock lock-to-release))])))
+    match-ends)))
+       
+       
+
+(define (start-in-branch branch-instr-list hole-list)
+  (filter
+   (lambda (h)
+     (< 0
+        (length (filter (lambda (instr) (equal? (Hole-method1 h) (C-Instruction-instr-id instr))) branch-instr-list))))
+   hole-list))
+
+(define (end-in-branch branch-instr-list hole-list)
+  ;; (displayln "end in branch")
+  (filter
+   (lambda (h)
+     (< 0
+        (length (filter (lambda (instr) (equal? (Hole-method2 h) (C-Instruction-instr-id instr))) branch-instr-list))))
+   hole-list))
+
+
+(define (hole-contains h-list h)
+  ;; (display "hole-contains: ") (displayln h-list) (displayln h) (displayln "--------")
+  (> 0 (length (filter (lambda (h-prime) (and
+                                          (equal? (Hole-method1 h) (Hole-method1 h-prime))
+                                          (equal? (Hole-interruptor h) (Hole-interruptor h-prime))
+                                          (equal? (Hole-method2 h) (Hole-method2 h-prime))))
+                       h-list))))
+  
+
+(define (all-in-branch branch-instr-list hole-list)
+  ;; (displayln "all-in-branch")
+  (let ([start-holes (start-in-branch branch-instr-list hole-list)]
+        [end-holes (end-in-branch branch-instr-list hole-list)])
+    ;; (display "all-in-branch-results: ") (display "1:") (displayln start-holes) (display "2:")
+    ;; (displayln end-holes) (displayln "------")
+    (filter (lambda (h) (hole-contains end-holes h)) start-holes)))
+
+
+
+(define (only-start-in-branch branch-instr-list hole-list)
+  (let
+      ([start-holes (start-in-branch branch-instr-list hole-list)]
+       [all-holes (all-in-branch branch-instr-list hole-list)])
+    (filter (lambda (h) (not (hole-contains all-holes h))) start-holes)))
+
+
+(define (only-end-in-branch branch-instr-list hole-list)
+  ;; (display "only-in-branch: (") (display branch-instr-list) (display hole-list) (displayln ")")
+  (let
+      ([end-holes (end-in-branch branch-instr-list hole-list)]
+       [all-holes (all-in-branch branch-instr-list hole-list)])
+
+    (filter (lambda (h) (not (hole-contains all-holes h))) end-holes)))
+
+;; Repairs given Method using Minimal Locking Algorithm
+(define (minimal-lock instr-list hole-list acquired-list)
+
+  
+  
+  (cond
+    [(empty? instr-list) `()]
+    [(Single-branch? (first instr-list))
+     (let ([just-ends (only-end-in-branch (Single-branch-branch (first instr-list)) hole-list)])
+       ;; (displayln "have just-ends")
+       (let ([releases (create-release-statements
+                        just-ends
+                        acquired-list)])
+
+         (append
+
+          
+          (list (Branch (Single-branch-condition (first instr-list))
+                        (minimal-lock (Single-branch-branch (first instr-list)) hole-list acquired-list)
+                        releases))
+
+
+          (minimal-lock (rest instr-list) hole-list acquired-list))))]
+    
+    [(Branch? (first instr-list))
+     ;; TODO
+     `()]
+    [(Loop? (first instr-list))
+     ;; TODO
+     (displayln "TODO: Cannot lock loops")]
+    [(C-Instruction? (first instr-list))
+     (let
+         ([match-starts (hole-start-match hole-list (C-Instruction-instr-id (first instr-list)))]
+          [match-ends (hole-end-match hole-list (C-Instruction-instr-id (first instr-list)))])
+       (let
+           ([start-locks (new-locks match-starts)])
+         (let
+             ([new-acquired-list (append acquired-list start-locks)]
+              [new-acquires (create-acquire-statements start-locks)]
+              [new-releases (create-release-statements match-ends acquired-list)])
+
+           (append
+            new-acquires
+            (list (first instr-list))
+            new-releases
+            (minimal-lock (rest instr-list) hole-list new-acquired-list)))))]))
+           
+            
+              
+          
+           
+
+       
+       
+     
