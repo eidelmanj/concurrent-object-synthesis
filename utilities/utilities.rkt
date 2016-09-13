@@ -96,3 +96,18 @@
       (map (append-list (first l1-set)) l2-set)
       (all-combinations (rest l1-set) l2-set))]))
 
+(define (find-instr instr-list instr)
+  (let 
+      ([all-matches (filter (lambda (i)
+                              (and (C-Instruction? i)
+                                   (equal? (C-Instruction-instr-id i) (C-Instruction-instr-id instr))))
+                            instr-list)])
+    (cond
+      [(empty? all-matches) null]
+      [else
+       (first all-matches)])))
+   
+
+
+  
+  
