@@ -11,7 +11,7 @@
  add-binding-parent
  retrieve-code
  new-scope-num
-
+ generate-optimistic-condition-lists
  generate-optimistic-condition-sketches
  get-interfering-ret-vars
  generate-library-code
@@ -854,6 +854,17 @@
           (string-append "(set! TRACE-TYPE " (to-string-instr (Trace-Type-tp elem) arg-store scope-num parent-scope) ")\n"
                          (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope))]
 
+
+         [(Optimistic-Check? elem)
+          (cond
+            [(Optimistic-Check-which-val elem)
+             (string-append "(set! OPT" (~v (Optimistic-Check-opt-id elem)) "-true-list (append (list (OPT" (~v (Optimistic-Check-opt-id elem)) "))  OPT" (~v (Optimistic-Check-opt-id elem)) "-true-list))\n"
+                            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope))]
+            [else
+             (string-append "(set! OPT" (~v (Optimistic-Check-opt-id elem)) "-false-list (append (list (OPT" (~v (Optimistic-Check-opt-id elem)) "))  OPT" (~v (Optimistic-Check-opt-id elem)) "-false-list))\n"
+                            (instr-list-to-sketch (rest instr-list) library arg-store scope-num parent-scope))])]
+
+
          [else
           ;; (display "todo case\n")
           (string-append
@@ -879,6 +890,17 @@
 
 
 
+(define (generate-optimistic-condition-lists opt-conds)
+  (reduce
+   string-append
+   (map (lambda (c) (string-append "(define OPT" (~v (Optimistic-Check-opt-id c)) "-true-list (void))\n"
+                                   "(set! OPT" (~v (Optimistic-Check-opt-id c)) "-true-list `())\n"
+                                   "(define OPT" (~v (Optimistic-Check-opt-id c)) "-false-list (void))\n"
+                                   "(set! OPT" (~v (Optimistic-Check-opt-id c)) "-false-list `())\n"))
+        opt-conds)))
+   
+   
+
 
 ;; Optimistic Concurrency condition grammar generated for each Optimistic-Condition
 ;; object given.
@@ -887,31 +909,37 @@
    string-append
    (map
     (lambda (opt-cond)
-      (string-append
-      "
 
-  (define-synthax (optimistic-condition" (~v (Optimistic-Condition-meta-var opt-cond)) "  depth)
-    #:base (choose  (METHOD-contains (list (list-ref first-args 0) (list-ref first-args 1)))
-                    (! (METHOD-contains (list (list-ref first-args 0) (list-ref first-args 1)))))
+      (let
+          ([opt-meta-id
+            (cond
+              [(Optimistic-Condition? opt-cond) (~v (Optimistic-Condition-meta-var opt-cond))]
+              [(Optimistic-Check? opt-cond) (~v (Optimistic-Check-opt-id opt-cond))]
+              [else
+               (displayln "opt-meta-id not found...")
+               (exit)])])
+        (string-append
+         "
+
+  (define-synthax (optimistic-condition" opt-meta-id "  depth)
+    #:base (choose (lambda ()  (METHOD-contains (list (list-ref first-args 0) (list-ref first-args 1))))
+                    (lambda () (not (METHOD-contains (list (list-ref first-args 0) (list-ref first-args 1))))))
 
     #:else (choose
-              (METHOD-contains (list (list-ref first-args 0) (list-ref first-args 1)))
-              (! (METHOD-contains (list (list-ref first-args 0) (list-ref first-args 1))))
-              ((choose && ||) (optimistic-condition" (~v (Optimistic-Condition-meta-var opt-cond)) " (- depth 1))
-                              (optimistic-condition" (~v (Optimistic-Condition-meta-var opt-cond)) " (- depth 1)))))
+              (lambda () (METHOD-contains (list (list-ref first-args 0) (list-ref first-args 1))))
+              (lambda () (not (METHOD-contains (list (list-ref first-args 0) (list-ref first-args 1)))))
+              (lambda () ((choose && ||) ((optimistic-condition" opt-meta-id " (- depth 1)))
+                              ((optimistic-condition" opt-meta-id " (- depth 1)))))))
 
  (define OPT1"
 
-                              " (lambda () (optimistic-condition" (~v (Optimistic-Condition-meta-var opt-cond)) " 2)))"))
+                              " (optimistic-condition" opt-meta-id " 2))")))
 
  ;; (~v (Optimistic-Condition-meta-var opt-cond)) " (lambda () (optimistic-condition" (~v (Optimistic-Condition-meta-var opt-cond)) " 1)))\n"))
 
     
 
 opt-conds)))
-
-
-
 
 
 

@@ -15,7 +15,8 @@
  ; C Instructions
  (struct-out C-Instruction)
 
-
+ new-opt-id
+ (c-struct-out Optimistic-Check)
 
  (c-struct-out Meta-addition-choice)
  (c-struct-out Repeat-meta)
@@ -194,6 +195,8 @@
 (c-struct Run-method (method args ret) #:transparent #:mutable)
 (c-struct Single-branch (condition branch) #:transparent)
 
+
+(c-struct Optimistic-Check (opt-id which-val) #:transparent #:mutable)
 (c-struct Single-branch-counter (condition branch counter) #:transparent #:mutable)
 (c-struct Goto (goto-addr unroll-count) #:transparent #:mutable)
 ;; (c-struct Single-branch-counter (condition branch [counter #:auto #:mutable]) #:transparent #:auto-value 0)
@@ -389,6 +392,8 @@
 
 
 
+
+
 (struct Info (thread-id instr-id) #:transparent)
 
 
@@ -506,3 +511,9 @@
 (define (new-loop-id)
   (set! loop-id-count (+ loop-id-count 1))
   loop-id-count)
+
+(define opt-id-count (void))
+(set! opt-id-count 0)
+(define (new-opt-id)
+  (set! opt-id-count (+ opt-id-count 1))
+  opt-id-count)

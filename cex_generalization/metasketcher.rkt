@@ -7,8 +7,10 @@
  metasketch-library-add-announcement
  expand-traces-to-sketch-lib
  metasketch-optimistic-strategy
+ optimistic-verification-condition
  modify-library-for-optimistic
  meta-vars-consistent?
+ collect-all-optimistic-checks
  collect-all-optimistic-expressions
  optimistic-stopped-hole?
  minimal-lock
@@ -438,9 +440,96 @@
 
 
 
+
+
+;; Optimistic Concurrency: Merges traces that should really be a single trace with
+;; a single optimistic condition.
+;; Takes in:
+;;           hole1, hole2: The holes that led to the generated trace
+;;           trace1, trace2: the original traces
+;;      returns:
+;;           a list of traces. Either a single merged trace, or the two original traces
+;;;;;;;;;;;;;;;;;;;;;;TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  
+
+
+
+
+;; Optimistic Concurrency: Generate a set of traces to act as a verification condition
+;; returns a set of pairs of traces, and whether the optimistic condition should
+;; succeed or fail
+;; Takes in:
+;;          trace: Should have no interruptions
+;;          hole: Should be a concrete hold with the offending interruptor as a runnable
+;;                  statement
+(define (optimistic-verification-condition trace hole opt-id)
+  ;; (displayln trace)
+  (cond
+    [(empty? trace) (list (list))]
+
+    [(and
+      (C-Instruction? (first trace))
+      (equal? (C-Instruction-instr-id (first trace)) (Hole-method1 hole)))
+
+     ;; (display "found: ") (displayln (C-Instruction-instr-id (first trace)))
+     ;; (display "found-hole: ") (displayln (Hole-method1 hole))
+     ;; (display "to-end-of-hole: ") (displayln (to-end-of-hole (rest trace) hole))
+     (map (append-item (first trace))
+          (map
+           (lambda (l) (append l (after-hole (rest trace) hole)))
+           (shuffle-in (to-end-of-hole (rest trace) hole) (Hole-interruptor hole) opt-id)))]
+
+          
+
+    [else
+     (map (append-list (list (first trace) (Optimistic-Check opt-id  #f)))
+          (optimistic-verification-condition (rest trace) hole opt-id))]))
+
+(define (to-end-of-hole trace hole)
+  (cond
+    [(empty? trace) `()]
+    [(and
+      (C-Instruction? (first trace))
+      (equal? (C-Instruction-instr-id (first trace)) (Hole-method2 hole)))
+     `()]
+    [else
+     (append (list (first trace)) (to-end-of-hole (rest trace) hole))]))
+
+(define (after-hole trace hole)
+  (cond
+    [(empty? trace) `()]
+    [(and
+      (C-Instruction? (first trace))
+      (equal? (C-Instruction-instr-id (first trace)) (Hole-method2 hole)))
+     trace]
+    [else
+     (after-hole (rest trace) hole)]))
+
+
+(define (shuffle-in trace instr opt-id)
+  ;; (display "shuffling: ") (displayln trace)
+  (cond
+    [(empty? trace) (list (list
+                           instr
+                           (Optimistic-Check opt-id #t)))]
+    [else
+     (map (lambda (l) (append (list (first trace)
+                                    instr
+                                    (Optimistic-Check opt-id #t))
+                              l))
+                                    
+          (shuffle-in (rest trace) instr opt-id))]))
+
+      
+
+      
+  
+
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;; Expansion of error traces to match new sketch extension ;;;;;;;;;;
-
 (define (expand-traces-to-sketch-lib traces library composed-method-name)
   ;; (display "traces: ")
   ;; (displayln traces)
@@ -910,7 +999,17 @@
 
 
 
+(define (collect-all-optimistic-checks t-list)
+  (unique (lambda (opt-check1 opt-check2)
+            (equal? (Optimistic-Check-opt-id opt-check1) (Optimistic-Check-opt-id opt-check2)))
 
+          (reduce
+           append
+           (map
+            (lambda (t)
+              (filter (lambda (ti) ;; (displayln ti)
+                              (Optimistic-Check? ti)) t))
+            t-list))))
 
 
 
