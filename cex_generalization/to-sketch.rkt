@@ -15,6 +15,8 @@
  generate-optimistic-condition-sketches
  get-interfering-ret-vars
  generate-library-code
+ generate-smart-optimistic-condition-grammar
+ generate-top-level-grammar
  trace-list-to-sketch
  instr-list-to-sketch)
 
@@ -935,6 +937,12 @@
 
                               " (optimistic-condition" opt-meta-id " 2))")))
 
+
+
+
+
+
+    
  ;; (~v (Optimistic-Condition-meta-var opt-cond)) " (lambda () (optimistic-condition" (~v (Optimistic-Condition-meta-var opt-cond)) " 1)))\n"))
 
     
@@ -944,3 +952,206 @@ opt-conds)))
 
 
 
+;; Top level grammar to connect all the parts
+(define (generate-top-level-grammar opt-info-list arg-store depth)
+
+  (define (range1 i j)
+    (cond
+      [(> i j) `()]
+      [(equal? i j) (list i)]
+      [else
+       (append (list i) (range1 (+ i 1) j))]))
+  
+  (reduce
+   string-append
+   (map
+    (lambda (opt-info)
+      (let ([opt-meta-id (~v (Optimistic-Info-id opt-info))]
+            [opt-possible-vals (Optimistic-Info-possible-vals opt-info)])
+        (string-append
+         "(define OPT" opt-meta-id " (lambda ()
+(choose
+ (not (equal? (method-choice" opt-meta-id (~v depth)") (var-choice" opt-meta-id (~v depth)")))\n"
+
+ (reduce
+string-append
+(map
+ (lambda (i)
+   (string-append
+    "((choose || &&) "
+    (reduce
+     string-append
+     (map
+      (lambda (j)
+        (string-append "(not (equal? (method-choice" opt-meta-id (~v j)") (var-choice" opt-meta-id (~v j) "))) "))
+      (range1 1 i)))
+    ")\n"))
+ (range1 2 depth)))
+")))\n")))
+
+opt-info-list)))
+
+             
+
+
+;; Generates optimistic condition grammar based on trace consistency checks
+(define (generate-smart-optimistic-condition-grammar opt-info-list arg-store depth)
+  (cond
+    [(equal? depth 0) ""]
+    [else
+
+     (string-append
+
+      
+     (reduce
+      string-append
+      (map
+       (lambda (opt-info)
+         (let ([opt-meta-id (~v (Optimistic-Info-id opt-info))]
+               [opt-possible-vals (Optimistic-Info-possible-vals opt-info)])
+
+           (string-append
+            "
+(define method-choice" opt-meta-id (~v depth) "\n"
+ "            (choose\n"
+
+               (reduce
+string-append
+(map
+ (lambda (elem)
+   (string-append "(lambda () (METHOD-" (Run-method-method elem) " " (to-string-instr (Run-method-args elem) arg-store 0 `()) "))\n"))
+ opt-possible-vals))
+
+"))\n"
+
+)))
+
+
+
+ 
+opt-info-list))
+
+     (reduce
+      string-append
+      (map
+       (lambda (opt-info)
+         (let ([opt-meta-id (~v (Optimistic-Info-id opt-info))]
+               [opt-possible-vals (Optimistic-Info-possible-vals opt-info)])
+
+           (string-append
+            "
+(define var-choice" opt-meta-id (~v depth) "\n"
+ "            (choose\n"
+
+               (reduce
+string-append
+(map
+ (lambda (elem)
+   (string-append "(lambda () "(Run-method-ret elem) ")\n"))
+ opt-possible-vals))
+
+"))\n"
+
+)))
+
+opt-info-list))
+
+
+;; (reduce
+;;  string-append
+;;  (map
+;;   (lambda (opt-info)
+;;     (let ([opt-meta-id (~v (Optimistic-Info-id opt-info))]
+;;           [opt-possible-vals (Optimistic-Info-possible-vals opt-info)])
+      
+;;           (string-append
+;;            "
+;; (define grammar" opt-meta-id (~v depth) "\n"
+;;  "            (choose\n
+;;                (lambda () (not (equal? (method-choice" opt-meta-id (~v depth)") (var-choice" opt-meta-id (~v depth)"))))"
+;; (if (not (equal? depth 1))
+;;     (string-append "(lambda () ((choose || &&) (grammar" opt-meta-id (~v (- depth 1))") (grammar" opt-meta-id (~v (- depth 1))")))))")
+;;     "))\n")
+
+
+
+
+
+;; )))
+
+
+
+ 
+;; opt-info-list))
+
+
+
+(generate-smart-optimistic-condition-grammar opt-info-list arg-store (- depth 1)))]))
+
+
+
+
+
+
+
+
+
+        
+
+      
+     
+     
+
+;; (define (generate-smart-optimistic-condition-grammar opt-info-list arg-store depth)
+;;   (reduce
+;;    string-append
+;;    (map
+;;     (lambda (opt-info)
+
+;;       (let
+;;           ([opt-meta-id (~v (Optimistic-Info-id opt-info))]
+;;            [opt-possible-vals (Optimistic-Info-possible-vals opt-info)])
+
+;;         (string-append "
+
+;; (define-synthax (optimistic-condition" opt-meta-id " depth)\n"
+;; "#:base (choose "
+;;   (reduce
+;; string-append
+
+;; (map
+;;  (lambda (elem)
+;;    (string-append 
+;;     " (lambda () (equal? " (Run-method-ret elem) " (METHOD-" (Run-method-method elem) " " (to-string-instr (Run-method-args elem) arg-store 0 `()) ")))\n"))
+;;  opt-possible-vals)
+
+
+;; )
+;; ")\n"
+;; "#:else (choose "
+
+
+;; (reduce
+;;  string-append
+;;  (map
+;;   (lambda (elem)
+;;     (string-append
+;;      " (lambda () (equal? " (Run-method-ret elem) " (METHOD-" (Run-method-method elem) " " (to-string-instr (Run-method-args elem) arg-store 0 `()) ")))\n"))
+;;   opt-possible-vals))
+
+
+;; "( (choose || &&) ((optimistic-condition" opt-meta-id " (- depth 1))) ((optimistic-condition" opt-meta-id " (- depth 1))) )))\n"
+
+
+;;  "(define OPT" opt-meta-id
+
+;;                               " (optimistic-condition" opt-meta-id " 2))"
+
+
+;; )))
+
+;; opt-info-list)))
+
+   
+            
+  

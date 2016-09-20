@@ -11,9 +11,11 @@
  (struct-out Trace)
  (struct-out Invalid-Trace)
 
+ (struct-out Optimistic-Info)
 
  ; C Instructions
  (struct-out C-Instruction)
+ (struct-out Optimistic-Trace)
 
  new-opt-id
  (c-struct-out Optimistic-Check)
@@ -415,6 +417,11 @@
 
 
 (define-struct Continue (to-where))
+
+
+
+(define-struct Optimistic-Info (id possible-vals) #:transparent)
+(define-struct Optimistic-Trace (id instr-list hole) #:transparent #:mutable)
 
 ;; (define-struct Branch (condition branch1 branch2))
 

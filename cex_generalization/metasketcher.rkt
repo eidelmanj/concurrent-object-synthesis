@@ -13,6 +13,8 @@
  collect-all-optimistic-checks
  collect-all-optimistic-expressions
  optimistic-stopped-hole?
+ optimistic-merge
+ optimistic-grammar-sketch
  minimal-lock
  )
 
@@ -442,6 +444,40 @@
 
 
 
+;; Optimistic Concurrency: Generates the grammar of possible optimistic conditions
+(define (optimistic-grammar-sketch trace hole)
+  ;; (display "grammar sketch generation: ") (displayln (first trace))
+  (cond
+    [(empty? trace) `()]
+    [(and
+      (C-Instruction? (first trace))
+      (equal? (C-Instruction-instr-id (first trace)) (Hole-method1 hole))
+      (Run-method? (first trace)))
+     (list (first trace))]
+             
+    [(and
+      (C-Instruction? (first trace))
+      (equal? (C-Instruction-instr-id (first trace)) (Hole-method1 hole)))
+     `()]
+
+    [(Run-method? (first trace))
+     (append
+      (list (first trace))
+      (optimistic-grammar-sketch (rest trace) hole))]
+    [else
+     (optimistic-grammar-sketch (rest trace) hole)]))
+     
+      
+             
+
+
+
+      
+
+
+
+
+
 ;; Optimistic Concurrency: Merges traces that should really be a single trace with
 ;; a single optimistic condition.
 ;; Takes in:
@@ -450,6 +486,17 @@
 ;;      returns:
 ;;           a list of traces. Either a single merged trace, or the two original traces
 ;;;;;;;;;;;;;;;;;;;;;;TODO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define (optimistic-merge opt-trace1 opt-trace2)
+  (cond
+    [(and
+      (equal? (Hole-method1 (Optimistic-Trace-hole opt-trace1))
+              (Hole-method1 (Optimistic-Trace-hole opt-trace2)))
+      (equal? (Hole-method2 (Optimistic-Trace-hole opt-trace1))
+              (Hole-method2 (Optimistic-Trace-hole opt-trace2))))
+     (set-Optimistic-Trace-id! opt-trace2 (Optimistic-Trace-id opt-trace1))]
+    [else
+     (void)]))
+              
   
 
 
@@ -467,6 +514,10 @@
   (cond
     [(empty? trace) (list (list))]
 
+    [(Create-var? (first trace))
+     (map
+      (append-item (first trace))
+      (optimistic-verification-condition (rest trace) hole opt-id))]
     [(and
       (C-Instruction? (first trace))
       (equal? (C-Instruction-instr-id (first trace)) (Hole-method1 hole)))
@@ -474,7 +525,8 @@
      ;; (display "found: ") (displayln (C-Instruction-instr-id (first trace)))
      ;; (display "found-hole: ") (displayln (Hole-method1 hole))
      ;; (display "to-end-of-hole: ") (displayln (to-end-of-hole (rest trace) hole))
-     (map (append-item (first trace))
+     (map (append-list (list (first trace)
+                             (Optimistic-Check opt-id #f)))
           (map
            (lambda (l) (append l (after-hole (rest trace) hole)))
            (shuffle-in (to-end-of-hole (rest trace) hole) (Hole-interruptor hole) opt-id)))]
@@ -482,7 +534,8 @@
           
 
     [else
-     (map (append-list (list (first trace) (Optimistic-Check opt-id  #f)))
+     (map (append-list (list (first trace) ;; (Optimistic-Check opt-id  #f)
+                             ))
           (optimistic-verification-condition (rest trace) hole opt-id))]))
 
 (define (to-end-of-hole trace hole)
