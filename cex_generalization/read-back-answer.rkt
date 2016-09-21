@@ -3,6 +3,11 @@
 (require "../utilities/utilities.rkt")
 
 (provide
+ string->opts
+ (struct-out Method-Call-Short)
+ (struct-out Argument-Ref)
+ (struct-out Variable)
+ (struct-out Opt-Inequality)
 
  )
 
@@ -292,10 +297,16 @@ TRACE-TYPE: no-optimistic-restart
    
 
 
-(define ret-pair (parse-str test-str))
-(define opt-map (cdr ret-pair))
-(define keyword-map (car ret-pair))
+(define (string->opts str)
+  
 
-(substitute-arguments opt-map keyword-map)
-opt-map
+  (define ret-pair (parse-str test-str))
+  (define opt-map (cdr ret-pair))
+  (define keyword-map (car ret-pair))
+
+  (substitute-arguments opt-map keyword-map)
+  opt-map)
+
+
+
 
