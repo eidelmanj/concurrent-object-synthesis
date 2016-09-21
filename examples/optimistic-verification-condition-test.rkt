@@ -333,8 +333,12 @@
 (define trace-counter (void))
 (set! trace-counter 0)
 
-(define (spit-out-traces traces hole lin-solutions)
 
+
+
+(define (spit-out-traces traces hole lin-solutions)
+  (define ret-string (void))
+  (set! ret-string "")
 
 
   (define interfering-var-declarations
@@ -357,36 +361,36 @@
 
 
 
-  (display prelude)
+  (set! ret-string (string-append ret-string  prelude))
 
-  (displayln (reduce
+  (set! ret-string (string-append ret-string  (reduce
    string-append
    (map (lambda (i) (string-append "(define POSSIBLE" (~v i) " (void))\n (set! POSSIBLE" (~v i) " #t)\n(define META-CHOICE" (~v i) " #t)"))
-        (range (length traces)))))
+        (range (length traces))))))
 
-  (displayln (instr-list-to-sketch all-declarations library "first-args" 0 0) )
-  (displayln interfering-var-declarations)
-  (display  (generate-library-code library))
-  (displayln initialize-data-structure)
+  (set! ret-string (string-append ret-string  (instr-list-to-sketch all-declarations library "first-args" 0 0) ))
+  (set! ret-string (string-append ret-string  interfering-var-declarations))
+  (set! ret-string (string-append ret-string   (generate-library-code library)))
+  (set! ret-string (string-append ret-string  initialize-data-structure))
 
-  ;; (displayln opt-cond-declarations)
-  (displayln smart-opt-cond-decl)
-  (displayln smart-opt-cond-top-level)
-  (displayln opt-cond-list-defs)
+  ;; (set! ret-string (string-append ret-string  opt-cond-declarations)
+  (set! ret-string (string-append ret-string  smart-opt-cond-decl))
+  (set! ret-string (string-append ret-string  smart-opt-cond-top-level))
+  (set! ret-string (string-append ret-string  opt-cond-list-defs))
 
 
-  (displayln "(cond ")
+  (set! ret-string (string-append ret-string  "(cond "))
 
 
   (map (lambda (which-trace)
          (set! trace-counter (+ trace-counter 1))
   
-         ;; (map (lambda (l) (displayln l)) which-trace)
+         ;; (map (lambda (l) (set! ret-string (string-append ret-string  l)) which-trace)
 
          
-         (displayln (string-append "[(equal? pick-trace " (~v trace-counter) ")"))
+         (set! ret-string (string-append ret-string  (string-append "[(equal? pick-trace " (~v trace-counter) ")")))
 
-         (displayln "(display \"Trace: \")(displayln pick-trace)")
+         ;; (set! ret-string (string-append ret-string  "(set! ret-string (string-append ret-string  \"Trace: \")(set! ret-string (string-append ret-string  pick-trace)"))
 
 
 
@@ -398,33 +402,33 @@
 
 
 
-         (displayln
+         (set! ret-string (string-append ret-string 
           (string-replace
            (instr-list-to-sketch which-trace library "first-args" 0 0) 
           ;; (string-replace (instr-list-to-sketch which-trace optimistic-lib "first-args" 0  0) "POSSIBLE" (string-append "POSSIBLE" (~v trace-counter)))
-          "META-CHOICE" (string-append "META-CHOICE" (~v trace-counter))))
+          "META-CHOICE" (string-append "META-CHOICE" (~v trace-counter)))))
           
 
-         ;; (display "(display \"POSSIBLE: \") (displayln POSSIBLE)\n")
+         ;; (set! ret-string (string-append ret-string  "(set! ret-string (string-append ret-string  \"POSSIBLE: \") (set! ret-string (string-append ret-string  POSSIBLE)\n")
 
 
-         (displayln "
-(display \"possible: \") (displayln POSSIBLE)
-(display \"TRACE-TYPE: \") (displayln TRACE-TYPE)
+         (set! ret-string (string-append ret-string  "
+;; (set! ret-string (string-append ret-string  \"possible: \") (set! ret-string (string-append ret-string  POSSIBLE)
+;; (set! ret-string (string-append ret-string  \"TRACE-TYPE: \") (set! ret-string (string-append ret-string  TRACE-TYPE)
 
-]")
+]"))
 
        )
        traces)
 
 
-  (displayln ")")
+  (set! ret-string (string-append ret-string  ")"))
 
 
-  ;; (displayln (string-append "(assert (and (> pick-trace 0) (< pick-trace " (~v (+ 1 trace-counter)) ")))"))
+  ;; (set! ret-string (string-append ret-string  (string-append "(assert (and (> pick-trace 0) (< pick-trace " (~v (+ 1 trace-counter)) ")))"))
 
 
-;; (displayln (string-append "
+;; (set! ret-string (string-append ret-string  (string-append "
 ;; (define (things-to-assert)
 ;;   (assert (or
 ;;            (equal? TRACE-TYPE \"optimistic-restart\")
@@ -438,27 +442,27 @@
 
 
 
-(displayln "
-(define (to-assert)")
+(set! ret-string (string-append ret-string  "
+(define (to-assert)"))
 (for-each (lambda (opt-id)
-            (displayln (string-append "
+            (set! ret-string (string-append ret-string  (string-append "
             (for-each (lambda (x) (assert x)) OPT" (~v (Optimistic-Check-opt-id opt-id)) "-true-list)
-            (for-each (lambda (x) (assert (not x))) OPT" (~v (Optimistic-Check-opt-id opt-id)) "-false-list)")))
+            (for-each (lambda (x) (assert (not x))) OPT" (~v (Optimistic-Check-opt-id opt-id)) "-false-list)"))))
           all-optimistic-checks)
-(displayln "
-  )")
+(set! ret-string (string-append ret-string  "
+  )"))
 
 
 
   
-  (displayln "(print-forms (synthesize #:forall (list pick-trace)
-                          #:guarantee (to-assert)))")
+  (set! ret-string (string-append ret-string  "(print-forms (synthesize #:forall (list pick-trace)
+                          #:guarantee (to-assert)))"))
 
-  )
+  
 
+ret-string
 
-
-
+)
 
 
 
@@ -471,3 +475,9 @@
                   (list
                    (list (cons "RETURN-VAL" 5) (cons "push5-1" (None)))
                    (list (cons "RETURN-VAL" (None)) (cons "push5-1" 5)))))
+
+(with-output-to-file "TMP.rkt"
+  (lambda () (printf spit-out)))
+
+(system "/u/eidelmanj/racket/bin/racket TMP.rkt > OUTPUT.txt")
+(system "rm -f TMP.rkt")
