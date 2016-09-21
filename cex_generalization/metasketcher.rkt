@@ -1,5 +1,6 @@
 #lang racket
 (require "../program_representation/simulator-structures.rkt")
+(require "../cex_generalization/read-back-answer.rkt")
 (require "../utilities/utilities.rkt")
 
 (provide
@@ -16,6 +17,7 @@
  optimistic-merge
  optimistic-grammar-sketch
  minimal-lock
+ optimistic-repair
  )
 
 (define optimistic-count (void))
@@ -1219,10 +1221,129 @@
             (minimal-lock (rest instr-list) hole-list new-acquired-list)))))]))
            
             
-              
+
+(define (generate-all-optimistic-expressions conditions)
+  (define final-expr (void))
+  (set! final-expr #t)
+  (cons
+   (reduce
+    append
+    (map
+     (lambda (c)
+       (let
+           ([varname (string-append "TMP" (~v (freshvar)))])
+         (cond
+           [(Method-Call-Short? (Opt-Inequality-elem1 c))
+            (set! final-expr (Or final-expr (Not (Equal varname (Opt-Inequality-elem2 c)))))
+            (list
+             (Create-var varname "int")
+             (Run-method
+              (Method-Call-Short-name (Opt-Inequality-elem1 c))
+              (Method-Call-Short-args (Opt-Inequality-elem1 c))
+              varname))]
+           [else
+            (set! final-expr (And final-expr (Not (Equal varname (Opt-Inequality-elem1 c)))))
+            (list
+             (Create-var varname "int")
+             (Run-method
+              (Method-Call-Short-name (Opt-Inequality-elem2 c))
+              (Method-Call-Short-args (Opt-Inequality-elem2 c))
+              varname))])))
+                   
+
+
+
+    conditions))
+   final-expr))
           
+(define (repair-extension-instr-list instr-list hole id conditions)
+  (cond
+    [(empty? instr-list) `()]
+    ;; [(and
+    ;;   (Single-branch? (first instr-list))
+    ;;   (not (empty? (Single-branch-branch (first instr-list))))
+    ;;   (C-Instruction? (first (Single-branch-branch (first instr-list))))
+    ;;   (equal?
+    ;;    (C-Instruction-instr-id (first (Single-branch-branch (first instr-list))))
+    ;;    (Hole-method1)))
+
+    [(Single-branch? (first instr-list))
+     (append
+      (list (Single-branch
+             (Single-branch-condition (first instr-list))
+             (repair-extension-instr-list
+              (Single-branch-branch (first instr-list))
+              hole
+              id
+              conditions)))
+      (repair-extension-instr-list (rest instr-list) hole id conditions))]
+    [(and
+      (C-Instruction? (first instr-list))
+      (equal?
+       (C-Instruction-instr-id (first instr-list))
+       (Hole-method1 hole)))
+     (append
+      (list
+       (Label id)
+       (first instr-list))
+      (repair-extension-instr-list (rest instr-list) hole id conditions))]
+
+    [(and
+      (C-Instruction? (first instr-list))
+      (equal?
+       (C-Instruction-instr-id (first instr-list))
+       (Hole-method2 hole)))
+     (let*
+         ([new-lock 100] ;; TODO: make new lock
+          [optimistic-expressions (generate-all-optimistic-expressions (hash-ref conditions id))])
+       (append
+        (list
+         (Lock new-lock))
+        (car optimistic-expressions)
+        (list (Single-branch (cdr optimistic-expressions)
+                       (list
+                        (Unlock id)
+                        (Goto id 0)))
+
+              (first instr-list)
+              (Unlock id))
+        (repair-extension-instr-list (rest instr-list) hole id conditions)))]
+
+         
+     
+    [else
+     (append
+      (list (first instr-list))
+      (repair-extension-instr-list (rest instr-list) hole id conditions))]))
+     
            
 
        
-       
+(define (optimistic-repair trace-list conditions library method-name)
+  (define extension-instr-list (void))
+  (set! extension-instr-list
+        (Method-instr-list (get-lib-method library "extension")))
+
+  (define already-seen (void))
+  (set! already-seen `())
+  (define (repair-extension t )
+    (let*
+        ([hole (Optimistic-Trace-hole t)]
+         [id (Optimistic-Trace-id t)]
+         [instr-list (Optimistic-Trace-instr-list t)])
+
+      (if (not (member id already-seen ))
+          (begin
+            (set! extension-instr-list
+                  (repair-extension-instr-list extension-instr-list hole id conditions))
+            (set! already-seen (append already-seen (list id))))
+          (set! already-seen (append already-seen (list id))))))
+
+            
+
+  (for-each
+   repair-extension
+   trace-list)
+  extension-instr-list)
+        
      

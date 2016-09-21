@@ -7,6 +7,7 @@
 (require racket/string)
 
 (require "../cex_generalization/to-sketch.rkt")
+(require "../cex_generalization/read-back-answer.rkt")
 (require "../cex_generalization/metasketcher.rkt")
 
 (require "../error_trace_generation/error-trace.rkt")
@@ -483,4 +484,13 @@ ret-string
 (system "rm -f TMP.rkt")
 
 
-(displayln (file->string "OUTPUT.txt"))
+(define optimistic-conditions
+  (string->opts (file->string "OUTPUT.txt")))
+(system "rm -f OUTPUT.txt")
+
+
+(optimistic-repair
+ opt-trace-list
+ optimistic-conditions
+ library
+ "extension")
