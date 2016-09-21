@@ -481,3 +481,6 @@ ret-string
 
 (system "/u/eidelmanj/racket/bin/racket TMP.rkt > OUTPUT.txt")
 (system "rm -f TMP.rkt")
+
+
+(displayln (file->string "OUTPUT.txt"))
