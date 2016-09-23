@@ -973,21 +973,27 @@ opt-conds)))
 (choose
  (not (equal? (method-choice" opt-meta-id (~v depth)") (var-choice" opt-meta-id (~v depth)")))\n"
 
- (reduce
-string-append
-(map
- (lambda (i)
-   (string-append
-    "((choose || &&) "
-    (reduce
-     string-append
-     (map
-      (lambda (j)
-        (string-append "(not (equal? (method-choice" opt-meta-id (~v j)") (var-choice" opt-meta-id (~v j) "))) "))
-      (range1 1 i)))
-    ")\n"))
- (range1 2 depth)))
-")))\n")))
+
+(cond
+  [(not (equal? depth 1))
+   (reduce
+    string-append
+    (map
+     (lambda (i)
+       (string-append
+        "((choose || &&) "
+        (reduce
+         string-append
+         (map
+          (lambda (j)
+            (string-append "(not (equal? (method-choice" opt-meta-id (~v j)") (var-choice" opt-meta-id (~v j) "))) "))
+          (range1 1 i)))
+        ")\n"))
+     (range1 2 depth)))
+   ")))\n"]
+
+  [else
+   ")))\n"]))))
 
 opt-info-list)))
 
