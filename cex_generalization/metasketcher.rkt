@@ -506,6 +506,15 @@
   
 
 
+(define (lock-merge h1 h2)
+  (cond
+    [(and
+      (equal? (Hole-method1 h1) (Hole-method1 h2))
+      (equal? (Hole-method2 h1) (Hole-method2 h2)))
+     (list (Hole (Hole-method1 h1) (list (Hole-interruptor h1) (Hole-interruptor h2)) (Hole-method2 h1)))]
+    [else
+     (list h1 h2)]))
+
 
 
 ;; Optimistic Concurrency: Generate a set of traces to act as a verification condition
@@ -1177,10 +1186,24 @@
 
     (filter (lambda (h) (not (hole-contains all-holes h))) end-holes)))
 
-;; Repairs given Method using Minimal Locking Algorithm
-(define (minimal-lock instr-list hole-list acquired-list)
+
+
 
   
+
+  
+  
+
+
+;; Repairs given Method using Minimal Locking Algorithm
+(define (minimal-lock instr-list hole-list-redundant acquired-list)
+
+  ;; TODO: Solidify ordering of hole merges
+  (define hole-list (flatten (list (reduce lock-merge hole-list-redundant))))
+
+    
+
+
   
   (cond
     [(empty? instr-list) `()]
@@ -1201,12 +1224,7 @@
 
           (minimal-lock (rest instr-list) hole-list acquired-list))))]
     
-    [(Branch? (first instr-list))
-     ;; TODO
-     `()]
-    [(Loop? (first instr-list))
-     ;; TODO
-     (displayln "TODO: Cannot lock loops")]
+
     [(C-Instruction? (first instr-list))
      (let
          ([match-starts (hole-start-match hole-list (C-Instruction-instr-id (first instr-list)))]
@@ -1618,9 +1636,9 @@
 
 
 
-(define smart-opt-cond-top-level (generate-top-level-grammar opt-info-list "first-args" 2))
+(define smart-opt-cond-top-level (generate-top-level-grammar opt-info-list "first-args" 1))
 
-(define smart-opt-cond-decl (generate-smart-optimistic-condition-grammar opt-info-list "first-args" 2))
+(define smart-opt-cond-decl (generate-smart-optimistic-condition-grammar opt-info-list "first-args" 1))
 
 
 

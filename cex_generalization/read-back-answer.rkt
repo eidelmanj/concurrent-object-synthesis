@@ -245,8 +245,8 @@ TRACE-TYPE: no-optimistic-restart
           [arg-objects (create-arg-objects from-method-args)]
           [method-name (first (string-split from-method-name))])
 
-       (display "found method: ") (displayln method-name)
-       (display "with args: ") (displayln arg-objects)
+       ;; (display "found method: ") (displayln method-name)
+       ;; (display "with args: ") (displayln arg-objects)
        
        ;; (hash-set! keyword-map (string-replace (first str-list) " " "")
        ;;            str-version)

@@ -7,7 +7,6 @@
 (require racket/string)
 
 (require "../cex_generalization/to-sketch.rkt")
-(require "../cex_generalization/read-back-answer.rkt")
 (require "../cex_generalization/metasketcher.rkt")
 
 (require "../error_trace_generation/error-trace.rkt")
@@ -28,7 +27,7 @@
 
 
 
-;; Run Aliya's code to find error traces
+
 (bound 1)
 (define-values (err-traces numbered-method)
   (error-traces
@@ -42,39 +41,23 @@
      ,(Run-method "push" `(,(Get-var "shared") 2 4) null))))
 
 
-
+(define lib-with-nums (replace-lib-method library "extension" numbered-method))
 
 (define results  err-traces)
 (define result-trace-lists
   (map (lambda (t) (lin-result-trace t)) results))
 
 
-;; Compute sets of pairs to be repaired
+
+(define (convert-holes hole-list)
+  (map (lambda (h) (Hole (hole-before h) (hole-interrupt h) (hole-after h))) hole-list))
+     
+      
+
+
 (define hole-set (optimal-cover (map lin-result-trace results) null))
 
-
-;; Generate a sketch to guess optimistic conditions from one of the sets of pairs (first hole-set)
-;; can't be repaired with optimistic concurrency
-(define spit-out (optimistic-sketch-from-hole-list result-trace-lists (second hole-set) library))
-
-(with-output-to-file "TMP.rkt"
-  (lambda () (printf (first spit-out))))
-
-;; Resolve sketch
-(define throwout (system "/u/eidelmanj/racket/bin/racket TMP.rkt > OUTPUT.txt"))
-(define throwout2 (system "rm -f TMP.rkt"))
-
-;; Retrieve the appropriate optimistic conditions
-(define optimistic-conditions
-  (string->opts (file->string "OUTPUT.txt")))
-(define throwout3 (system "rm -f OUTPUT.txt"))
-
-
-;; (displayln optimistic-conditions)
-
-;; Use the resolved sketch optimistic conditions to repair the library extension
-(optimistic-repair
- (second spit-out) ;; All of the traces, with meta information
- optimistic-conditions ;; Results from the sketch
- library
- "extension")
+;; Only one hole set can be repaired with locks - TODO: make this check automatic
+(define to-repair (second hole-set))
+;; (displayln (second hole-set))
+(minimal-lock (Method-instr-list (get-lib-method metasketch-lib "extension")) (convert-holes to-repair) `())
