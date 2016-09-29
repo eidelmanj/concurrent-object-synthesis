@@ -1,0 +1,11 @@
+[a][a][a]
+Node copy(int x) {
+  Node n1 = get(l1, v);
+  int val = n1.val;
+  Node n2 = newNode(val, fea);
+  if (??) {add(l2, n2);}
+  remove(l1, val);
+  assert(n1.val == n2.val);
+  return n2;
+}
+  

@@ -1,0 +1,1 @@
+run --mode=NUM --verbose=LOW < test_conc.txt

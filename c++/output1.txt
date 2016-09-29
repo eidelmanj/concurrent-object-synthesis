@@ -1,0 +1,1144 @@
+make  all-recursive
+make[1]: Entering directory `/home/eidelmanj/sketch-newest/sketch-backend'
+Making all in src
+make[2]: Entering directory `/home/eidelmanj/sketch-newest/sketch-backend/src'
+Making all in MiniSat
+make[3]: Entering directory `/home/eidelmanj/sketch-newest/sketch-backend/src/MiniSat'
+make[3]: Nothing to be done for `all'.
+make[3]: Leaving directory `/home/eidelmanj/sketch-newest/sketch-backend/src/MiniSat'
+Making all in SketchSolver
+make[3]: Entering directory `/home/eidelmanj/sketch-newest/sketch-backend/src/SketchSolver'
+make  all-am
+make[4]: Entering directory `/home/eidelmanj/sketch-newest/sketch-backend/src/SketchSolver'
+make[4]: Nothing to be done for `all-am'.
+make[4]: Leaving directory `/home/eidelmanj/sketch-newest/sketch-backend/src/SketchSolver'
+make[3]: Leaving directory `/home/eidelmanj/sketch-newest/sketch-backend/src/SketchSolver'
+make[3]: Entering directory `/home/eidelmanj/sketch-newest/sketch-backend/src'
+make[3]: Nothing to be done for `all-am'.
+make[3]: Leaving directory `/home/eidelmanj/sketch-newest/sketch-backend/src'
+make[2]: Leaving directory `/home/eidelmanj/sketch-newest/sketch-backend/src'
+make[2]: Entering directory `/home/eidelmanj/sketch-newest/sketch-backend'
+make[2]: Leaving directory `/home/eidelmanj/sketch-newest/sketch-backend'
+make[1]: Leaving directory `/home/eidelmanj/sketch-newest/sketch-backend'
+[INFO] Error stacktraces are turned on.
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building SKETCH compiler frontend 1.7.0
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-resources-plugin:2.3:resources (default-resources) @ sketch-frontend ---
+[WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] Copying 1 resource
+[INFO] 
+[INFO] --- maven-compiler-plugin:2.0.2:compile (default-compile) @ sketch-frontend ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] >>> exec-maven-plugin:1.2.1:java (default-cli) @ sketch-frontend >>>
+[INFO] 
+[INFO] <<< exec-maven-plugin:1.2.1:java (default-cli) @ sketch-frontend <<<
+[INFO] 
+[INFO] --- exec-maven-plugin:1.2.1:java (default-cli) @ sketch-frontend ---
+SKETCH version 1.7.0
+Benchmark = /home/eidelmanj/Dropbox/school/Toronto/Research/synthesis/space_exploration/c++/parser/background.sk
+typedef{
+BLAH__WRAPPER_ANONYMOUS ( )
+BLAH__WRAPPERNOSPEC_ANONYMOUS ( )
+BLAH_ANONYMOUS ( int int_arr int[*32] int int[*32] int[*32] )
+NEWLIST_ANONYMOUS ( int int[*32] int[*32] int )
+ADD_ANONYMOUS ( int int_arr int[*32] int[*32] int[*32] )
+REMOVEANDPUT_ANONYMOUS ( int int_arr int[*32] int[*32] int[*32] int )
+REMOVEANDPUTSKETCH_ANONYMOUS ( int int_arr int[*32] int[*32] int[*32] int )
+NEWNODE_ANONYMOUS ( int int_arr int[*32] int )
+GET_ANONYMOUS ( int )
+REMOVE_ANONYMOUS ( int_arr int[*32] int[*32] int[*32] int )
+}
+def blah__Wrapper(){
+out_blah_ANONYMOUS_6_1 = blah[*BLAH_ANONYMOUS]( 0 0 -1 0 -1 -1   )(<#PC >)[ _p_out_blah_ANONYMOUS,0];
+___tEmP0_7_1 = ((out_blah_ANONYMOUS_6_1).[1]);
+___tEmP1_8_1 = ((out_blah_ANONYMOUS_6_1).[2]);
+___tEmP2_9_1 = ((out_blah_ANONYMOUS_6_1).[4]);
+___tEmP3_a_1 = ((out_blah_ANONYMOUS_6_1).[5]);
+#Node_nextInstance__s43_0_3 = ((out_blah_ANONYMOUS_6_1).[0]);
+_Node_val__s44_1_2 = ___tEmP0_7_1;
+_Node_next__s45_2_2 = ___tEmP1_8_1;
+#List_nextInstance__s46_3_3 = ((out_blah_ANONYMOUS_6_1).[3]);
+_List_last__s47_4_2 = ___tEmP2_9_1;
+_List_first__s48_5_2 = ___tEmP3_a_1;
+}
+def blah__WrapperNospec(){
+}
+def blah(int #Node_nextInstance__s49_b_0 , int[*32] _Node_val__s50_c_0 , int[*32] _Node_next__s51_d_0 , int #List_nextInstance__s52_e_0 , int[*32] _List_last__s53_f_0 , int[*32] _List_first__s54_10_0 , ! NOREC _p_out_blah_ANONYMOUS){
+out_newList_ANONYMOUS_13_1 = newList[*NEWLIST_ANONYMOUS]( #List_nextInstance__s52_e_0 _List_last__s53_f_0 _List_first__s54_10_0   )(<#PC >)[ _p_out_newList_ANONYMOUS,0];
+___tEmP4_14_1 = ((out_newList_ANONYMOUS_13_1).[1]);
+___tEmP5_15_1 = ((out_newList_ANONYMOUS_13_1).[2]);
+#List_nextInstance__s52_e_1 = ((out_newList_ANONYMOUS_13_1).[0]);
+_List_last__s53_f_1 = ___tEmP4_14_1;
+_List_first__s54_10_1 = ___tEmP5_15_1;
+l1_s3_1_12_2 = ((out_newList_ANONYMOUS_13_1).[3]);
+l1_0_11_2 = l1_s3_1_12_2;
+out_newList_ANONYMOUS_18_1 = newList[*NEWLIST_ANONYMOUS]( #List_nextInstance__s52_e_1 _List_last__s53_f_1 _List_first__s54_10_1   )(<#PC >)[ _p_out_newList_ANONYMOUS,0];
+___tEmP6_19_1 = ((out_newList_ANONYMOUS_18_1).[1]);
+___tEmP7_1a_1 = ((out_newList_ANONYMOUS_18_1).[2]);
+#List_nextInstance__s52_e_2 = ((out_newList_ANONYMOUS_18_1).[0]);
+_List_last__s53_f_2 = ___tEmP6_19_1;
+_List_first__s54_10_2 = ___tEmP7_1a_1;
+l2_s5_3_17_2 = ((out_newList_ANONYMOUS_18_1).[3]);
+l2_2_16_2 = l2_s5_3_17_2;
+out_newList_ANONYMOUS_1d_1 = newList[*NEWLIST_ANONYMOUS]( #List_nextInstance__s52_e_2 _List_last__s53_f_2 _List_first__s54_10_2   )(<#PC >)[ _p_out_newList_ANONYMOUS,0];
+___tEmP8_1e_1 = ((out_newList_ANONYMOUS_1d_1).[1]);
+___tEmP9_1f_1 = ((out_newList_ANONYMOUS_1d_1).[2]);
+#List_nextInstance__s52_e_3 = ((out_newList_ANONYMOUS_1d_1).[0]);
+_List_last__s53_f_3 = ___tEmP8_1e_1;
+_List_first__s54_10_3 = ___tEmP9_1f_1;
+l1prime_s7_5_1c_2 = ((out_newList_ANONYMOUS_1d_1).[3]);
+l1prime_4_1b_2 = l1prime_s7_5_1c_2;
+out_newList_ANONYMOUS_22_1 = newList[*NEWLIST_ANONYMOUS]( #List_nextInstance__s52_e_3 _List_last__s53_f_3 _List_first__s54_10_3   )(<#PC >)[ _p_out_newList_ANONYMOUS,0];
+___tEmP10_23_1 = ((out_newList_ANONYMOUS_22_1).[1]);
+___tEmP11_24_1 = ((out_newList_ANONYMOUS_22_1).[2]);
+#List_nextInstance__s52_e_4 = ((out_newList_ANONYMOUS_22_1).[0]);
+_List_last__s53_f_4 = ___tEmP10_23_1;
+_List_first__s54_10_4 = ___tEmP11_24_1;
+l2prime_s9_7_21_2 = ((out_newList_ANONYMOUS_22_1).[3]);
+l2prime_6_20_2 = l2prime_s9_7_21_2;
+out_add_ANONYMOUS_25_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s49_b_0 _Node_val__s50_c_0 _Node_next__s51_d_0 _List_last__s53_f_4 _List_first__s54_10_4 l1_0_11_2 1   )(<#PC >)[ _p_out_add_ANONYMOUS,0];
+___tEmP12_26_1 = ((out_add_ANONYMOUS_25_1).[1]);
+___tEmP13_27_1 = ((out_add_ANONYMOUS_25_1).[2]);
+___tEmP14_28_1 = ((out_add_ANONYMOUS_25_1).[3]);
+___tEmP15_29_1 = ((out_add_ANONYMOUS_25_1).[4]);
+#Node_nextInstance__s49_b_1 = ((out_add_ANONYMOUS_25_1).[0]);
+_Node_val__s50_c_1 = ___tEmP12_26_1;
+_Node_next__s51_d_1 = ___tEmP13_27_1;
+_List_last__s53_f_5 = ___tEmP14_28_1;
+_List_first__s54_10_5 = ___tEmP15_29_1;
+out_add_ANONYMOUS_2a_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s49_b_1 _Node_val__s50_c_1 _Node_next__s51_d_1 _List_last__s53_f_5 _List_first__s54_10_5 l1_0_11_2 2   )(<#PC >)[ _p_out_add_ANONYMOUS,0];
+___tEmP16_2b_1 = ((out_add_ANONYMOUS_2a_1).[1]);
+___tEmP17_2c_1 = ((out_add_ANONYMOUS_2a_1).[2]);
+___tEmP18_2d_1 = ((out_add_ANONYMOUS_2a_1).[3]);
+___tEmP19_2e_1 = ((out_add_ANONYMOUS_2a_1).[4]);
+#Node_nextInstance__s49_b_2 = ((out_add_ANONYMOUS_2a_1).[0]);
+_Node_val__s50_c_2 = ___tEmP16_2b_1;
+_Node_next__s51_d_2 = ___tEmP17_2c_1;
+_List_last__s53_f_6 = ___tEmP18_2d_1;
+_List_first__s54_10_6 = ___tEmP19_2e_1;
+out_add_ANONYMOUS_2f_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s49_b_2 _Node_val__s50_c_2 _Node_next__s51_d_2 _List_last__s53_f_6 _List_first__s54_10_6 l1_0_11_2 3   )(<#PC >)[ _p_out_add_ANONYMOUS,0];
+___tEmP20_30_1 = ((out_add_ANONYMOUS_2f_1).[1]);
+___tEmP21_31_1 = ((out_add_ANONYMOUS_2f_1).[2]);
+___tEmP22_32_1 = ((out_add_ANONYMOUS_2f_1).[3]);
+___tEmP23_33_1 = ((out_add_ANONYMOUS_2f_1).[4]);
+#Node_nextInstance__s49_b_3 = ((out_add_ANONYMOUS_2f_1).[0]);
+_Node_val__s50_c_3 = ___tEmP20_30_1;
+_Node_next__s51_d_3 = ___tEmP21_31_1;
+_List_last__s53_f_7 = ___tEmP22_32_1;
+_List_first__s54_10_7 = ___tEmP23_33_1;
+out_add_ANONYMOUS_34_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s49_b_3 _Node_val__s50_c_3 _Node_next__s51_d_3 _List_last__s53_f_7 _List_first__s54_10_7 l1_0_11_2 4   )(<#PC >)[ _p_out_add_ANONYMOUS,0];
+___tEmP24_35_1 = ((out_add_ANONYMOUS_34_1).[1]);
+___tEmP25_36_1 = ((out_add_ANONYMOUS_34_1).[2]);
+___tEmP26_37_1 = ((out_add_ANONYMOUS_34_1).[3]);
+___tEmP27_38_1 = ((out_add_ANONYMOUS_34_1).[4]);
+#Node_nextInstance__s49_b_4 = ((out_add_ANONYMOUS_34_1).[0]);
+_Node_val__s50_c_4 = ___tEmP24_35_1;
+_Node_next__s51_d_4 = ___tEmP25_36_1;
+_List_last__s53_f_8 = ___tEmP26_37_1;
+_List_first__s54_10_8 = ___tEmP27_38_1;
+out_removeAndPut_ANONYMOUS_3b_1 = removeAndPut[*REMOVEANDPUT_ANONYMOUS]( #Node_nextInstance__s49_b_4 _Node_val__s50_c_4 _Node_next__s51_d_4 _List_last__s53_f_8 _List_first__s54_10_8 l1_0_11_2 l2_2_16_2 1   )(<#PC >)[ _p_out_removeAndPut_ANONYMOUS,0];
+___tEmP28_3c_1 = ((out_removeAndPut_ANONYMOUS_3b_1).[1]);
+___tEmP29_3d_1 = ((out_removeAndPut_ANONYMOUS_3b_1).[2]);
+___tEmP30_3e_1 = ((out_removeAndPut_ANONYMOUS_3b_1).[3]);
+___tEmP31_3f_1 = ((out_removeAndPut_ANONYMOUS_3b_1).[4]);
+#Node_nextInstance__s49_b_5 = ((out_removeAndPut_ANONYMOUS_3b_1).[0]);
+_Node_val__s50_c_5 = ___tEmP28_3c_1;
+_Node_next__s51_d_5 = ___tEmP29_3d_1;
+_List_last__s53_f_9 = ___tEmP30_3e_1;
+_List_first__s54_10_9 = ___tEmP31_3f_1;
+a_s11_9_3a_2 = ((out_removeAndPut_ANONYMOUS_3b_1).[5]);
+a_8_39_2 = a_s11_9_3a_2;
+out_add_ANONYMOUS_40_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s49_b_5 _Node_val__s50_c_5 _Node_next__s51_d_5 _List_last__s53_f_9 _List_first__s54_10_9 l1prime_4_1b_2 1   )(<#PC >)[ _p_out_add_ANONYMOUS,0];
+___tEmP32_41_1 = ((out_add_ANONYMOUS_40_1).[1]);
+___tEmP33_42_1 = ((out_add_ANONYMOUS_40_1).[2]);
+___tEmP34_43_1 = ((out_add_ANONYMOUS_40_1).[3]);
+___tEmP35_44_1 = ((out_add_ANONYMOUS_40_1).[4]);
+#Node_nextInstance__s49_b_6 = ((out_add_ANONYMOUS_40_1).[0]);
+_Node_val__s50_c_6 = ___tEmP32_41_1;
+_Node_next__s51_d_6 = ___tEmP33_42_1;
+_List_last__s53_f_10 = ___tEmP34_43_1;
+_List_first__s54_10_10 = ___tEmP35_44_1;
+out_add_ANONYMOUS_45_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s49_b_6 _Node_val__s50_c_6 _Node_next__s51_d_6 _List_last__s53_f_10 _List_first__s54_10_10 l1prime_4_1b_2 2   )(<#PC >)[ _p_out_add_ANONYMOUS,0];
+___tEmP36_46_1 = ((out_add_ANONYMOUS_45_1).[1]);
+___tEmP37_47_1 = ((out_add_ANONYMOUS_45_1).[2]);
+___tEmP38_48_1 = ((out_add_ANONYMOUS_45_1).[3]);
+___tEmP39_49_1 = ((out_add_ANONYMOUS_45_1).[4]);
+#Node_nextInstance__s49_b_7 = ((out_add_ANONYMOUS_45_1).[0]);
+_Node_val__s50_c_7 = ___tEmP36_46_1;
+_Node_next__s51_d_7 = ___tEmP37_47_1;
+_List_last__s53_f_11 = ___tEmP38_48_1;
+_List_first__s54_10_11 = ___tEmP39_49_1;
+out_add_ANONYMOUS_4a_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s49_b_7 _Node_val__s50_c_7 _Node_next__s51_d_7 _List_last__s53_f_11 _List_first__s54_10_11 l1prime_4_1b_2 3   )(<#PC >)[ _p_out_add_ANONYMOUS,0];
+___tEmP40_4b_1 = ((out_add_ANONYMOUS_4a_1).[1]);
+___tEmP41_4c_1 = ((out_add_ANONYMOUS_4a_1).[2]);
+___tEmP42_4d_1 = ((out_add_ANONYMOUS_4a_1).[3]);
+___tEmP43_4e_1 = ((out_add_ANONYMOUS_4a_1).[4]);
+#Node_nextInstance__s49_b_8 = ((out_add_ANONYMOUS_4a_1).[0]);
+_Node_val__s50_c_8 = ___tEmP40_4b_1;
+_Node_next__s51_d_8 = ___tEmP41_4c_1;
+_List_last__s53_f_12 = ___tEmP42_4d_1;
+_List_first__s54_10_12 = ___tEmP43_4e_1;
+out_add_ANONYMOUS_4f_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s49_b_8 _Node_val__s50_c_8 _Node_next__s51_d_8 _List_last__s53_f_12 _List_first__s54_10_12 l1prime_4_1b_2 4   )(<#PC >)[ _p_out_add_ANONYMOUS,0];
+___tEmP44_50_1 = ((out_add_ANONYMOUS_4f_1).[1]);
+___tEmP45_51_1 = ((out_add_ANONYMOUS_4f_1).[2]);
+___tEmP46_52_1 = ((out_add_ANONYMOUS_4f_1).[3]);
+___tEmP47_53_1 = ((out_add_ANONYMOUS_4f_1).[4]);
+#Node_nextInstance__s49_b_9 = ((out_add_ANONYMOUS_4f_1).[0]);
+_Node_val__s50_c_9 = ___tEmP44_50_1;
+_Node_next__s51_d_9 = ___tEmP45_51_1;
+_List_last__s53_f_13 = ___tEmP46_52_1;
+_List_first__s54_10_13 = ___tEmP47_53_1;
+out_removeAndPutSketch_ANONYMOUS_56_1 = removeAndPutSketch[*REMOVEANDPUTSKETCH_ANONYMOUS]( #Node_nextInstance__s49_b_9 _Node_val__s50_c_9 _Node_next__s51_d_9 _List_last__s53_f_13 _List_first__s54_10_13 l1prime_4_1b_2 l2prime_6_20_2 1   )(<#PC >)[ _p_out_removeAndPutSketch_ANONYMOUS,0];
+___tEmP48_57_1 = ((out_removeAndPutSketch_ANONYMOUS_56_1).[1]);
+___tEmP49_58_1 = ((out_removeAndPutSketch_ANONYMOUS_56_1).[2]);
+___tEmP50_59_1 = ((out_removeAndPutSketch_ANONYMOUS_56_1).[3]);
+___tEmP51_5a_1 = ((out_removeAndPutSketch_ANONYMOUS_56_1).[4]);
+#Node_nextInstance__s49_b_10 = ((out_removeAndPutSketch_ANONYMOUS_56_1).[0]);
+_Node_val__s50_c_10 = ___tEmP48_57_1;
+_Node_next__s51_d_10 = ___tEmP49_58_1;
+_List_last__s53_f_14 = ___tEmP50_59_1;
+_List_first__s54_10_14 = ___tEmP51_5a_1;
+b_s13_b_55_2 = ((out_removeAndPutSketch_ANONYMOUS_56_1).[5]);
+b_a_54_2 = b_s13_b_55_2;
+assert ((( ! (a_8_39_2 == -1)) | ( ! <#PC >))) : "Assert at background.sk:151 (-7583211923013557239)" ;
+assert ((( ! (b_a_54_2 == -1)) | ( ! <#PC >))) : "Assert at background.sk:151 (-7023805074161706185)" ;
+assert (((((_Node_val__s50_c_10)[|a_8_39_2|]) == ((_Node_val__s50_c_10)[|b_a_54_2|])) | ( ! <#PC >))) : "Assert at background.sk:151 (-7918705467076899391)" ;
+out_removeAndPut_ANONYMOUS_5c_1 = removeAndPut[*REMOVEANDPUT_ANONYMOUS]( #Node_nextInstance__s49_b_10 _Node_val__s50_c_10 _Node_next__s51_d_10 _List_last__s53_f_14 _List_first__s54_10_14 l1_0_11_2 l2_2_16_2 1   )(<#PC >)[ _p_out_removeAndPut_ANONYMOUS,0];
+___tEmP52_5d_1 = ((out_removeAndPut_ANONYMOUS_5c_1).[1]);
+___tEmP53_5e_1 = ((out_removeAndPut_ANONYMOUS_5c_1).[2]);
+___tEmP54_5f_1 = ((out_removeAndPut_ANONYMOUS_5c_1).[3]);
+___tEmP55_60_1 = ((out_removeAndPut_ANONYMOUS_5c_1).[4]);
+#Node_nextInstance__s49_b_11 = ((out_removeAndPut_ANONYMOUS_5c_1).[0]);
+_Node_val__s50_c_11 = ___tEmP52_5d_1;
+_Node_next__s51_d_11 = ___tEmP53_5e_1;
+_List_last__s53_f_15 = ___tEmP54_5f_1;
+_List_first__s54_10_15 = ___tEmP55_60_1;
+a_s15_c_5b_2 = ((out_removeAndPut_ANONYMOUS_5c_1).[5]);
+a_8_39_3 = a_s15_c_5b_2;
+out_removeAndPutSketch_ANONYMOUS_62_1 = removeAndPutSketch[*REMOVEANDPUTSKETCH_ANONYMOUS]( #Node_nextInstance__s49_b_11 _Node_val__s50_c_11 _Node_next__s51_d_11 _List_last__s53_f_15 _List_first__s54_10_15 l1prime_4_1b_2 l2prime_6_20_2 1   )(<#PC >)[ _p_out_removeAndPutSketch_ANONYMOUS,0];
+___tEmP56_63_1 = ((out_removeAndPutSketch_ANONYMOUS_62_1).[1]);
+___tEmP57_64_1 = ((out_removeAndPutSketch_ANONYMOUS_62_1).[2]);
+___tEmP58_65_1 = ((out_removeAndPutSketch_ANONYMOUS_62_1).[3]);
+___tEmP59_66_1 = ((out_removeAndPutSketch_ANONYMOUS_62_1).[4]);
+#Node_nextInstance__s49_b_12 = ((out_removeAndPutSketch_ANONYMOUS_62_1).[0]);
+_Node_val__s50_c_12 = ___tEmP56_63_1;
+_Node_next__s51_d_12 = ___tEmP57_64_1;
+_List_last__s53_f_16 = ___tEmP58_65_1;
+_List_first__s54_10_16 = ___tEmP59_66_1;
+b_s17_d_61_2 = ((out_removeAndPutSketch_ANONYMOUS_62_1).[5]);
+b_a_54_3 = b_s17_d_61_2;
+assert ((( ! (a_8_39_3 == -1)) | ( ! <#PC >))) : "Assert at background.sk:156 (2862777513559276261)" ;
+assert ((( ! (b_a_54_3 == -1)) | ( ! <#PC >))) : "Assert at background.sk:156 (1630670010351210298)" ;
+assert (((((_Node_val__s50_c_12)[|a_8_39_3|]) == ((_Node_val__s50_c_12)[|b_a_54_3|])) | ( ! <#PC >))) : "Assert at background.sk:156 (-1662639503980920145)" ;
+assert ((( ! (l1_0_11_2 == -1)) | ( ! <#PC >))) : "Assert at background.sk:158 (3901166815886351692)" ;
+cur1_e_67_2 = ((_List_first__s54_10_16)[|l1_0_11_2|]);
+assert ((( ! (l1prime_4_1b_2 == -1)) | ( ! <#PC >))) : "Assert at background.sk:159 (3086265089201317675)" ;
+cur2_f_68_2 = ((_List_first__s54_10_16)[|l1prime_4_1b_2|]);
+assert ((( ! (cur1_e_67_2 == -1)) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))) : "Assert at background.sk:161 (-3260182303088091645)" ;
+assert ((( ! (cur2_f_68_2 == -1)) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))) : "Assert at background.sk:161 (-1422062019940073862)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_2|]) == ((_Node_val__s50_c_12)[|cur2_f_68_2|])) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))) : "Assert at background.sk:161 (-2127684736965489512)" ;
+assert ((( ! (cur1_e_67_2 == -1)) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))) : "Assert at background.sk:162 (-5709498494896570688)" ;
+cur1_e_67_3 = ((_Node_next__s51_d_12)[|cur1_e_67_2|]);
+assert ((( ! (cur2_f_68_2 == -1)) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))) : "Assert at background.sk:163 (-7990100471142090072)" ;
+cur2_f_68_3 = ((_Node_next__s51_d_12)[|cur2_f_68_2|]);
+assert ((( ! (cur1_e_67_3 == -1)) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:161 (6556711403471617463)" ;
+assert ((( ! (cur2_f_68_3 == -1)) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:161 (6907488241146971992)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_3|]) == ((_Node_val__s50_c_12)[|cur2_f_68_3|])) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:161 (-2127684736965489512)" ;
+assert ((( ! (cur1_e_67_3 == -1)) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:162 (-2840283229781014513)" ;
+cur1_e_67_4 = ((_Node_next__s51_d_12)[|cur1_e_67_3|]);
+assert ((( ! (cur2_f_68_3 == -1)) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:163 (-6034698497254868541)" ;
+cur2_f_68_4 = ((_Node_next__s51_d_12)[|cur2_f_68_3|]);
+assert ((( ! (cur1_e_67_4 == -1)) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))) : "Assert at background.sk:161 (6359569306297697230)" ;
+assert ((( ! (cur2_f_68_4 == -1)) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))) : "Assert at background.sk:161 (2336315687152619301)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_4|]) == ((_Node_val__s50_c_12)[|cur2_f_68_4|])) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))) : "Assert at background.sk:161 (-2127684736965489512)" ;
+assert ((( ! (cur1_e_67_4 == -1)) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))) : "Assert at background.sk:162 (-3335827057377678419)" ;
+cur1_e_67_5 = ((_Node_next__s51_d_12)[|cur1_e_67_4|]);
+assert ((( ! (cur2_f_68_4 == -1)) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))) : "Assert at background.sk:163 (1302707807513505196)" ;
+cur2_f_68_5 = ((_Node_next__s51_d_12)[|cur2_f_68_4|]);
+assert ((( ! (cur1_e_67_5 == -1)) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))) : "Assert at background.sk:161 (5247253441942019903)" ;
+assert ((( ! (cur2_f_68_5 == -1)) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))) : "Assert at background.sk:161 (5458751483021366312)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_5|]) == ((_Node_val__s50_c_12)[|cur2_f_68_5|])) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))) : "Assert at background.sk:161 (-2127684736965489512)" ;
+assert ((( ! (cur1_e_67_5 == -1)) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))) : "Assert at background.sk:162 (4000321382905074533)" ;
+cur1_e_67_6 = ((_Node_next__s51_d_12)[|cur1_e_67_5|]);
+assert ((( ! (cur2_f_68_5 == -1)) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))) : "Assert at background.sk:163 (-4890684842372191057)" ;
+cur2_f_68_6 = ((_Node_next__s51_d_12)[|cur2_f_68_5|]);
+assert ((( ! (cur1_e_67_6 == -1)) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))))) : "Assert at background.sk:161 (5438810788286210701)" ;
+assert ((( ! (cur2_f_68_6 == -1)) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))))) : "Assert at background.sk:161 (-767371721810292526)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_6|]) == ((_Node_val__s50_c_12)[|cur2_f_68_6|])) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))))) : "Assert at background.sk:161 (-2127684736965489512)" ;
+assert ((( ! (cur1_e_67_6 == -1)) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))))) : "Assert at background.sk:162 (2790319893961754174)" ;
+cur1_e_67_7 = ((_Node_next__s51_d_12)[|cur1_e_67_6|]);
+assert ((( ! (cur2_f_68_6 == -1)) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))))) : "Assert at background.sk:163 (5189530315457484975)" ;
+cur2_f_68_7 = ((_Node_next__s51_d_12)[|cur2_f_68_6|]);
+assert ((( ! (cur1_e_67_7 == -1)) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))))) : "Assert at background.sk:161 (-5006145453053311853)" ;
+assert ((( ! (cur2_f_68_7 == -1)) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))))) : "Assert at background.sk:161 (-6453154900812673775)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_7|]) == ((_Node_val__s50_c_12)[|cur2_f_68_7|])) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))))) : "Assert at background.sk:161 (-2127684736965489512)" ;
+assert ((( ! (cur1_e_67_7 == -1)) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))))) : "Assert at background.sk:162 (5966957623870175469)" ;
+cur1_e_67_8 = ((_Node_next__s51_d_12)[|cur1_e_67_7|]);
+assert ((( ! (cur2_f_68_7 == -1)) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))))) : "Assert at background.sk:163 (-5507544249932809891)" ;
+cur2_f_68_8 = ((_Node_next__s51_d_12)[|cur2_f_68_7|]);
+assert ((( ! (cur1_e_67_8 == -1)) | (( ! ( ! (cur1_e_67_8 == -1))) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))))))) : "Assert at background.sk:161 (8983087118432840067)" ;
+assert ((( ! (cur2_f_68_8 == -1)) | (( ! ( ! (cur1_e_67_8 == -1))) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))))))) : "Assert at background.sk:161 (-1018134203835191067)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_8|]) == ((_Node_val__s50_c_12)[|cur2_f_68_8|])) | (( ! ( ! (cur1_e_67_8 == -1))) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))))))) : "Assert at background.sk:161 (-2127684736965489512)" ;
+assert ((( ! (cur1_e_67_8 == -1)) | (( ! ( ! (cur1_e_67_8 == -1))) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))))))) : "Assert at background.sk:162 (9075041049176322442)" ;
+cur1_e_67_9 = ((_Node_next__s51_d_12)[|cur1_e_67_8|]);
+assert ((( ! (cur2_f_68_8 == -1)) | (( ! ( ! (cur1_e_67_8 == -1))) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >)))))))))) : "Assert at background.sk:163 (4923270887680411047)" ;
+cur2_f_68_9 = ((_Node_next__s51_d_12)[|cur2_f_68_8|]);
+assert ((( ! (cur1_e_67_9 == -1)) | (( ! ( ! (cur1_e_67_9 == -1))) | (( ! ( ! (cur1_e_67_8 == -1))) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))))))) : "Assert at background.sk:161 (6525375825404246060)" ;
+assert ((( ! (cur2_f_68_9 == -1)) | (( ! ( ! (cur1_e_67_9 == -1))) | (( ! ( ! (cur1_e_67_8 == -1))) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))))))) : "Assert at background.sk:161 (-5883966012938326990)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_9|]) == ((_Node_val__s50_c_12)[|cur2_f_68_9|])) | (( ! ( ! (cur1_e_67_9 == -1))) | (( ! ( ! (cur1_e_67_8 == -1))) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))))))) : "Assert at background.sk:161 (-2127684736965489512)" ;
+assert ((( ! (cur1_e_67_9 == -1)) | (( ! ( ! (cur1_e_67_9 == -1))) | (( ! ( ! (cur1_e_67_8 == -1))) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))))))) : "Assert at background.sk:162 (-1586152534848425337)" ;
+cur1_e_67_10 = ((_Node_next__s51_d_12)[|cur1_e_67_9|]);
+assert ((( ! (cur2_f_68_9 == -1)) | (( ! ( ! (cur1_e_67_9 == -1))) | (( ! ( ! (cur1_e_67_8 == -1))) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))))))) : "Assert at background.sk:163 (3162005290230730861)" ;
+cur2_f_68_10 = ((_Node_next__s51_d_12)[|cur2_f_68_9|]);
+assert ((( ! ( ! (cur1_e_67_10 == -1))) | (( ! ( ! (cur1_e_67_9 == -1))) | (( ! ( ! (cur1_e_67_8 == -1))) | (( ! ( ! (cur1_e_67_7 == -1))) | (( ! ( ! (cur1_e_67_6 == -1))) | (( ! ( ! (cur1_e_67_5 == -1))) | (( ! ( ! (cur1_e_67_4 == -1))) | (( ! ( ! (cur1_e_67_3 == -1))) | (( ! ( ! (cur1_e_67_2 == -1))) | ( ! <#PC >))))))))))) : "background.sk:160: This loop was unrolled 8 times, but apparently that was not enough. Use the --bnd-unroll-amnt flag for better results." ;
+cur2_f_68_11 = (( ! (cur1_e_67_9 == -1))? (cur2_f_68_10) : (cur2_f_68_9) );
+cur1_e_67_11 = (( ! (cur1_e_67_9 == -1))? (cur1_e_67_10) : (cur1_e_67_9) );
+cur2_f_68_12 = (( ! (cur1_e_67_8 == -1))? (cur2_f_68_11) : (cur2_f_68_8) );
+cur1_e_67_12 = (( ! (cur1_e_67_8 == -1))? (cur1_e_67_11) : (cur1_e_67_8) );
+cur2_f_68_13 = (( ! (cur1_e_67_7 == -1))? (cur2_f_68_12) : (cur2_f_68_7) );
+cur1_e_67_13 = (( ! (cur1_e_67_7 == -1))? (cur1_e_67_12) : (cur1_e_67_7) );
+cur2_f_68_14 = (( ! (cur1_e_67_6 == -1))? (cur2_f_68_13) : (cur2_f_68_6) );
+cur1_e_67_14 = (( ! (cur1_e_67_6 == -1))? (cur1_e_67_13) : (cur1_e_67_6) );
+cur2_f_68_15 = (( ! (cur1_e_67_5 == -1))? (cur2_f_68_14) : (cur2_f_68_5) );
+cur1_e_67_15 = (( ! (cur1_e_67_5 == -1))? (cur1_e_67_14) : (cur1_e_67_5) );
+cur2_f_68_16 = (( ! (cur1_e_67_4 == -1))? (cur2_f_68_15) : (cur2_f_68_4) );
+cur1_e_67_16 = (( ! (cur1_e_67_4 == -1))? (cur1_e_67_15) : (cur1_e_67_4) );
+cur2_f_68_17 = (( ! (cur1_e_67_3 == -1))? (cur2_f_68_16) : (cur2_f_68_3) );
+cur1_e_67_17 = (( ! (cur1_e_67_3 == -1))? (cur1_e_67_16) : (cur1_e_67_3) );
+cur2_f_68_18 = (( ! (cur1_e_67_2 == -1))? (cur2_f_68_17) : (cur2_f_68_2) );
+cur1_e_67_18 = (( ! (cur1_e_67_2 == -1))? (cur1_e_67_17) : (cur1_e_67_2) );
+assert (((cur2_f_68_18 == -1) | ( ! <#PC >))) : "Assert at background.sk:165 (-7218853231764834755)" ;
+assert ((( ! (l2_2_16_2 == -1)) | ( ! <#PC >))) : "Assert at background.sk:167 (-5821391821126154296)" ;
+cur1_e_67_19 = ((_List_first__s54_10_16)[|l2_2_16_2|]);
+assert ((( ! (l2prime_6_20_2 == -1)) | ( ! <#PC >))) : "Assert at background.sk:168 (-1153619644692559603)" ;
+cur2_f_68_19 = ((_List_first__s54_10_16)[|l2prime_6_20_2|]);
+assert ((( ! (cur1_e_67_19 == -1)) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))) : "Assert at background.sk:170 (886120650426212445)" ;
+assert ((( ! (cur2_f_68_19 == -1)) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))) : "Assert at background.sk:170 (-4056509179799966756)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_19|]) == ((_Node_val__s50_c_12)[|cur2_f_68_19|])) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))) : "Assert at background.sk:170 (-4418667335675879108)" ;
+assert ((( ! (cur1_e_67_19 == -1)) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))) : "Assert at background.sk:171 (-7594597462236807886)" ;
+cur1_e_67_20 = ((_Node_next__s51_d_12)[|cur1_e_67_19|]);
+assert ((( ! (cur2_f_68_19 == -1)) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))) : "Assert at background.sk:172 (-3194665043354779569)" ;
+cur2_f_68_20 = ((_Node_next__s51_d_12)[|cur2_f_68_19|]);
+assert ((( ! (cur1_e_67_20 == -1)) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:170 (-4015210093542126252)" ;
+assert ((( ! (cur2_f_68_20 == -1)) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:170 (-3640529577341235108)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_20|]) == ((_Node_val__s50_c_12)[|cur2_f_68_20|])) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:170 (-4418667335675879108)" ;
+assert ((( ! (cur1_e_67_20 == -1)) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:171 (922969346046791394)" ;
+cur1_e_67_21 = ((_Node_next__s51_d_12)[|cur1_e_67_20|]);
+assert ((( ! (cur2_f_68_20 == -1)) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:172 (7801483731461350772)" ;
+cur2_f_68_21 = ((_Node_next__s51_d_12)[|cur2_f_68_20|]);
+assert ((( ! (cur1_e_67_21 == -1)) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))) : "Assert at background.sk:170 (4590531995845258587)" ;
+assert ((( ! (cur2_f_68_21 == -1)) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))) : "Assert at background.sk:170 (7083508784626331157)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_21|]) == ((_Node_val__s50_c_12)[|cur2_f_68_21|])) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))) : "Assert at background.sk:170 (-4418667335675879108)" ;
+assert ((( ! (cur1_e_67_21 == -1)) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))) : "Assert at background.sk:171 (-1427666966010027395)" ;
+cur1_e_67_22 = ((_Node_next__s51_d_12)[|cur1_e_67_21|]);
+assert ((( ! (cur2_f_68_21 == -1)) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))) : "Assert at background.sk:172 (-8293645101657321540)" ;
+cur2_f_68_22 = ((_Node_next__s51_d_12)[|cur2_f_68_21|]);
+assert ((( ! (cur1_e_67_22 == -1)) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))) : "Assert at background.sk:170 (2818322237561051157)" ;
+assert ((( ! (cur2_f_68_22 == -1)) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))) : "Assert at background.sk:170 (-6443192437704777774)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_22|]) == ((_Node_val__s50_c_12)[|cur2_f_68_22|])) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))) : "Assert at background.sk:170 (-4418667335675879108)" ;
+assert ((( ! (cur1_e_67_22 == -1)) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))) : "Assert at background.sk:171 (5160525159510251135)" ;
+cur1_e_67_23 = ((_Node_next__s51_d_12)[|cur1_e_67_22|]);
+assert ((( ! (cur2_f_68_22 == -1)) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))) : "Assert at background.sk:172 (3250107707233196823)" ;
+cur2_f_68_23 = ((_Node_next__s51_d_12)[|cur2_f_68_22|]);
+assert ((( ! (cur1_e_67_23 == -1)) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))))) : "Assert at background.sk:170 (-7704793796121932335)" ;
+assert ((( ! (cur2_f_68_23 == -1)) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))))) : "Assert at background.sk:170 (-4405571295026211720)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_23|]) == ((_Node_val__s50_c_12)[|cur2_f_68_23|])) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))))) : "Assert at background.sk:170 (-4418667335675879108)" ;
+assert ((( ! (cur1_e_67_23 == -1)) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))))) : "Assert at background.sk:171 (2452256012099769201)" ;
+cur1_e_67_24 = ((_Node_next__s51_d_12)[|cur1_e_67_23|]);
+assert ((( ! (cur2_f_68_23 == -1)) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))))) : "Assert at background.sk:172 (1348497126149220486)" ;
+cur2_f_68_24 = ((_Node_next__s51_d_12)[|cur2_f_68_23|]);
+assert ((( ! (cur1_e_67_24 == -1)) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))))) : "Assert at background.sk:170 (-8241290678498120177)" ;
+assert ((( ! (cur2_f_68_24 == -1)) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))))) : "Assert at background.sk:170 (-3154477449644176241)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_24|]) == ((_Node_val__s50_c_12)[|cur2_f_68_24|])) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))))) : "Assert at background.sk:170 (-4418667335675879108)" ;
+assert ((( ! (cur1_e_67_24 == -1)) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))))) : "Assert at background.sk:171 (-985922352460302705)" ;
+cur1_e_67_25 = ((_Node_next__s51_d_12)[|cur1_e_67_24|]);
+assert ((( ! (cur2_f_68_24 == -1)) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))))) : "Assert at background.sk:172 (7970996625634129153)" ;
+cur2_f_68_25 = ((_Node_next__s51_d_12)[|cur2_f_68_24|]);
+assert ((( ! (cur1_e_67_25 == -1)) | (( ! ( ! (cur1_e_67_25 == -1))) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))))))) : "Assert at background.sk:170 (7588055367725306434)" ;
+assert ((( ! (cur2_f_68_25 == -1)) | (( ! ( ! (cur1_e_67_25 == -1))) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))))))) : "Assert at background.sk:170 (-8407859359312122880)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_25|]) == ((_Node_val__s50_c_12)[|cur2_f_68_25|])) | (( ! ( ! (cur1_e_67_25 == -1))) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))))))) : "Assert at background.sk:170 (-4418667335675879108)" ;
+assert ((( ! (cur1_e_67_25 == -1)) | (( ! ( ! (cur1_e_67_25 == -1))) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))))))) : "Assert at background.sk:171 (-4957192159071518038)" ;
+cur1_e_67_26 = ((_Node_next__s51_d_12)[|cur1_e_67_25|]);
+assert ((( ! (cur2_f_68_25 == -1)) | (( ! ( ! (cur1_e_67_25 == -1))) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >)))))))))) : "Assert at background.sk:172 (-4772397017103385957)" ;
+cur2_f_68_26 = ((_Node_next__s51_d_12)[|cur2_f_68_25|]);
+assert ((( ! (cur1_e_67_26 == -1)) | (( ! ( ! (cur1_e_67_26 == -1))) | (( ! ( ! (cur1_e_67_25 == -1))) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))))))) : "Assert at background.sk:170 (1413077889114083543)" ;
+assert ((( ! (cur2_f_68_26 == -1)) | (( ! ( ! (cur1_e_67_26 == -1))) | (( ! ( ! (cur1_e_67_25 == -1))) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))))))) : "Assert at background.sk:170 (2193682113362469920)" ;
+assert (((((_Node_val__s50_c_12)[|cur1_e_67_26|]) == ((_Node_val__s50_c_12)[|cur2_f_68_26|])) | (( ! ( ! (cur1_e_67_26 == -1))) | (( ! ( ! (cur1_e_67_25 == -1))) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))))))) : "Assert at background.sk:170 (-4418667335675879108)" ;
+assert ((( ! (cur1_e_67_26 == -1)) | (( ! ( ! (cur1_e_67_26 == -1))) | (( ! ( ! (cur1_e_67_25 == -1))) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))))))) : "Assert at background.sk:171 (8806833353691216719)" ;
+cur1_e_67_27 = ((_Node_next__s51_d_12)[|cur1_e_67_26|]);
+assert ((( ! (cur2_f_68_26 == -1)) | (( ! ( ! (cur1_e_67_26 == -1))) | (( ! ( ! (cur1_e_67_25 == -1))) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))))))) : "Assert at background.sk:172 (2832845938749177827)" ;
+cur2_f_68_27 = ((_Node_next__s51_d_12)[|cur2_f_68_26|]);
+assert ((( ! ( ! (cur1_e_67_27 == -1))) | (( ! ( ! (cur1_e_67_26 == -1))) | (( ! ( ! (cur1_e_67_25 == -1))) | (( ! ( ! (cur1_e_67_24 == -1))) | (( ! ( ! (cur1_e_67_23 == -1))) | (( ! ( ! (cur1_e_67_22 == -1))) | (( ! ( ! (cur1_e_67_21 == -1))) | (( ! ( ! (cur1_e_67_20 == -1))) | (( ! ( ! (cur1_e_67_19 == -1))) | ( ! <#PC >))))))))))) : "background.sk:169: This loop was unrolled 8 times, but apparently that was not enough. Use the --bnd-unroll-amnt flag for better results." ;
+cur2_f_68_28 = (( ! (cur1_e_67_26 == -1))? (cur2_f_68_27) : (cur2_f_68_26) );
+cur1_e_67_28 = (( ! (cur1_e_67_26 == -1))? (cur1_e_67_27) : (cur1_e_67_26) );
+cur2_f_68_29 = (( ! (cur1_e_67_25 == -1))? (cur2_f_68_28) : (cur2_f_68_25) );
+cur1_e_67_29 = (( ! (cur1_e_67_25 == -1))? (cur1_e_67_28) : (cur1_e_67_25) );
+cur2_f_68_30 = (( ! (cur1_e_67_24 == -1))? (cur2_f_68_29) : (cur2_f_68_24) );
+cur1_e_67_30 = (( ! (cur1_e_67_24 == -1))? (cur1_e_67_29) : (cur1_e_67_24) );
+cur2_f_68_31 = (( ! (cur1_e_67_23 == -1))? (cur2_f_68_30) : (cur2_f_68_23) );
+cur1_e_67_31 = (( ! (cur1_e_67_23 == -1))? (cur1_e_67_30) : (cur1_e_67_23) );
+cur2_f_68_32 = (( ! (cur1_e_67_22 == -1))? (cur2_f_68_31) : (cur2_f_68_22) );
+cur1_e_67_32 = (( ! (cur1_e_67_22 == -1))? (cur1_e_67_31) : (cur1_e_67_22) );
+cur2_f_68_33 = (( ! (cur1_e_67_21 == -1))? (cur2_f_68_32) : (cur2_f_68_21) );
+cur1_e_67_33 = (( ! (cur1_e_67_21 == -1))? (cur1_e_67_32) : (cur1_e_67_21) );
+cur2_f_68_34 = (( ! (cur1_e_67_20 == -1))? (cur2_f_68_33) : (cur2_f_68_20) );
+cur1_e_67_34 = (( ! (cur1_e_67_20 == -1))? (cur1_e_67_33) : (cur1_e_67_20) );
+cur2_f_68_35 = (( ! (cur1_e_67_19 == -1))? (cur2_f_68_34) : (cur2_f_68_19) );
+cur1_e_67_35 = (( ! (cur1_e_67_19 == -1))? (cur1_e_67_34) : (cur1_e_67_19) );
+assert (((cur2_f_68_35 == -1) | ( ! <#PC >))) : "Assert at background.sk:174 (-5819031691571717234)" ;
+_p_out_blah_ANONYMOUS= [BLAH_ANONYMOUS]{< #Node_nextInstance__s49_b_12 _Node_val__s50_c_12 _Node_next__s51_d_12 #List_nextInstance__s52_e_4 _List_last__s53_f_16 _List_first__s54_10_16 >};
+}
+def newList(int #List_nextInstance__s55_69_0 , int[*32] _List_last__s56_6a_0 , int[*32] _List_first__s57_6b_0 , ! NOREC _p_out_newList_ANONYMOUS){
+__sa58_6d_2 = #List_nextInstance__s55_69_0;
+#List_nextInstance__s55_69_1 = (#List_nextInstance__s55_69_0 + 1);
+_out_10_6c_2 = __sa58_6d_2;
+assert ((( ! (_out_10_6c_2 == -1)) | ( ! <#PC >))) : "Assert at background.sk:20 (454498946809527094)" ;
+_List_first__s57_6b_1= _List_first__s57_6b_0[[_out_10_6c_2->-1]];
+assert ((( ! (_out_10_6c_2 == -1)) | ( ! <#PC >))) : "Assert at background.sk:21 (-8804386044776776256)" ;
+_List_last__s56_6a_1= _List_last__s56_6a_0[[_out_10_6c_2->-1]];
+_List_first__s57_6b_2 = _List_first__s57_6b_1;
+_out_10_6c_3 = _out_10_6c_2;
+_List_last__s56_6a_2 = _List_last__s56_6a_1;
+#List_nextInstance__s55_69_2 = #List_nextInstance__s55_69_1;
+_List_first__s57_6b_3 = _List_first__s57_6b_1;
+_out_10_6c_4 = _out_10_6c_2;
+_List_last__s56_6a_3 = _List_last__s56_6a_1;
+#List_nextInstance__s55_69_3 = ((#List_nextInstance__s55_69_2 > #List_nextInstance__s55_69_1)? (#List_nextInstance__s55_69_2) : (#List_nextInstance__s55_69_1) );
+_p_out_newList_ANONYMOUS= [NEWLIST_ANONYMOUS]{< #List_nextInstance__s55_69_3 _List_last__s56_6a_3 _List_first__s57_6b_3 _out_10_6c_4 >};
+}
+def add(int #Node_nextInstance__s59_6e_0 , int[*32] _Node_val__s60_6f_0 , int[*32] _Node_next__s61_70_0 , int[*32] _List_last__s63_71_0 , int[*32] _List_first__s64_72_0 , int l_11_73_0 , int newVal_12_74_0 , ! NOREC _p_out_add_ANONYMOUS){
+out_newNode_ANONYMOUS_77_1 = newNode[*NEWNODE_ANONYMOUS]( #Node_nextInstance__s59_6e_0 _Node_val__s60_6f_0 _Node_next__s61_70_0   )(<#PC >)[ _p_out_newNode_ANONYMOUS,0];
+___tEmP60_78_1 = ((out_newNode_ANONYMOUS_77_1).[1]);
+___tEmP61_79_1 = ((out_newNode_ANONYMOUS_77_1).[2]);
+#Node_nextInstance__s59_6e_1 = ((out_newNode_ANONYMOUS_77_1).[0]);
+_Node_val__s60_6f_1 = ___tEmP60_78_1;
+_Node_next__s61_70_1 = ___tEmP61_79_1;
+newN_s35_14_76_2 = ((out_newNode_ANONYMOUS_77_1).[3]);
+newN_13_75_2 = newN_s35_14_76_2;
+assert ((( ! (newN_13_75_2 == -1)) | ( ! <#PC >))) : "Assert at background.sk:28 (-5322536144959755947)" ;
+_Node_val__s60_6f_2= _Node_val__s60_6f_1[[newN_13_75_2->newVal_12_74_0]];
+assert ((( ! (l_11_73_0 == -1)) | ( ! <#PC >))) : "Assert at background.sk:30 (7183630015130569916)" ;
+assert ((( ! (l_11_73_0 == -1)) | (( ! (((_List_first__s64_72_0)[|l_11_73_0|]) == -1)) | ( ! <#PC >)))) : "Assert at background.sk:31 (796298481117386146)" ;
+_List_first__s64_72_1= _List_first__s64_72_0[[l_11_73_0->newN_13_75_2]];
+assert ((( ! (l_11_73_0 == -1)) | (( ! (((_List_first__s64_72_0)[|l_11_73_0|]) == -1)) | ( ! <#PC >)))) : "Assert at background.sk:32 (1551986308429083426)" ;
+_List_last__s63_71_1= _List_last__s63_71_0[[l_11_73_0->newN_13_75_2]];
+assert ((( ! (l_11_73_0 == -1)) | (( ! ( ! (((_List_first__s64_72_0)[|l_11_73_0|]) == -1))) | ( ! <#PC >)))) : "Assert at background.sk:35 (8856337281814113661)" ;
+assert ((( ! (((_List_last__s63_71_0)[|l_11_73_0|]) == -1)) | (( ! ( ! (((_List_first__s64_72_0)[|l_11_73_0|]) == -1))) | ( ! <#PC >)))) : "Assert at background.sk:35 (3340319023700519185)" ;
+_Node_next__s61_70_2= _Node_next__s61_70_1[[((_List_last__s63_71_0)[|l_11_73_0|])->newN_13_75_2]];
+assert ((( ! (l_11_73_0 == -1)) | (( ! ( ! (((_List_first__s64_72_0)[|l_11_73_0|]) == -1))) | ( ! <#PC >)))) : "Assert at background.sk:36 (-6541197700400040137)" ;
+_List_last__s63_71_2= _List_last__s63_71_0[[l_11_73_0->newN_13_75_2]];
+_List_last__s63_71_3 = ((((_List_first__s64_72_0)[|l_11_73_0|]) == -1)? (_List_last__s63_71_1) : (_List_last__s63_71_2) );
+_Node_next__s61_70_3 = (( ! (((_List_first__s64_72_0)[|l_11_73_0|]) == -1))? (_Node_next__s61_70_2) : (_Node_next__s61_70_1) );
+_List_first__s64_72_2 = ((((_List_first__s64_72_0)[|l_11_73_0|]) == -1)? (_List_first__s64_72_1) : (_List_first__s64_72_0) );
+_p_out_add_ANONYMOUS= [ADD_ANONYMOUS]{< #Node_nextInstance__s59_6e_1 _Node_val__s60_6f_2 _Node_next__s61_70_3 _List_last__s63_71_3 _List_first__s64_72_2 >};
+}
+def removeAndPut(int #Node_nextInstance__s65_7a_0 , int[*32] _Node_val__s66_7b_0 , int[*32] _Node_next__s67_7c_0 , int[*32] _List_last__s69_7d_0 , int[*32] _List_first__s70_7e_0 , int l1_15_7f_0 , int l2_16_80_0 , int idx_17_81_0 , ! NOREC _p_out_removeAndPut_ANONYMOUS){
+out_get_ANONYMOUS_84_1 = get[*GET_ANONYMOUS]( _Node_val__s66_7b_0 _Node_next__s67_7c_0 _List_last__s69_7d_0 _List_first__s70_7e_0 l1_15_7f_0 idx_17_81_0   )(<#PC >)[ _p_out_get_ANONYMOUS,0];
+removedNode_s37_19_83_2 = ((out_get_ANONYMOUS_84_1).[0]);
+_out_18_82_2 = removedNode_s37_19_83_2;
+assert ((( ! (_out_18_82_2 == -1)) | ( ! <#PC >))) : "Assert at background.sk:79 (2638752253918576316)" ;
+val_1a_85_2 = ((_Node_val__s66_7b_0)[|_out_18_82_2|]);
+out_add_ANONYMOUS_86_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s65_7a_0 _Node_val__s66_7b_0 _Node_next__s67_7c_0 _List_last__s69_7d_0 _List_first__s70_7e_0 l2_16_80_0 val_1a_85_2   )(<#PC >)[ _p_out_add_ANONYMOUS,0];
+___tEmP62_87_1 = ((out_add_ANONYMOUS_86_1).[1]);
+___tEmP63_88_1 = ((out_add_ANONYMOUS_86_1).[2]);
+___tEmP64_89_1 = ((out_add_ANONYMOUS_86_1).[3]);
+___tEmP65_8a_1 = ((out_add_ANONYMOUS_86_1).[4]);
+#Node_nextInstance__s65_7a_1 = ((out_add_ANONYMOUS_86_1).[0]);
+_Node_val__s66_7b_1 = ___tEmP62_87_1;
+_Node_next__s67_7c_1 = ___tEmP63_88_1;
+_List_last__s69_7d_1 = ___tEmP64_89_1;
+_List_first__s70_7e_1 = ___tEmP65_8a_1;
+out_remove_ANONYMOUS_8c_1 = remove[*REMOVE_ANONYMOUS]( _Node_val__s66_7b_1 _Node_next__s67_7c_1 _List_last__s69_7d_1 _List_first__s70_7e_1 l1_15_7f_0 idx_17_81_0   )(<#PC >)[ _p_out_remove_ANONYMOUS,0];
+___tEmP66_8d_1 = ((out_remove_ANONYMOUS_8c_1).[0]);
+___tEmP67_8e_1 = ((out_remove_ANONYMOUS_8c_1).[1]);
+___tEmP68_8f_1 = ((out_remove_ANONYMOUS_8c_1).[2]);
+___tEmP69_90_1 = ((out_remove_ANONYMOUS_8c_1).[3]);
+_Node_val__s66_7b_2 = ___tEmP66_8d_1;
+_Node_next__s67_7c_2 = ___tEmP67_8e_1;
+_List_last__s69_7d_2 = ___tEmP68_8f_1;
+_List_first__s70_7e_2 = ___tEmP69_90_1;
+_out_s39_1b_8b_2 = ((out_remove_ANONYMOUS_8c_1).[4]);
+#Node_nextInstance__s65_7a_2 = #Node_nextInstance__s65_7a_1;
+_List_last__s69_7d_3 = _List_last__s69_7d_2;
+_Node_next__s67_7c_3 = _Node_next__s67_7c_2;
+_Node_val__s66_7b_3 = _Node_val__s66_7b_2;
+_out_18_82_3 = _out_18_82_2;
+_List_first__s70_7e_3 = _List_first__s70_7e_2;
+#Node_nextInstance__s65_7a_3 = ((#Node_nextInstance__s65_7a_2 > #Node_nextInstance__s65_7a_1)? (#Node_nextInstance__s65_7a_2) : (#Node_nextInstance__s65_7a_1) );
+_List_last__s69_7d_4 = _List_last__s69_7d_2;
+_Node_next__s67_7c_4 = _Node_next__s67_7c_2;
+_Node_val__s66_7b_4 = _Node_val__s66_7b_2;
+_out_18_82_4 = _out_18_82_2;
+_List_first__s70_7e_4 = _List_first__s70_7e_2;
+_p_out_removeAndPut_ANONYMOUS= [REMOVEANDPUT_ANONYMOUS]{< #Node_nextInstance__s65_7a_3 _Node_val__s66_7b_4 _Node_next__s67_7c_4 _List_last__s69_7d_4 _List_first__s70_7e_4 _out_18_82_4 >};
+}
+def removeAndPutSketch(int #Node_nextInstance__s71_91_0 , int[*32] _Node_val__s72_92_0 , int[*32] _Node_next__s73_93_0 , int[*32] _List_last__s75_94_0 , int[*32] _List_first__s76_95_0 , int l1_1c_96_0 , int l2_1d_97_0 , int idx_1e_98_0 , ! NOREC _p_out_removeAndPutSketch_ANONYMOUS){
+_whichexpr_s0_20_9a_2 = <H__9  2 *> ;
+assert (((0 <= _whichexpr_s0_20_9a_2) & (_whichexpr_s0_20_9a_2 < 4))) : "regen H__9" ;
+_whichexpr_s1_21_9b_2 = <H__10> ;
+assert (((0 <= _whichexpr_s1_21_9b_2) & (_whichexpr_s1_21_9b_2 < 2))) : "regen H__10" ;
+out_get_ANONYMOUS_9e_1 = get[*GET_ANONYMOUS]( _Node_val__s72_92_0 _Node_next__s73_93_0 _List_last__s75_94_0 _List_first__s76_95_0 l1_1c_96_0 idx_1e_98_0   )(( ! (( ! (_whichexpr_s0_20_9a_2 == 0)) | ( ! <#PC >))))[ _p_out_get_ANONYMOUS,0];
+removedNode_s20_23_9d_2 = ((out_get_ANONYMOUS_9e_1).[0]);
+_pac_sc_s18_22_9c_2 = removedNode_s20_23_9d_2;
+idx_2f_s40_a1_2 = <H__0  5> ;
+out_get_ANONYMOUS_a2_1 = get[*GET_ANONYMOUS]( _Node_val__s72_92_0 _Node_next__s73_93_0 _List_last__s75_94_0 _List_first__s76_95_0 l1_1c_96_0 idx_2f_s40_a1_2   )(( ! (( ! (_whichexpr_s0_20_9a_2 == 1)) | (( ! ( ! (_whichexpr_s0_20_9a_2 == 0))) | ( ! <#PC >)))))[ _p_out_get_ANONYMOUS,0];
+removedNode_s23_25_a0_2 = ((out_get_ANONYMOUS_a2_1).[0]);
+_pac_sc_s21_24_9f_2 = removedNode_s23_25_a0_2;
+out_remove_ANONYMOUS_a5_1 = remove[*REMOVE_ANONYMOUS]( _Node_val__s72_92_0 _Node_next__s73_93_0 _List_last__s75_94_0 _List_first__s76_95_0 l1_1c_96_0 idx_1e_98_0   )(( ! (( ! (_whichexpr_s0_20_9a_2 == 2)) | (( ! ( ! (_whichexpr_s0_20_9a_2 == 1))) | (( ! ( ! (_whichexpr_s0_20_9a_2 == 0))) | ( ! <#PC >))))))[ _p_out_remove_ANONYMOUS,0];
+___tEmP70_a6_1 = ((out_remove_ANONYMOUS_a5_1).[0]);
+___tEmP71_a7_1 = ((out_remove_ANONYMOUS_a5_1).[1]);
+___tEmP72_a8_1 = ((out_remove_ANONYMOUS_a5_1).[2]);
+___tEmP73_a9_1 = ((out_remove_ANONYMOUS_a5_1).[3]);
+_Node_val__s72_92_1 = ___tEmP70_a6_1;
+_Node_next__s73_93_1 = ___tEmP71_a7_1;
+_List_last__s75_94_1 = ___tEmP72_a8_1;
+_List_first__s76_95_1 = ___tEmP73_a9_1;
+removedNode_s26_27_a4_2 = ((out_remove_ANONYMOUS_a5_1).[4]);
+_pac_sc_s24_26_a3_2 = removedNode_s26_27_a4_2;
+idx_34_s41_ab_2 = <H__1  5> ;
+out_remove_ANONYMOUS_ac_1 = remove[*REMOVE_ANONYMOUS]( _Node_val__s72_92_0 _Node_next__s73_93_0 _List_last__s75_94_0 _List_first__s76_95_0 l1_1c_96_0 idx_34_s41_ab_2   )(( ! (( ! ( ! (_whichexpr_s0_20_9a_2 == 2))) | (( ! ( ! (_whichexpr_s0_20_9a_2 == 1))) | (( ! ( ! (_whichexpr_s0_20_9a_2 == 0))) | ( ! <#PC >))))))[ _p_out_remove_ANONYMOUS,0];
+___tEmP74_ad_1 = ((out_remove_ANONYMOUS_ac_1).[0]);
+___tEmP75_ae_1 = ((out_remove_ANONYMOUS_ac_1).[1]);
+___tEmP76_af_1 = ((out_remove_ANONYMOUS_ac_1).[2]);
+___tEmP77_b0_1 = ((out_remove_ANONYMOUS_ac_1).[3]);
+_Node_val__s72_92_2 = ___tEmP74_ad_1;
+_Node_next__s73_93_2 = ___tEmP75_ae_1;
+_List_last__s75_94_2 = ___tEmP76_af_1;
+_List_first__s76_95_2 = ___tEmP77_b0_1;
+removedNode_s28_28_aa_2 = ((out_remove_ANONYMOUS_ac_1).[4]);
+_pac_sc_s24_26_a3_3 = removedNode_s28_28_aa_2;
+_Node_val__s72_92_3 = ((_whichexpr_s0_20_9a_2 == 2)? (_Node_val__s72_92_1) : (_Node_val__s72_92_2) );
+_Node_next__s73_93_3 = ((_whichexpr_s0_20_9a_2 == 2)? (_Node_next__s73_93_1) : (_Node_next__s73_93_2) );
+_List_last__s75_94_3 = ((_whichexpr_s0_20_9a_2 == 2)? (_List_last__s75_94_1) : (_List_last__s75_94_2) );
+_List_first__s76_95_3 = ((_whichexpr_s0_20_9a_2 == 2)? (_List_first__s76_95_1) : (_List_first__s76_95_2) );
+_pac_sc_s24_26_a3_4 = ((_whichexpr_s0_20_9a_2 == 2)? (_pac_sc_s24_26_a3_2) : (_pac_sc_s24_26_a3_3) );
+_pac_sc_s21_24_9f_3 = _pac_sc_s24_26_a3_4;
+_Node_val__s72_92_4 = (( ! (_whichexpr_s0_20_9a_2 == 1))? (_Node_val__s72_92_3) : (_Node_val__s72_92_0) );
+_Node_next__s73_93_4 = (( ! (_whichexpr_s0_20_9a_2 == 1))? (_Node_next__s73_93_3) : (_Node_next__s73_93_0) );
+_List_last__s75_94_4 = (( ! (_whichexpr_s0_20_9a_2 == 1))? (_List_last__s75_94_3) : (_List_last__s75_94_0) );
+_List_first__s76_95_4 = (( ! (_whichexpr_s0_20_9a_2 == 1))? (_List_first__s76_95_3) : (_List_first__s76_95_0) );
+_pac_sc_s21_24_9f_4 = ((_whichexpr_s0_20_9a_2 == 1)? (_pac_sc_s21_24_9f_2) : (_pac_sc_s21_24_9f_3) );
+_pac_sc_s18_22_9c_3 = _pac_sc_s21_24_9f_4;
+_pac_sc_s18_22_9c_4 = ((_whichexpr_s0_20_9a_2 == 0)? (_pac_sc_s18_22_9c_2) : (_pac_sc_s18_22_9c_3) );
+_Node_val__s72_92_5 = (( ! (_whichexpr_s0_20_9a_2 == 0))? (_Node_val__s72_92_4) : (_Node_val__s72_92_0) );
+_Node_next__s73_93_5 = (( ! (_whichexpr_s0_20_9a_2 == 0))? (_Node_next__s73_93_4) : (_Node_next__s73_93_0) );
+_List_last__s75_94_5 = (( ! (_whichexpr_s0_20_9a_2 == 0))? (_List_last__s75_94_4) : (_List_last__s75_94_0) );
+_List_first__s76_95_5 = (( ! (_whichexpr_s0_20_9a_2 == 0))? (_List_first__s76_95_4) : (_List_first__s76_95_0) );
+_out_1f_99_2 = _pac_sc_s18_22_9c_4;
+assert ((( ! (_out_1f_99_2 == -1)) | ( ! <#PC >))) : "Assert at background.sk:88 (698651582627291768)" ;
+val_29_b1_2 = ((_Node_val__s72_92_5)[|_out_1f_99_2|]);
+out_remove_ANONYMOUS_b4_1 = remove[*REMOVE_ANONYMOUS]( _Node_val__s72_92_5 _Node_next__s73_93_5 _List_last__s75_94_5 _List_first__s76_95_5 l1_1c_96_0 idx_1e_98_0   )(( ! (( ! (_whichexpr_s1_21_9b_2 == 0)) | (( ! <H__2> ) | ( ! <#PC >)))))[ _p_out_remove_ANONYMOUS,0];
+___tEmP78_b5_1 = ((out_remove_ANONYMOUS_b4_1).[0]);
+___tEmP79_b6_1 = ((out_remove_ANONYMOUS_b4_1).[1]);
+___tEmP80_b7_1 = ((out_remove_ANONYMOUS_b4_1).[2]);
+___tEmP81_b8_1 = ((out_remove_ANONYMOUS_b4_1).[3]);
+_Node_val__s72_92_6 = ___tEmP78_b5_1;
+_Node_next__s73_93_6 = ___tEmP79_b6_1;
+_List_last__s75_94_6 = ___tEmP80_b7_1;
+_List_first__s76_95_6 = ___tEmP81_b8_1;
+_out_s31_2b_b3_2 = ((out_remove_ANONYMOUS_b4_1).[4]);
+_pac_sc_s29_2a_b2_2 = _out_s31_2b_b3_2;
+out_remove_ANONYMOUS_ba_1 = remove[*REMOVE_ANONYMOUS]( _Node_val__s72_92_5 _Node_next__s73_93_5 _List_last__s75_94_5 _List_first__s76_95_5 l2_1d_97_0 idx_1e_98_0   )(( ! (( ! ( ! (_whichexpr_s1_21_9b_2 == 0))) | (( ! <H__2> ) | ( ! <#PC >)))))[ _p_out_remove_ANONYMOUS,0];
+___tEmP82_bb_1 = ((out_remove_ANONYMOUS_ba_1).[0]);
+___tEmP83_bc_1 = ((out_remove_ANONYMOUS_ba_1).[1]);
+___tEmP84_bd_1 = ((out_remove_ANONYMOUS_ba_1).[2]);
+___tEmP85_be_1 = ((out_remove_ANONYMOUS_ba_1).[3]);
+_Node_val__s72_92_7 = ___tEmP82_bb_1;
+_Node_next__s73_93_7 = ___tEmP83_bc_1;
+_List_last__s75_94_7 = ___tEmP84_bd_1;
+_List_first__s76_95_7 = ___tEmP85_be_1;
+_out_s33_2c_b9_2 = ((out_remove_ANONYMOUS_ba_1).[4]);
+_pac_sc_s29_2a_b2_3 = _out_s33_2c_b9_2;
+_pac_sc_s29_2a_b2_4 = ((_whichexpr_s1_21_9b_2 == 0)? (_pac_sc_s29_2a_b2_2) : (_pac_sc_s29_2a_b2_3) );
+_Node_val__s72_92_8 = ((_whichexpr_s1_21_9b_2 == 0)? (_Node_val__s72_92_6) : (_Node_val__s72_92_7) );
+_Node_next__s73_93_8 = ((_whichexpr_s1_21_9b_2 == 0)? (_Node_next__s73_93_6) : (_Node_next__s73_93_7) );
+_List_last__s75_94_8 = ((_whichexpr_s1_21_9b_2 == 0)? (_List_last__s75_94_6) : (_List_last__s75_94_7) );
+_List_first__s76_95_8 = ((_whichexpr_s1_21_9b_2 == 0)? (_List_first__s76_95_6) : (_List_first__s76_95_7) );
+_Node_val__s72_92_9 = (<H__2> ? (_Node_val__s72_92_8) : (_Node_val__s72_92_5) );
+_Node_next__s73_93_9 = (<H__2> ? (_Node_next__s73_93_8) : (_Node_next__s73_93_5) );
+_List_last__s75_94_9 = (<H__2> ? (_List_last__s75_94_8) : (_List_last__s75_94_5) );
+_List_first__s76_95_9 = (<H__2> ? (_List_first__s76_95_8) : (_List_first__s76_95_5) );
+out_add_ANONYMOUS_bf_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s71_91_0 _Node_val__s72_92_9 _Node_next__s73_93_9 _List_last__s75_94_9 _List_first__s76_95_9 l1_1c_96_0 0   )(( ! (( ! <H__3> ) | ( ! <#PC >))))[ _p_out_add_ANONYMOUS,0];
+___tEmP86_c0_1 = ((out_add_ANONYMOUS_bf_1).[1]);
+___tEmP87_c1_1 = ((out_add_ANONYMOUS_bf_1).[2]);
+___tEmP88_c2_1 = ((out_add_ANONYMOUS_bf_1).[3]);
+___tEmP89_c3_1 = ((out_add_ANONYMOUS_bf_1).[4]);
+#Node_nextInstance__s71_91_1 = ((out_add_ANONYMOUS_bf_1).[0]);
+_Node_val__s72_92_10 = ___tEmP86_c0_1;
+_Node_next__s73_93_10 = ___tEmP87_c1_1;
+_List_last__s75_94_10 = ___tEmP88_c2_1;
+_List_first__s76_95_10 = ___tEmP89_c3_1;
+_Node_val__s72_92_11 = (<H__3> ? (_Node_val__s72_92_10) : (_Node_val__s72_92_9) );
+_Node_next__s73_93_11 = (<H__3> ? (_Node_next__s73_93_10) : (_Node_next__s73_93_9) );
+_List_last__s75_94_11 = (<H__3> ? (_List_last__s75_94_10) : (_List_last__s75_94_9) );
+_List_first__s76_95_11 = (<H__3> ? (_List_first__s76_95_10) : (_List_first__s76_95_9) );
+#Node_nextInstance__s71_91_2 = ((#Node_nextInstance__s71_91_1 > #Node_nextInstance__s71_91_0)? (#Node_nextInstance__s71_91_1) : (#Node_nextInstance__s71_91_0) );
+out_add_ANONYMOUS_c4_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s71_91_2 _Node_val__s72_92_11 _Node_next__s73_93_11 _List_last__s75_94_11 _List_first__s76_95_11 l1_1c_96_0 idx_1e_98_0   )(( ! (( ! <H__4> ) | ( ! <#PC >))))[ _p_out_add_ANONYMOUS,0];
+___tEmP90_c5_1 = ((out_add_ANONYMOUS_c4_1).[1]);
+___tEmP91_c6_1 = ((out_add_ANONYMOUS_c4_1).[2]);
+___tEmP92_c7_1 = ((out_add_ANONYMOUS_c4_1).[3]);
+___tEmP93_c8_1 = ((out_add_ANONYMOUS_c4_1).[4]);
+#Node_nextInstance__s71_91_3 = ((out_add_ANONYMOUS_c4_1).[0]);
+_Node_val__s72_92_12 = ___tEmP90_c5_1;
+_Node_next__s73_93_12 = ___tEmP91_c6_1;
+_List_last__s75_94_12 = ___tEmP92_c7_1;
+_List_first__s76_95_12 = ___tEmP93_c8_1;
+_Node_val__s72_92_13 = (<H__4> ? (_Node_val__s72_92_12) : (_Node_val__s72_92_11) );
+_Node_next__s73_93_13 = (<H__4> ? (_Node_next__s73_93_12) : (_Node_next__s73_93_11) );
+_List_last__s75_94_13 = (<H__4> ? (_List_last__s75_94_12) : (_List_last__s75_94_11) );
+_List_first__s76_95_13 = (<H__4> ? (_List_first__s76_95_12) : (_List_first__s76_95_11) );
+#Node_nextInstance__s71_91_4 = ((#Node_nextInstance__s71_91_3 > #Node_nextInstance__s71_91_2)? (#Node_nextInstance__s71_91_3) : (#Node_nextInstance__s71_91_2) );
+out_add_ANONYMOUS_c9_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s71_91_4 _Node_val__s72_92_13 _Node_next__s73_93_13 _List_last__s75_94_13 _List_first__s76_95_13 l2_1d_97_0 val_29_b1_2   )(( ! (( ! <H__5> ) | ( ! <#PC >))))[ _p_out_add_ANONYMOUS,0];
+___tEmP94_ca_1 = ((out_add_ANONYMOUS_c9_1).[1]);
+___tEmP95_cb_1 = ((out_add_ANONYMOUS_c9_1).[2]);
+___tEmP96_cc_1 = ((out_add_ANONYMOUS_c9_1).[3]);
+___tEmP97_cd_1 = ((out_add_ANONYMOUS_c9_1).[4]);
+#Node_nextInstance__s71_91_5 = ((out_add_ANONYMOUS_c9_1).[0]);
+_Node_val__s72_92_14 = ___tEmP94_ca_1;
+_Node_next__s73_93_14 = ___tEmP95_cb_1;
+_List_last__s75_94_14 = ___tEmP96_cc_1;
+_List_first__s76_95_14 = ___tEmP97_cd_1;
+_Node_val__s72_92_15 = (<H__5> ? (_Node_val__s72_92_14) : (_Node_val__s72_92_13) );
+_Node_next__s73_93_15 = (<H__5> ? (_Node_next__s73_93_14) : (_Node_next__s73_93_13) );
+_List_last__s75_94_15 = (<H__5> ? (_List_last__s75_94_14) : (_List_last__s75_94_13) );
+_List_first__s76_95_15 = (<H__5> ? (_List_first__s76_95_14) : (_List_first__s76_95_13) );
+#Node_nextInstance__s71_91_6 = ((#Node_nextInstance__s71_91_5 > #Node_nextInstance__s71_91_4)? (#Node_nextInstance__s71_91_5) : (#Node_nextInstance__s71_91_4) );
+out_add_ANONYMOUS_ce_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s71_91_6 _Node_val__s72_92_15 _Node_next__s73_93_15 _List_last__s75_94_15 _List_first__s76_95_15 l2_1d_97_0 idx_1e_98_0   )(( ! (( ! <H__6> ) | ( ! <#PC >))))[ _p_out_add_ANONYMOUS,0];
+___tEmP98_cf_1 = ((out_add_ANONYMOUS_ce_1).[1]);
+___tEmP99_d0_1 = ((out_add_ANONYMOUS_ce_1).[2]);
+___tEmP100_d1_1 = ((out_add_ANONYMOUS_ce_1).[3]);
+___tEmP101_d2_1 = ((out_add_ANONYMOUS_ce_1).[4]);
+#Node_nextInstance__s71_91_7 = ((out_add_ANONYMOUS_ce_1).[0]);
+_Node_val__s72_92_16 = ___tEmP98_cf_1;
+_Node_next__s73_93_16 = ___tEmP99_d0_1;
+_List_last__s75_94_16 = ___tEmP100_d1_1;
+_List_first__s76_95_16 = ___tEmP101_d2_1;
+_Node_val__s72_92_17 = (<H__6> ? (_Node_val__s72_92_16) : (_Node_val__s72_92_15) );
+_Node_next__s73_93_17 = (<H__6> ? (_Node_next__s73_93_16) : (_Node_next__s73_93_15) );
+_List_last__s75_94_17 = (<H__6> ? (_List_last__s75_94_16) : (_List_last__s75_94_15) );
+_List_first__s76_95_17 = (<H__6> ? (_List_first__s76_95_16) : (_List_first__s76_95_15) );
+#Node_nextInstance__s71_91_8 = ((#Node_nextInstance__s71_91_7 > #Node_nextInstance__s71_91_6)? (#Node_nextInstance__s71_91_7) : (#Node_nextInstance__s71_91_6) );
+newVal_12_s42_d3_2 = <H__8  5> ;
+out_add_ANONYMOUS_d4_1 = add[*ADD_ANONYMOUS]( #Node_nextInstance__s71_91_8 _Node_val__s72_92_17 _Node_next__s73_93_17 _List_last__s75_94_17 _List_first__s76_95_17 l2_1d_97_0 newVal_12_s42_d3_2   )(( ! (( ! <H__7> ) | ( ! <#PC >))))[ _p_out_add_ANONYMOUS,0];
+___tEmP102_d5_1 = ((out_add_ANONYMOUS_d4_1).[1]);
+___tEmP103_d6_1 = ((out_add_ANONYMOUS_d4_1).[2]);
+___tEmP104_d7_1 = ((out_add_ANONYMOUS_d4_1).[3]);
+___tEmP105_d8_1 = ((out_add_ANONYMOUS_d4_1).[4]);
+#Node_nextInstance__s71_91_9 = ((out_add_ANONYMOUS_d4_1).[0]);
+_Node_val__s72_92_18 = ___tEmP102_d5_1;
+_Node_next__s73_93_18 = ___tEmP103_d6_1;
+_List_last__s75_94_18 = ___tEmP104_d7_1;
+_List_first__s76_95_18 = ___tEmP105_d8_1;
+_Node_val__s72_92_19 = (<H__7> ? (_Node_val__s72_92_18) : (_Node_val__s72_92_17) );
+_Node_next__s73_93_19 = (<H__7> ? (_Node_next__s73_93_18) : (_Node_next__s73_93_17) );
+_List_last__s75_94_19 = (<H__7> ? (_List_last__s75_94_18) : (_List_last__s75_94_17) );
+_List_first__s76_95_19 = (<H__7> ? (_List_first__s76_95_18) : (_List_first__s76_95_17) );
+#Node_nextInstance__s71_91_10 = ((#Node_nextInstance__s71_91_9 > #Node_nextInstance__s71_91_8)? (#Node_nextInstance__s71_91_9) : (#Node_nextInstance__s71_91_8) );
+_out_1f_99_3 = _out_1f_99_2;
+_Node_val__s72_92_20 = _Node_val__s72_92_19;
+_List_last__s75_94_20 = _List_last__s75_94_19;
+_Node_next__s73_93_20 = _Node_next__s73_93_19;
+_List_first__s76_95_20 = _List_first__s76_95_19;
+#Node_nextInstance__s71_91_11 = #Node_nextInstance__s71_91_10;
+_out_1f_99_4 = _out_1f_99_2;
+_Node_val__s72_92_21 = _Node_val__s72_92_19;
+_List_last__s75_94_21 = _List_last__s75_94_19;
+_Node_next__s73_93_21 = _Node_next__s73_93_19;
+_List_first__s76_95_21 = _List_first__s76_95_19;
+#Node_nextInstance__s71_91_12 = ((#Node_nextInstance__s71_91_11 > #Node_nextInstance__s71_91_10)? (#Node_nextInstance__s71_91_11) : (#Node_nextInstance__s71_91_10) );
+_p_out_removeAndPutSketch_ANONYMOUS= [REMOVEANDPUTSKETCH_ANONYMOUS]{< #Node_nextInstance__s71_91_12 _Node_val__s72_92_21 _Node_next__s73_93_21 _List_last__s75_94_21 _List_first__s76_95_21 _out_1f_99_4 >};
+}
+def newNode(int #Node_nextInstance__s77_d9_0 , int[*32] _Node_val__s78_da_0 , int[*32] _Node_next__s79_db_0 , ! NOREC _p_out_newNode_ANONYMOUS){
+__sa80_dd_2 = #Node_nextInstance__s77_d9_0;
+#Node_nextInstance__s77_d9_1 = (#Node_nextInstance__s77_d9_0 + 1);
+_out_2d_dc_2 = __sa80_dd_2;
+assert ((( ! (_out_2d_dc_2 == -1)) | ( ! <#PC >))) : "Assert at background.sk:14 (5636382706307065679)" ;
+_Node_next__s79_db_1= _Node_next__s79_db_0[[_out_2d_dc_2->-1]];
+_Node_next__s79_db_2 = _Node_next__s79_db_1;
+_out_2d_dc_3 = _out_2d_dc_2;
+_Node_val__s78_da_1 = _Node_val__s78_da_0;
+#Node_nextInstance__s77_d9_2 = #Node_nextInstance__s77_d9_1;
+_Node_next__s79_db_3 = _Node_next__s79_db_1;
+_out_2d_dc_4 = _out_2d_dc_2;
+_Node_val__s78_da_2 = _Node_val__s78_da_0;
+#Node_nextInstance__s77_d9_3 = ((#Node_nextInstance__s77_d9_2 > #Node_nextInstance__s77_d9_1)? (#Node_nextInstance__s77_d9_2) : (#Node_nextInstance__s77_d9_1) );
+_p_out_newNode_ANONYMOUS= [NEWNODE_ANONYMOUS]{< #Node_nextInstance__s77_d9_3 _Node_val__s78_da_2 _Node_next__s79_db_3 _out_2d_dc_4 >};
+}
+def get(int[*32] _Node_val__s82_de_0 , int[*32] _Node_next__s83_df_0 , int[*32] _List_last__s85_e0_0 , int[*32] _List_first__s86_e1_0 , int l_2e_e2_0 , int idx_2f_e3_0 , ! NOREC _p_out_get_ANONYMOUS){
+assert ((( ! (l_2e_e2_0 == -1)) | ( ! <#PC >))) : "Assert at background.sk:42 (-6012470394743995723)" ;
+cur_31_e5_2 = ((_List_first__s86_e1_0)[|l_2e_e2_0|]);
+_out_30_e4_2 = cur_31_e5_2;
+_out_30_e4_3 = _out_30_e4_2;
+_rvf0_3 = ((0 == idx_2f_e3_0)? (1) : (0) );
+assert ((( ! (cur_31_e5_2 == -1)) | ((( ! ( ! (cur_31_e5_2 == -1))) | _rvf0_3) | ( ! <#PC >)))) : "Assert at background.sk:48 (-7023254552795484988)" ;
+cur_31_e5_3 = ((_Node_next__s83_df_0)[|cur_31_e5_2|]);
+_out_30_e4_4 = cur_31_e5_3;
+_out_30_e4_5 = _out_30_e4_4;
+_rvf0_5 = ((1 == idx_2f_e3_0)? (1) : (_rvf0_3) );
+assert ((( ! (cur_31_e5_3 == -1)) | (( ! ( ! (cur_31_e5_3 == -1))) | ((( ! ( ! (cur_31_e5_2 == -1))) | _rvf0_5) | ( ! <#PC >))))) : "Assert at background.sk:48 (1005783797436636797)" ;
+cur_31_e5_4 = ((_Node_next__s83_df_0)[|cur_31_e5_3|]);
+_out_30_e4_6 = cur_31_e5_4;
+_out_30_e4_7 = _out_30_e4_6;
+_rvf0_7 = ((2 == idx_2f_e3_0)? (1) : (_rvf0_5) );
+assert ((( ! (cur_31_e5_4 == -1)) | (( ! ( ! (cur_31_e5_4 == -1))) | (( ! ( ! (cur_31_e5_3 == -1))) | ((( ! ( ! (cur_31_e5_2 == -1))) | _rvf0_7) | ( ! <#PC >)))))) : "Assert at background.sk:48 (-8268250647589693404)" ;
+cur_31_e5_5 = ((_Node_next__s83_df_0)[|cur_31_e5_4|]);
+_out_30_e4_8 = cur_31_e5_5;
+_out_30_e4_9 = _out_30_e4_8;
+_rvf0_9 = ((3 == idx_2f_e3_0)? (1) : (_rvf0_7) );
+assert ((( ! (cur_31_e5_5 == -1)) | (( ! ( ! (cur_31_e5_5 == -1))) | (( ! ( ! (cur_31_e5_4 == -1))) | (( ! ( ! (cur_31_e5_3 == -1))) | ((( ! ( ! (cur_31_e5_2 == -1))) | _rvf0_9) | ( ! <#PC >))))))) : "Assert at background.sk:48 (3624738125028783264)" ;
+cur_31_e5_6 = ((_Node_next__s83_df_0)[|cur_31_e5_5|]);
+_out_30_e4_10 = cur_31_e5_6;
+_out_30_e4_11 = _out_30_e4_10;
+_rvf0_11 = ((4 == idx_2f_e3_0)? (1) : (_rvf0_9) );
+assert ((( ! (cur_31_e5_6 == -1)) | (( ! ( ! (cur_31_e5_6 == -1))) | (( ! ( ! (cur_31_e5_5 == -1))) | (( ! ( ! (cur_31_e5_4 == -1))) | (( ! ( ! (cur_31_e5_3 == -1))) | ((( ! ( ! (cur_31_e5_2 == -1))) | _rvf0_11) | ( ! <#PC >)))))))) : "Assert at background.sk:48 (-7024760603988145778)" ;
+cur_31_e5_7 = ((_Node_next__s83_df_0)[|cur_31_e5_6|]);
+_out_30_e4_12 = cur_31_e5_7;
+_out_30_e4_13 = _out_30_e4_12;
+_rvf0_13 = ((5 == idx_2f_e3_0)? (1) : (_rvf0_11) );
+assert ((( ! (cur_31_e5_7 == -1)) | (( ! ( ! (cur_31_e5_7 == -1))) | (( ! ( ! (cur_31_e5_6 == -1))) | (( ! ( ! (cur_31_e5_5 == -1))) | (( ! ( ! (cur_31_e5_4 == -1))) | (( ! ( ! (cur_31_e5_3 == -1))) | ((( ! ( ! (cur_31_e5_2 == -1))) | _rvf0_13) | ( ! <#PC >))))))))) : "Assert at background.sk:48 (-5829132988416837600)" ;
+cur_31_e5_8 = ((_Node_next__s83_df_0)[|cur_31_e5_7|]);
+_out_30_e4_14 = cur_31_e5_8;
+_out_30_e4_15 = _out_30_e4_14;
+_rvf0_15 = ((6 == idx_2f_e3_0)? (1) : (_rvf0_13) );
+assert ((( ! (cur_31_e5_8 == -1)) | (( ! ( ! (cur_31_e5_8 == -1))) | (( ! ( ! (cur_31_e5_7 == -1))) | (( ! ( ! (cur_31_e5_6 == -1))) | (( ! ( ! (cur_31_e5_5 == -1))) | (( ! ( ! (cur_31_e5_4 == -1))) | (( ! ( ! (cur_31_e5_3 == -1))) | ((( ! ( ! (cur_31_e5_2 == -1))) | _rvf0_15) | ( ! <#PC >)))))))))) : "Assert at background.sk:48 (-7290441697387812798)" ;
+cur_31_e5_9 = ((_Node_next__s83_df_0)[|cur_31_e5_8|]);
+_out_30_e4_16 = cur_31_e5_9;
+_out_30_e4_17 = _out_30_e4_16;
+_rvf0_17 = ((7 == idx_2f_e3_0)? (1) : (_rvf0_15) );
+assert ((( ! (cur_31_e5_9 == -1)) | (( ! ( ! (cur_31_e5_9 == -1))) | (( ! ( ! (cur_31_e5_8 == -1))) | (( ! ( ! (cur_31_e5_7 == -1))) | (( ! ( ! (cur_31_e5_6 == -1))) | (( ! ( ! (cur_31_e5_5 == -1))) | (( ! ( ! (cur_31_e5_4 == -1))) | (( ! ( ! (cur_31_e5_3 == -1))) | ((( ! ( ! (cur_31_e5_2 == -1))) | _rvf0_17) | ( ! <#PC >))))))))))) : "Assert at background.sk:48 (3461615970155549182)" ;
+cur_31_e5_10 = ((_Node_next__s83_df_0)[|cur_31_e5_9|]);
+assert ((( ! ( ! (cur_31_e5_10 == -1))) | (( ! ( ! (cur_31_e5_9 == -1))) | (( ! ( ! (cur_31_e5_8 == -1))) | (( ! ( ! (cur_31_e5_7 == -1))) | (( ! ( ! (cur_31_e5_6 == -1))) | (( ! ( ! (cur_31_e5_5 == -1))) | (( ! ( ! (cur_31_e5_4 == -1))) | (( ! ( ! (cur_31_e5_3 == -1))) | ((( ! ( ! (cur_31_e5_2 == -1))) | _rvf0_17) | ( ! <#PC >))))))))))) : "background.sk:45: This loop was unrolled 8 times, but apparently that was not enough. Use the --bnd-unroll-amnt flag for better results." ;
+_rvf0_18 = (( ! (cur_31_e5_9 == -1))? (_rvf0_17) : (_rvf0_15) );
+cur_31_e5_11 = (( ! (cur_31_e5_9 == -1))? (cur_31_e5_10) : (cur_31_e5_9) );
+i_32_e6_11 = (( ! (cur_31_e5_9 == -1))? (8) : (7) );
+_rvf0_19 = (( ! (cur_31_e5_8 == -1))? (_rvf0_18) : (_rvf0_13) );
+cur_31_e5_12 = (( ! (cur_31_e5_8 == -1))? (cur_31_e5_11) : (cur_31_e5_8) );
+i_32_e6_12 = (( ! (cur_31_e5_8 == -1))? (i_32_e6_11) : (6) );
+_rvf0_20 = (( ! (cur_31_e5_7 == -1))? (_rvf0_19) : (_rvf0_11) );
+cur_31_e5_13 = (( ! (cur_31_e5_7 == -1))? (cur_31_e5_12) : (cur_31_e5_7) );
+i_32_e6_13 = (( ! (cur_31_e5_7 == -1))? (i_32_e6_12) : (5) );
+_rvf0_21 = (( ! (cur_31_e5_6 == -1))? (_rvf0_20) : (_rvf0_9) );
+cur_31_e5_14 = (( ! (cur_31_e5_6 == -1))? (cur_31_e5_13) : (cur_31_e5_6) );
+i_32_e6_14 = (( ! (cur_31_e5_6 == -1))? (i_32_e6_13) : (4) );
+_rvf0_22 = (( ! (cur_31_e5_5 == -1))? (_rvf0_21) : (_rvf0_7) );
+cur_31_e5_15 = (( ! (cur_31_e5_5 == -1))? (cur_31_e5_14) : (cur_31_e5_5) );
+i_32_e6_15 = (( ! (cur_31_e5_5 == -1))? (i_32_e6_14) : (3) );
+_rvf0_23 = (( ! (cur_31_e5_4 == -1))? (_rvf0_22) : (_rvf0_5) );
+cur_31_e5_16 = (( ! (cur_31_e5_4 == -1))? (cur_31_e5_15) : (cur_31_e5_4) );
+i_32_e6_16 = (( ! (cur_31_e5_4 == -1))? (i_32_e6_15) : (2) );
+_rvf0_24 = (( ! (cur_31_e5_3 == -1))? (_rvf0_23) : (_rvf0_3) );
+cur_31_e5_17 = (( ! (cur_31_e5_3 == -1))? (cur_31_e5_16) : (cur_31_e5_3) );
+i_32_e6_17 = (( ! (cur_31_e5_3 == -1))? (i_32_e6_16) : (1) );
+_rvf0_25 = (( ! (cur_31_e5_2 == -1))? (_rvf0_24) : (0) );
+cur_31_e5_18 = (( ! (cur_31_e5_2 == -1))? (cur_31_e5_17) : (cur_31_e5_2) );
+i_32_e6_18 = (( ! (cur_31_e5_2 == -1))? (i_32_e6_17) : (0) );
+_out_30_e4_21 = (( ! (( ! (7 == idx_2f_e3_0)) | (( ! ( ! (cur_31_e5_9 == -1))) | (( ! ( ! (cur_31_e5_8 == -1))) | (( ! ( ! (cur_31_e5_7 == -1))) | (( ! ( ! (cur_31_e5_6 == -1))) | (( ! ( ! (cur_31_e5_5 == -1))) | (( ! ( ! (cur_31_e5_4 == -1))) | (( ! ( ! (cur_31_e5_3 == -1))) | (( ! ( ! (cur_31_e5_2 == -1))) | ( ! <#PC >)))))))))))? (_out_30_e4_17) : (-1) );
+_out_30_e4_22 = (( ! (( ! (6 == idx_2f_e3_0)) | (( ! ( ! (cur_31_e5_8 == -1))) | (( ! ( ! (cur_31_e5_7 == -1))) | (( ! ( ! (cur_31_e5_6 == -1))) | (( ! ( ! (cur_31_e5_5 == -1))) | (( ! ( ! (cur_31_e5_4 == -1))) | (( ! ( ! (cur_31_e5_3 == -1))) | (( ! ( ! (cur_31_e5_2 == -1))) | ( ! <#PC >))))))))))? (_out_30_e4_15) : (_out_30_e4_21) );
+_out_30_e4_23 = (( ! (( ! (5 == idx_2f_e3_0)) | (( ! ( ! (cur_31_e5_7 == -1))) | (( ! ( ! (cur_31_e5_6 == -1))) | (( ! ( ! (cur_31_e5_5 == -1))) | (( ! ( ! (cur_31_e5_4 == -1))) | (( ! ( ! (cur_31_e5_3 == -1))) | (( ! ( ! (cur_31_e5_2 == -1))) | ( ! <#PC >)))))))))? (_out_30_e4_13) : (_out_30_e4_22) );
+_out_30_e4_24 = (( ! (( ! (4 == idx_2f_e3_0)) | (( ! ( ! (cur_31_e5_6 == -1))) | (( ! ( ! (cur_31_e5_5 == -1))) | (( ! ( ! (cur_31_e5_4 == -1))) | (( ! ( ! (cur_31_e5_3 == -1))) | (( ! ( ! (cur_31_e5_2 == -1))) | ( ! <#PC >))))))))? (_out_30_e4_11) : (_out_30_e4_23) );
+_out_30_e4_25 = (( ! (( ! (3 == idx_2f_e3_0)) | (( ! ( ! (cur_31_e5_5 == -1))) | (( ! ( ! (cur_31_e5_4 == -1))) | (( ! ( ! (cur_31_e5_3 == -1))) | (( ! ( ! (cur_31_e5_2 == -1))) | ( ! <#PC >)))))))? (_out_30_e4_9) : (_out_30_e4_24) );
+_out_30_e4_26 = (( ! (( ! (2 == idx_2f_e3_0)) | (( ! ( ! (cur_31_e5_4 == -1))) | (( ! ( ! (cur_31_e5_3 == -1))) | (( ! ( ! (cur_31_e5_2 == -1))) | ( ! <#PC >))))))? (_out_30_e4_7) : (_out_30_e4_25) );
+_out_30_e4_27 = (( ! (( ! (1 == idx_2f_e3_0)) | (( ! ( ! (cur_31_e5_3 == -1))) | (( ! ( ! (cur_31_e5_2 == -1))) | ( ! <#PC >)))))? (_out_30_e4_5) : (_out_30_e4_26) );
+_out_30_e4_28 = (( ! (( ! (0 == idx_2f_e3_0)) | (( ! ( ! (cur_31_e5_2 == -1))) | ( ! <#PC >))))? (_out_30_e4_3) : (_out_30_e4_27) );
+_p_out_get_ANONYMOUS= [GET_ANONYMOUS]{< _out_30_e4_28 >};
+}
+def remove(int[*32] _Node_val__s88_e7_0 , int[*32] _Node_next__s89_e8_0 , int[*32] _List_last__s91_e9_0 , int[*32] _List_first__s92_ea_0 , int l_33_eb_0 , int idx_34_ec_0 , ! NOREC _p_out_remove_ANONYMOUS){
+assert ((( ! (l_33_eb_0 == -1)) | ( ! <#PC >))) : "Assert at background.sk:57 (9140261033038621805)" ;
+cur_36_ee_2 = ((_List_first__s92_ea_0)[|l_33_eb_0|]);
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:63 (8810051087194233745)" ;
+toRemove_37_ef_2 = ((_Node_next__s89_e8_0)[|cur_36_ee_2|]);
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:64 (-2381494340852649109)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:64 (5042640253963090531)" ;
+assert ((( ! (((_Node_next__s89_e8_0)[|cur_36_ee_2|]) == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:64 (-6017548824823397035)" ;
+_Node_next__s89_e8_1= _Node_next__s89_e8_0[[cur_36_ee_2->((_Node_next__s89_e8_0)[|((_Node_next__s89_e8_0)[|cur_36_ee_2|])|])]];
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))) : "Assert at background.sk:65 (-1373732657502684434)" ;
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_2)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))) : "Assert at background.sk:66 (-7765573953827103734)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_2)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))) : "Assert at background.sk:66 (-7334846045707511890)" ;
+_List_last__s91_e9_1= _List_last__s91_e9_0[[l_33_eb_0->((_Node_next__s89_e8_1)[|cur_36_ee_2|])]];
+_List_last__s91_e9_2 = ((((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_2)? (_List_last__s91_e9_1) : (_List_last__s91_e9_0) );
+_out_35_ed_2 = toRemove_37_ef_2;
+_out_35_ed_3 = _out_35_ed_2;
+_Node_next__s89_e8_2 = _Node_next__s89_e8_1;
+_List_first__s92_ea_1 = _List_first__s92_ea_0;
+_List_last__s91_e9_3 = _List_last__s91_e9_2;
+_Node_val__s88_e7_1 = _Node_val__s88_e7_0;
+_rvf0_3 = ((0 == (idx_34_ec_0 - 1))? (1) : (0) );
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_3) | ( ! <#PC >)))))) : "Assert at background.sk:63 (8158800209363753907)" ;
+toRemove_37_ef_3 = ((_Node_next__s89_e8_0)[|cur_36_ee_2|]);
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_3) | ( ! <#PC >)))))) : "Assert at background.sk:64 (-5296170027354659838)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_3) | ( ! <#PC >)))))) : "Assert at background.sk:64 (-5120413727313064704)" ;
+assert ((( ! (((_Node_next__s89_e8_0)[|cur_36_ee_2|]) == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_3) | ( ! <#PC >)))))) : "Assert at background.sk:64 (-6017548824823397035)" ;
+_Node_next__s89_e8_3= _Node_next__s89_e8_0[[cur_36_ee_2->((_Node_next__s89_e8_0)[|((_Node_next__s89_e8_0)[|cur_36_ee_2|])|])]];
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_3) | ( ! <#PC >)))))) : "Assert at background.sk:65 (-8657408146285932069)" ;
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_3)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_3) | ( ! <#PC >))))))) : "Assert at background.sk:66 (3070590245041991162)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_3)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_3) | ( ! <#PC >))))))) : "Assert at background.sk:66 (2377798180639707561)" ;
+_List_last__s91_e9_4= _List_last__s91_e9_0[[l_33_eb_0->((_Node_next__s89_e8_3)[|cur_36_ee_2|])]];
+_List_last__s91_e9_5 = ((((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_3)? (_List_last__s91_e9_4) : (_List_last__s91_e9_0) );
+_out_35_ed_4 = toRemove_37_ef_3;
+_out_35_ed_5 = _out_35_ed_4;
+_Node_next__s89_e8_4 = _Node_next__s89_e8_3;
+_List_first__s92_ea_2 = _List_first__s92_ea_0;
+_List_last__s91_e9_6 = _List_last__s91_e9_5;
+_Node_val__s88_e7_2 = _Node_val__s88_e7_0;
+_rvf0_5 = ((0 == (idx_34_ec_0 - 1))? (1) : (_rvf0_3) );
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_5) | ( ! <#PC >))))))) : "Assert at background.sk:63 (4875638487816483549)" ;
+toRemove_37_ef_4 = ((_Node_next__s89_e8_0)[|cur_36_ee_2|]);
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_5) | ( ! <#PC >))))))) : "Assert at background.sk:64 (4584017790555487246)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_5) | ( ! <#PC >))))))) : "Assert at background.sk:64 (-6163785723379596624)" ;
+assert ((( ! (((_Node_next__s89_e8_0)[|cur_36_ee_2|]) == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_5) | ( ! <#PC >))))))) : "Assert at background.sk:64 (-6017548824823397035)" ;
+_Node_next__s89_e8_5= _Node_next__s89_e8_0[[cur_36_ee_2->((_Node_next__s89_e8_0)[|((_Node_next__s89_e8_0)[|cur_36_ee_2|])|])]];
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_5) | ( ! <#PC >))))))) : "Assert at background.sk:65 (4273274488040018730)" ;
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_4)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_5) | ( ! <#PC >)))))))) : "Assert at background.sk:66 (-6854580189114520279)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_4)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_5) | ( ! <#PC >)))))))) : "Assert at background.sk:66 (4456414784306846463)" ;
+_List_last__s91_e9_7= _List_last__s91_e9_0[[l_33_eb_0->((_Node_next__s89_e8_5)[|cur_36_ee_2|])]];
+_List_last__s91_e9_8 = ((((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_4)? (_List_last__s91_e9_7) : (_List_last__s91_e9_0) );
+_out_35_ed_6 = toRemove_37_ef_4;
+_out_35_ed_7 = _out_35_ed_6;
+_Node_next__s89_e8_6 = _Node_next__s89_e8_5;
+_List_first__s92_ea_3 = _List_first__s92_ea_0;
+_List_last__s91_e9_9 = _List_last__s91_e9_8;
+_Node_val__s88_e7_3 = _Node_val__s88_e7_0;
+_rvf0_7 = ((0 == (idx_34_ec_0 - 1))? (1) : (_rvf0_5) );
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_7) | ( ! <#PC >)))))))) : "Assert at background.sk:63 (-3574700449229164053)" ;
+toRemove_37_ef_5 = ((_Node_next__s89_e8_0)[|cur_36_ee_2|]);
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_7) | ( ! <#PC >)))))))) : "Assert at background.sk:64 (-8427363999475360816)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_7) | ( ! <#PC >)))))))) : "Assert at background.sk:64 (-2216353369469969193)" ;
+assert ((( ! (((_Node_next__s89_e8_0)[|cur_36_ee_2|]) == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_7) | ( ! <#PC >)))))))) : "Assert at background.sk:64 (-6017548824823397035)" ;
+_Node_next__s89_e8_7= _Node_next__s89_e8_0[[cur_36_ee_2->((_Node_next__s89_e8_0)[|((_Node_next__s89_e8_0)[|cur_36_ee_2|])|])]];
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_7) | ( ! <#PC >)))))))) : "Assert at background.sk:65 (1075681088977102643)" ;
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_5)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_7) | ( ! <#PC >))))))))) : "Assert at background.sk:66 (2971701329182105526)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_5)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_7) | ( ! <#PC >))))))))) : "Assert at background.sk:66 (-3151349000453395588)" ;
+_List_last__s91_e9_10= _List_last__s91_e9_0[[l_33_eb_0->((_Node_next__s89_e8_7)[|cur_36_ee_2|])]];
+_List_last__s91_e9_11 = ((((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_5)? (_List_last__s91_e9_10) : (_List_last__s91_e9_0) );
+_out_35_ed_8 = toRemove_37_ef_5;
+_out_35_ed_9 = _out_35_ed_8;
+_Node_next__s89_e8_8 = _Node_next__s89_e8_7;
+_List_first__s92_ea_4 = _List_first__s92_ea_0;
+_List_last__s91_e9_12 = _List_last__s91_e9_11;
+_Node_val__s88_e7_4 = _Node_val__s88_e7_0;
+_rvf0_9 = ((0 == (idx_34_ec_0 - 1))? (1) : (_rvf0_7) );
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_9) | ( ! <#PC >))))))))) : "Assert at background.sk:63 (-4826466349689488129)" ;
+toRemove_37_ef_6 = ((_Node_next__s89_e8_0)[|cur_36_ee_2|]);
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_9) | ( ! <#PC >))))))))) : "Assert at background.sk:64 (-1453808768323470863)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_9) | ( ! <#PC >))))))))) : "Assert at background.sk:64 (-3220006675170840070)" ;
+assert ((( ! (((_Node_next__s89_e8_0)[|cur_36_ee_2|]) == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_9) | ( ! <#PC >))))))))) : "Assert at background.sk:64 (-6017548824823397035)" ;
+_Node_next__s89_e8_9= _Node_next__s89_e8_0[[cur_36_ee_2->((_Node_next__s89_e8_0)[|((_Node_next__s89_e8_0)[|cur_36_ee_2|])|])]];
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_9) | ( ! <#PC >))))))))) : "Assert at background.sk:65 (-5727969821703774604)" ;
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_6)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_9) | ( ! <#PC >)))))))))) : "Assert at background.sk:66 (6328817276652774941)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_6)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_9) | ( ! <#PC >)))))))))) : "Assert at background.sk:66 (5667308172496359402)" ;
+_List_last__s91_e9_13= _List_last__s91_e9_0[[l_33_eb_0->((_Node_next__s89_e8_9)[|cur_36_ee_2|])]];
+_List_last__s91_e9_14 = ((((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_6)? (_List_last__s91_e9_13) : (_List_last__s91_e9_0) );
+_out_35_ed_10 = toRemove_37_ef_6;
+_out_35_ed_11 = _out_35_ed_10;
+_Node_next__s89_e8_10 = _Node_next__s89_e8_9;
+_List_first__s92_ea_5 = _List_first__s92_ea_0;
+_List_last__s91_e9_15 = _List_last__s91_e9_14;
+_Node_val__s88_e7_5 = _Node_val__s88_e7_0;
+_rvf0_11 = ((0 == (idx_34_ec_0 - 1))? (1) : (_rvf0_9) );
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_11) | ( ! <#PC >)))))))))) : "Assert at background.sk:63 (-2861562447832617255)" ;
+toRemove_37_ef_7 = ((_Node_next__s89_e8_0)[|cur_36_ee_2|]);
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_11) | ( ! <#PC >)))))))))) : "Assert at background.sk:64 (-5652574259599346162)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_11) | ( ! <#PC >)))))))))) : "Assert at background.sk:64 (1534747588057019337)" ;
+assert ((( ! (((_Node_next__s89_e8_0)[|cur_36_ee_2|]) == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_11) | ( ! <#PC >)))))))))) : "Assert at background.sk:64 (-6017548824823397035)" ;
+_Node_next__s89_e8_11= _Node_next__s89_e8_0[[cur_36_ee_2->((_Node_next__s89_e8_0)[|((_Node_next__s89_e8_0)[|cur_36_ee_2|])|])]];
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_11) | ( ! <#PC >)))))))))) : "Assert at background.sk:65 (252839308866773978)" ;
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_7)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_11) | ( ! <#PC >))))))))))) : "Assert at background.sk:66 (-3459132466053301300)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_7)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_11) | ( ! <#PC >))))))))))) : "Assert at background.sk:66 (-8567905301697826105)" ;
+_List_last__s91_e9_16= _List_last__s91_e9_0[[l_33_eb_0->((_Node_next__s89_e8_11)[|cur_36_ee_2|])]];
+_List_last__s91_e9_17 = ((((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_7)? (_List_last__s91_e9_16) : (_List_last__s91_e9_0) );
+_out_35_ed_12 = toRemove_37_ef_7;
+_out_35_ed_13 = _out_35_ed_12;
+_Node_next__s89_e8_12 = _Node_next__s89_e8_11;
+_List_first__s92_ea_6 = _List_first__s92_ea_0;
+_List_last__s91_e9_18 = _List_last__s91_e9_17;
+_Node_val__s88_e7_6 = _Node_val__s88_e7_0;
+_rvf0_13 = ((0 == (idx_34_ec_0 - 1))? (1) : (_rvf0_11) );
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_13) | ( ! <#PC >))))))))))) : "Assert at background.sk:63 (-7052698323930227348)" ;
+toRemove_37_ef_8 = ((_Node_next__s89_e8_0)[|cur_36_ee_2|]);
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_13) | ( ! <#PC >))))))))))) : "Assert at background.sk:64 (6705303714441514870)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_13) | ( ! <#PC >))))))))))) : "Assert at background.sk:64 (7733258454174142814)" ;
+assert ((( ! (((_Node_next__s89_e8_0)[|cur_36_ee_2|]) == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_13) | ( ! <#PC >))))))))))) : "Assert at background.sk:64 (-6017548824823397035)" ;
+_Node_next__s89_e8_13= _Node_next__s89_e8_0[[cur_36_ee_2->((_Node_next__s89_e8_0)[|((_Node_next__s89_e8_0)[|cur_36_ee_2|])|])]];
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_13) | ( ! <#PC >))))))))))) : "Assert at background.sk:65 (-2738042009968881857)" ;
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_8)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_13) | ( ! <#PC >)))))))))))) : "Assert at background.sk:66 (-3502829526614954763)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_8)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_13) | ( ! <#PC >)))))))))))) : "Assert at background.sk:66 (4523460951080385592)" ;
+_List_last__s91_e9_19= _List_last__s91_e9_0[[l_33_eb_0->((_Node_next__s89_e8_13)[|cur_36_ee_2|])]];
+_List_last__s91_e9_20 = ((((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_8)? (_List_last__s91_e9_19) : (_List_last__s91_e9_0) );
+_out_35_ed_14 = toRemove_37_ef_8;
+_out_35_ed_15 = _out_35_ed_14;
+_Node_next__s89_e8_14 = _Node_next__s89_e8_13;
+_List_first__s92_ea_7 = _List_first__s92_ea_0;
+_List_last__s91_e9_21 = _List_last__s91_e9_20;
+_Node_val__s88_e7_7 = _Node_val__s88_e7_0;
+_rvf0_15 = ((0 == (idx_34_ec_0 - 1))? (1) : (_rvf0_13) );
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_15) | ( ! <#PC >)))))))))))) : "Assert at background.sk:63 (371261008974320557)" ;
+toRemove_37_ef_9 = ((_Node_next__s89_e8_0)[|cur_36_ee_2|]);
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_15) | ( ! <#PC >)))))))))))) : "Assert at background.sk:64 (5309541335621076018)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_15) | ( ! <#PC >)))))))))))) : "Assert at background.sk:64 (1731191717424396743)" ;
+assert ((( ! (((_Node_next__s89_e8_0)[|cur_36_ee_2|]) == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_15) | ( ! <#PC >)))))))))))) : "Assert at background.sk:64 (-6017548824823397035)" ;
+_Node_next__s89_e8_15= _Node_next__s89_e8_0[[cur_36_ee_2->((_Node_next__s89_e8_0)[|((_Node_next__s89_e8_0)[|cur_36_ee_2|])|])]];
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_15) | ( ! <#PC >)))))))))))) : "Assert at background.sk:65 (-1674418854233039820)" ;
+assert ((( ! (l_33_eb_0 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_9)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_15) | ( ! <#PC >))))))))))))) : "Assert at background.sk:66 (5727190373046441381)" ;
+assert ((( ! (cur_36_ee_2 == -1)) | (( ! (((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_9)) | (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_15) | ( ! <#PC >))))))))))))) : "Assert at background.sk:66 (3056088650223598910)" ;
+_List_last__s91_e9_22= _List_last__s91_e9_0[[l_33_eb_0->((_Node_next__s89_e8_15)[|cur_36_ee_2|])]];
+_List_last__s91_e9_23 = ((((_List_last__s91_e9_0)[|l_33_eb_0|]) == toRemove_37_ef_9)? (_List_last__s91_e9_22) : (_List_last__s91_e9_0) );
+_out_35_ed_16 = toRemove_37_ef_9;
+_out_35_ed_17 = _out_35_ed_16;
+_Node_next__s89_e8_16 = _Node_next__s89_e8_15;
+_List_first__s92_ea_8 = _List_first__s92_ea_0;
+_List_last__s91_e9_24 = _List_last__s91_e9_23;
+_Node_val__s88_e7_8 = _Node_val__s88_e7_0;
+_rvf0_17 = ((0 == (idx_34_ec_0 - 1))? (1) : (_rvf0_15) );
+assert ((( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ((( ! ( ! (cur_36_ee_2 == -1))) | _rvf0_17) | ( ! <#PC >))))))))))) : "background.sk:61: This loop was unrolled 8 times, but apparently that was not enough. Use the --bnd-unroll-amnt flag for better results." ;
+_rvf0_18 = (( ! (cur_36_ee_2 == -1))? (_rvf0_17) : (_rvf0_15) );
+_rvf0_19 = (( ! (cur_36_ee_2 == -1))? (_rvf0_18) : (_rvf0_13) );
+_rvf0_20 = (( ! (cur_36_ee_2 == -1))? (_rvf0_19) : (_rvf0_11) );
+_rvf0_21 = (( ! (cur_36_ee_2 == -1))? (_rvf0_20) : (_rvf0_9) );
+_rvf0_22 = (( ! (cur_36_ee_2 == -1))? (_rvf0_21) : (_rvf0_7) );
+_rvf0_23 = (( ! (cur_36_ee_2 == -1))? (_rvf0_22) : (_rvf0_5) );
+_rvf0_24 = (( ! (cur_36_ee_2 == -1))? (_rvf0_23) : (_rvf0_3) );
+_rvf0_25 = (( ! (cur_36_ee_2 == -1))? (_rvf0_24) : (0) );
+_Node_next__s89_e8_17 = _Node_next__s89_e8_0;
+_List_first__s92_ea_9 = _List_first__s92_ea_0;
+_List_last__s91_e9_25 = _List_last__s91_e9_0;
+_Node_val__s88_e7_9 = _Node_val__s88_e7_0;
+_Node_next__s89_e8_18 = _Node_next__s89_e8_0;
+_List_first__s92_ea_10 = _List_first__s92_ea_0;
+_List_last__s91_e9_26 = _List_last__s91_e9_0;
+_Node_val__s88_e7_10 = _Node_val__s88_e7_0;
+_out_35_ed_21 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))))))? (_out_35_ed_17) : (-1) );
+_Node_next__s89_e8_19 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))))))? (_Node_next__s89_e8_16) : (_Node_next__s89_e8_18) );
+_List_first__s92_ea_11 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))))))? (_List_first__s92_ea_8) : (_List_first__s92_ea_10) );
+_List_last__s91_e9_27 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))))))? (_List_last__s91_e9_24) : (_List_last__s91_e9_26) );
+_Node_val__s88_e7_11 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))))))? (_Node_val__s88_e7_8) : (_Node_val__s88_e7_10) );
+_out_35_ed_22 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))))))? (_out_35_ed_15) : (_out_35_ed_21) );
+_Node_next__s89_e8_20 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))))))? (_Node_next__s89_e8_14) : (_Node_next__s89_e8_19) );
+_List_first__s92_ea_12 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))))))? (_List_first__s92_ea_7) : (_List_first__s92_ea_11) );
+_List_last__s91_e9_28 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))))))? (_List_last__s91_e9_21) : (_List_last__s91_e9_27) );
+_Node_val__s88_e7_12 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))))))? (_Node_val__s88_e7_7) : (_Node_val__s88_e7_11) );
+_out_35_ed_23 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))))? (_out_35_ed_13) : (_out_35_ed_22) );
+_Node_next__s89_e8_21 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))))? (_Node_next__s89_e8_12) : (_Node_next__s89_e8_20) );
+_List_first__s92_ea_13 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))))? (_List_first__s92_ea_6) : (_List_first__s92_ea_12) );
+_List_last__s91_e9_29 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))))? (_List_last__s91_e9_18) : (_List_last__s91_e9_28) );
+_Node_val__s88_e7_13 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))))? (_Node_val__s88_e7_6) : (_Node_val__s88_e7_12) );
+_out_35_ed_24 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))))? (_out_35_ed_11) : (_out_35_ed_23) );
+_Node_next__s89_e8_22 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))))? (_Node_next__s89_e8_10) : (_Node_next__s89_e8_21) );
+_List_first__s92_ea_14 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))))? (_List_first__s92_ea_5) : (_List_first__s92_ea_13) );
+_List_last__s91_e9_30 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))))? (_List_last__s91_e9_15) : (_List_last__s91_e9_29) );
+_Node_val__s88_e7_14 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))))? (_Node_val__s88_e7_5) : (_Node_val__s88_e7_13) );
+_out_35_ed_25 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))? (_out_35_ed_9) : (_out_35_ed_24) );
+_Node_next__s89_e8_23 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))? (_Node_next__s89_e8_8) : (_Node_next__s89_e8_22) );
+_List_first__s92_ea_15 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))? (_List_first__s92_ea_4) : (_List_first__s92_ea_14) );
+_List_last__s91_e9_31 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))? (_List_last__s91_e9_12) : (_List_last__s91_e9_30) );
+_Node_val__s88_e7_15 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))))? (_Node_val__s88_e7_4) : (_Node_val__s88_e7_14) );
+_out_35_ed_26 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))? (_out_35_ed_7) : (_out_35_ed_25) );
+_Node_next__s89_e8_24 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))? (_Node_next__s89_e8_6) : (_Node_next__s89_e8_23) );
+_List_first__s92_ea_16 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))? (_List_first__s92_ea_3) : (_List_first__s92_ea_15) );
+_List_last__s91_e9_32 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))? (_List_last__s91_e9_9) : (_List_last__s91_e9_31) );
+_Node_val__s88_e7_16 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))))? (_Node_val__s88_e7_3) : (_Node_val__s88_e7_15) );
+_out_35_ed_27 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))? (_out_35_ed_5) : (_out_35_ed_26) );
+_Node_next__s89_e8_25 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))? (_Node_next__s89_e8_4) : (_Node_next__s89_e8_24) );
+_List_first__s92_ea_17 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))? (_List_first__s92_ea_2) : (_List_first__s92_ea_16) );
+_List_last__s91_e9_33 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))? (_List_last__s91_e9_6) : (_List_last__s91_e9_32) );
+_Node_val__s88_e7_17 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >)))))? (_Node_val__s88_e7_2) : (_Node_val__s88_e7_16) );
+_out_35_ed_28 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))? (_out_35_ed_3) : (_out_35_ed_27) );
+_Node_next__s89_e8_26 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))? (_Node_next__s89_e8_2) : (_Node_next__s89_e8_25) );
+_List_first__s92_ea_18 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))? (_List_first__s92_ea_1) : (_List_first__s92_ea_17) );
+_List_last__s91_e9_34 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))? (_List_last__s91_e9_3) : (_List_last__s91_e9_33) );
+_Node_val__s88_e7_18 = (( ! (( ! (0 == (idx_34_ec_0 - 1))) | (( ! ( ! (cur_36_ee_2 == -1))) | ( ! <#PC >))))? (_Node_val__s88_e7_1) : (_Node_val__s88_e7_17) );
+_p_out_remove_ANONYMOUS= [REMOVE_ANONYMOUS]{< _Node_val__s88_e7_18 _Node_next__s89_e8_26 _List_last__s91_e9_34 _List_first__s92_ea_18 _out_35_ed_28 >};
+}
+assert blah__Wrapper SKETCHES blah__WrapperNospec;
+/home/eidelmanj/sketch-newest/sketch-backend/src/SketchSolver/cegis --bnd-inbits 5 --boundmode CALLNAME --verbosity 1 --print-version -simiters 4 --assumebcheck --bnd-inline-amnt 5 -angelictupledepth 1 -srctupledepth 2 -sprandbias 1 -o /home/eidelmanj/.sketch/tmp/background.sk/solution0-0 /home/eidelmanj/.sketch/tmp/background.sk/input0.tmp /* BEGIN PACKAGE ANONYMOUS*/
+struct Node {
+    int val;
+    Node next;
+}
+struct List {
+    Node first;
+    Node last;
+}
+/*background.sk:25*/
+
+void add (List l, int newVal)/*background.sk:25*/
+{
+  Node@ANONYMOUS newN_s35 = null;
+  newNode(newN_s35);
+  newN_s35.val = newVal;
+  if((l.first) == (null))/*background.sk:30*/
+  {
+    l.first = newN_s35;
+    l.last = newN_s35;
+  }
+  else
+  {
+    l.last.next = newN_s35;
+    l.last = newN_s35;
+  }
+}
+/*background.sk:100*/
+
+void blah ()/*background.sk:100*/
+{
+  List@ANONYMOUS l1_s3 = null;
+  newList(l1_s3);
+  List@ANONYMOUS l2_s5 = null;
+  newList(l2_s5);
+  List@ANONYMOUS l1prime_s7 = null;
+  newList(l1prime_s7);
+  List@ANONYMOUS l2prime_s9 = null;
+  newList(l2prime_s9);
+  add(l1_s3, 1);
+  add(l1_s3, 2);
+  add(l1_s3, 3);
+  add(l1_s3, 4);
+  Node@ANONYMOUS a_s11 = null;
+  removeAndPut(l1_s3, l2_s5, 1, a_s11);
+  add(l1prime_s7, 1);
+  add(l1prime_s7, 2);
+  add(l1prime_s7, 3);
+  add(l1prime_s7, 4);
+  Node@ANONYMOUS b_s13 = null;
+  removeAndPutSketch(l1prime_s7, l2prime_s9, 1, b_s13);
+  assert ((a_s11.val) == (b_s13.val)); //Assert at background.sk:151 (-7918705467076899391)
+  Node@ANONYMOUS a_s15 = null;
+  removeAndPut(l1_s3, l2_s5, 1, a_s15);
+  Node@ANONYMOUS b_s17 = null;
+  removeAndPutSketch(l1prime_s7, l2prime_s9, 1, b_s17);
+  assert ((a_s15.val) == (b_s17.val)); //Assert at background.sk:156 (-1662639503980920145)
+  Node@ANONYMOUS cur1 = l1_s3.first;
+  Node@ANONYMOUS cur2 = l1prime_s7.first;
+  while(cur1 != (null))
+  {
+    assert ((cur1.val) == (cur2.val)); //Assert at background.sk:161 (-2127684736965489512)
+    cur1 = cur1.next;
+    cur2 = cur2.next;
+  }
+  assert (cur2 == (null)); //Assert at background.sk:165 (-7218853231764834755)
+  cur1 = l2_s5.first;
+  cur2 = l2prime_s9.first;
+  while(cur1 != (null))
+  {
+    assert ((cur1.val) == (cur2.val)); //Assert at background.sk:170 (-4418667335675879108)
+    cur1 = cur1.next;
+    cur2 = cur2.next;
+  }
+  assert (cur2 == (null)); //Assert at background.sk:174 (-5819031691571717234)
+}
+/*background.sk:100*/
+
+void blah__Wrapper ()  implements blah__WrapperNospec/*background.sk:100*/
+{
+  blah();
+}
+/*background.sk:100*/
+
+void blah__WrapperNospec ()/*background.sk:100*/
+{ }
+/*background.sk:41*/
+
+void get (List l, int idx, ref Node _out)/*background.sk:41*/
+{
+  _out = null;
+  Node@ANONYMOUS cur = l.first;
+  int i = 0;
+  while(cur != (null))
+  {
+    if(i == idx)/*background.sk:46*/
+    {
+      _out = cur;
+      return;
+    }
+    cur = cur.next;
+    i = i + 1;
+  }
+  _out = null;
+  return;
+}
+/*background.sk:18*/
+
+void newList (ref List _out)/*background.sk:18*/
+{
+  _out = null;
+  _out = new List();
+  _out.first = null;
+  _out.last = null;
+  return;
+}
+/*background.sk:12*/
+
+void newNode (ref Node _out)/*background.sk:12*/
+{
+  _out = null;
+  _out = new Node();
+  _out.next = null;
+  return;
+}
+/*background.sk:56*/
+
+void remove (List l, int idx, ref Node _out)/*background.sk:56*/
+{
+  _out = null;
+  Node@ANONYMOUS cur = l.first;
+  Node@ANONYMOUS toRemove = null;
+  while(cur != (null))
+  {
+    if(0 == (idx - 1))/*background.sk:62*/
+    {
+      toRemove = cur.next;
+      cur.next = cur.next.next;
+      if((l.last) == toRemove)/*background.sk:65*/
+      {
+        l.last = cur.next;
+      }
+      _out = toRemove;
+      return;
+    }
+  }
+  _out = null;
+  return;
+}
+/*background.sk:76*/
+
+void removeAndPut (List l1, List l2, int idx, ref Node _out)/*background.sk:76*/
+{
+  _out = null;
+  Node@ANONYMOUS removedNode_s37 = null;
+  get(l1, idx, removedNode_s37);
+  _out = removedNode_s37;
+  int val;
+  val = removedNode_s37.val;
+  add(l2, val);
+  Node@ANONYMOUS _out_s39 = null;
+  remove(l1, idx, _out_s39);
+  return;
+}
+/*background.sk:85*/
+
+void removeAndPutSketch (List l1, List l2, int idx, ref Node _out)/*background.sk:85*/
+{
+  _out = null;
+  Node@ANONYMOUS removedNode_s28 = null;
+  remove(l1, 1, removedNode_s28);
+  _out = removedNode_s28;
+  int val;
+  val = removedNode_s28.val;
+  add(l2, val);
+  return;
+}
+/* END PACKAGE ANONYMOUS*/
+[SKETCH] DONE
+Total time = 502
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 1.259s
+[INFO] Finished at: Thu Mar 31 09:09:06 EDT 2016
+[INFO] Final Memory: 7M/116M
+[INFO] ------------------------------------------------------------------------

@@ -1,0 +1,33 @@
+int copySKETCH(List l1, List l2, int z0) {
+int z1 = 0;
+int z2 = 0;
+int z3 = 0;
+int z4 = 0;
+if(??) {z3 = {|get(l1,z3) |get(l1,z2) |get(l1,z1) |get(l1,z0) |get(l2,z3) |get(l2,z2) |get(l2,z1) |get(l2,z0) |remove(l1,z3) |remove(l1,z2) |remove(l1,z1) |remove(l1,z0) |remove(l2,z3) |remove(l2,z2) |remove(l2,z1) |remove(l2,z0) |}; }
+loop(??) {
+if (??) {
+if(??) {z3 = {|get(l1,z4) |get(l1,z3) |get(l1,z2) |get(l1,z1) |get(l1,z0) |get(l2,z4) |get(l2,z3) |get(l2,z2) |get(l2,z1) |get(l2,z0) |remove(l1,z4) |remove(l1,z3) |remove(l1,z2) |remove(l1,z1) |remove(l1,z0) |remove(l2,z4) |remove(l2,z3) |remove(l2,z2) |remove(l2,z1) |remove(l2,z0) |}; }
+if(??) {z4 = {|get(l1,z4) |get(l1,z3) |get(l1,z2) |get(l1,z1) |get(l1,z0) |get(l2,z4) |get(l2,z3) |get(l2,z2) |get(l2,z1) |get(l2,z0) |remove(l1,z4) |remove(l1,z3) |remove(l1,z2) |remove(l1,z1) |remove(l1,z0) |remove(l2,z4) |remove(l2,z3) |remove(l2,z2) |remove(l2,z1) |remove(l2,z0) |}; }
+}
+}
+if (??) {add(l1,z3);}
+if (??) {add(l1,z2);}
+if (??) {add(l1,z1);}
+if (??) {add(l1,z0);}
+if (??) {add(l2,z3);}
+if (??) {add(l2,z2);}
+if (??) {add(l2,z1);}
+if (??) {add(l2,z0);}
+ if (??) {add(l1,z4);}
+if (??) {add(l1,z3);}
+if (??) {add(l1,z2);}
+if (??) {add(l1,z1);}
+if (??) {add(l1,z0);}
+if (??) {add(l2,z4);}
+if (??) {add(l2,z3);}
+if (??) {add(l2,z2);}
+if (??) {add(l2,z1);}
+if (??) {add(l2,z0);}
+ return {|z0 |z1 |z2 |z3 |z4 |};
+
+}
