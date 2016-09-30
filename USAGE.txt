@@ -1,0 +1,32 @@
+For the concurrent search, there are currently two example repairs.
+Both are for the same extension, one uses locks and the other uses
+optimistic concurrency.
+
+To run them, you will need Racket 6.6.
+Go to the examples directory, and run the following commands:
+racket optimistic-verification-condition-test.rkt - for the optimistic concurrency repair
+racket lock-test.rkt - for the lock based repair
+
+
+Both repairs work on the shared library implemented in a Racket representation.
+This library is in the file mooly-library.rkt.
+
+
+
+To run the sequential search code, you will need Sketch as well as Maven 2.2.1 or later.
+Go to the c++ directory. Modify run_test.sh, so that SKETCH_HOME points to your sketch-frontend
+directory. For example:
+
+SKETCH_HOME=/home/eidelmanj/sketch-newest/sketch-frontend
+
+
+Then run Make.
+
+An example is currently in the c++ folder. background.sk contains the Sketch representation of the background
+library code, as well as a test harness to act as a verification condition for the sequential program.
+background.sk also has placeholders for BACKGROUND and SKETCH, which will be used by the search system.
+There is also a file called extension.c. This is an example for the specification for the extension method.
+
+To run the search program, run
+
+cat extension.c | ./seq_search
