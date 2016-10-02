@@ -11,6 +11,7 @@
          var-node
          var-add-node
          var-decl
+         (struct-out object-deref)
          arg-node
          arg-decl
          arg-add-node
@@ -84,7 +85,7 @@
   (digit10 (char-range "0" "9"))
   (number10 (number digit10))
   (identifier-characters (re-or (char-range "A" "z")
-                                "?" "!" ":" "$" "%" "^" "&"))
+                                "?" "!" ":" "$" "%" "^" "&" "_" (char-range "0" "9")))
   (basic-types (re-or "void" "int" "char"  "Integer" "pthread_mutex_t" "pthread_mutex_t*" "int*" "char*" (re-: "struct" " " (re-+ identifier-characters))))
   (identifier (re-+ identifier-characters))
   (loop (re-or "while" "for"))
@@ -193,6 +194,7 @@
 (define-struct decl-node (tp v))
 (define-struct cast-exp (tp e))
 (define-struct cast-exp-ptr (tp e))
+(define-struct paren-exp (e))
 
 
 (define global-id-cnt (void))
@@ -242,9 +244,10 @@
          ((exp OR exp) (make-bin-bool-exp '|| $1 $3))
          ((NOT exp) (make-un-bool-exp '! $2))
          ((VAR \. VAR) (make-obj-acc-exp $1 $3))
-         ((VAR -> VAR) (make-obj-deref-exp $1 $3))
+         ((exp -> exp) (make-obj-deref-exp $1 $3))
          (( \( TYPE  \) exp) (make-cast-exp $2 $4 ))
          (( \( TYPE * \) exp) (make-cast-exp-ptr $2 $5))
+         (( \( exp \) ) (make-paren-exp $2))
          ((& VAR) (make-empty-node))
 
          ((function-call) (make-function-call-root $1 null)))
@@ -257,14 +260,15 @@
                ((VAR = function-call \;) (make-function-call-root $3 $1))
                ((VAR = exp \;) (make-assign-stmt $1 $3))
                ((VAR \. object-access = exp \;) (make-assign-stmt (make-object-access $1 $3) $5))
-               ((VAR -> VAR = exp \;) (make-assign-stmt (make-object-deref $1 $3) $5))
+               ((exp -> exp = exp \;) (make-assign-stmt (make-object-deref $1 $3) $5))
                ((TYPE VAR = exp \;) (make-decl-node $1 (make-assign-stmt $2 $4)))
-               ((TYPE * VAR = exp \;) (make-decl-ptr-node $1 (make-assign-stmt $3 $5)))
+               ((VAR * VAR = exp \;) (make-decl-ptr-node $1 (make-assign-stmt $3 $5)))
                ((method-declaration) (make-method-root $1))
                ((function-call \;) (make-function-call-root $1 null))
                ((VAR \. object-access \;) (make-object-access $1 $3))
                ;((VAR = VAR \. object-access \;) (new-assign-obj $1 $3 $5))
                ((RETURN exp \;) (make-return-node $2))
+               ((RETURN \;) (make-return-node (make-empty-node)))
                ((single-line-if ) (make-if-stmt (make-if-root $1)))
                ((TYPE VAR \;) (make-decl-node $1 $2))
                ((TYPE * VAR \;) (make-decl-ptr-node $1 $3))
@@ -282,14 +286,19 @@
     (object-access ((VAR) (make-dereference-node $1))
                    ((function-call) (make-dereference-node (function-call-root $1 null))))
     
-    (method-declaration ((TYPE VAR \( var-list \) \{ program \} ) (make-method-node $1 $2 $4 $7) ))
+    (method-declaration
+
+     ((TYPE VAR \( var-list \) \{ program \} ) (make-method-node $1 $2 $4 $7) ))
+
     
     ;; Lists of variables for method/class declarations
     (add-var (() (make-empty-node))
-             ((\, TYPE VAR add-var) (make-var-add-node (make-var-decl $2 $3) $4)))
+             ((\, TYPE VAR add-var) (make-var-add-node (make-var-decl $2 $3) $4))
+             ((\, VAR * VAR add-var) (make-var-add-node (make-var-decl $2 $4) $5)))
     
     (var-list (() (make-empty-node))
-              ((TYPE VAR add-var) (make-var-node (make-var-decl $1 $2) $3)))
+              ((TYPE VAR add-var) (make-var-node (make-var-decl $1 $2) $3))
+              ((VAR * VAR add-var) (make-var-node (make-var-decl $1 $3) $4)))
     
     ;; List of arguments for function calls
     (add-arg (() (make-empty-node))

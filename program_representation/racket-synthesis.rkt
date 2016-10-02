@@ -84,6 +84,10 @@ To this (Racket struct) - (Method "test"
          (equal? (function-call-node-nm (function-call-root-f (cast-exp-ptr-e exp))) "malloc"))
         
         (Set-pointer (translate var) `() `()  (New-struct `() `()))]
+       [(object-deref? var)
+
+        (Set-pointer (object-deref-var var) "" (translate (object-deref-deref var)) (translate exp))]
+
        [else
              (Set-var (translate var) (translate exp))])]
     [(num-exp n)  n]
@@ -95,7 +99,7 @@ To this (Racket struct) - (Method "test"
     [(comparison-exp op expr1 expr2)
      (bin-op-struct op (translate expr1) (translate expr2))]
     [(bin-bool-exp op expr1 expr2)
-     (displayln op) (displayln (translate expr1)) (displayln (translate expr2)) (exit) 
+     ;; (displayln op) (displayln (translate expr1)) (displayln (translate expr2)) (exit) 
      (bin-op-struct op (translate expr1) (translate expr2))]
     [(arith-exp op expr1 expr2)
      (bin-op-struct op (translate expr1) (translate expr2))]
