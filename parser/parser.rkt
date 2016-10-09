@@ -14,12 +14,14 @@
          (struct-out object-deref)
          arg-node
          arg-decl
+         (struct-out paren-exp)
          arg-add-node
          user-input-node
          start-node
          program-node
          assign-obj
          single-var
+         (struct-out obj-deref-exp)
          (struct-out cast-exp)
          (struct-out cast-exp-ptr)
          (struct-out function-call-root)
@@ -117,6 +119,7 @@
    ("if" (token-IF))
    ("else" (token-ELSE))
    ("return" (token-RETURN))
+   ("NULL" (token-NULL))
    ("." (token-\.))
    ("->" (token-->))
    ("*" (token-*))

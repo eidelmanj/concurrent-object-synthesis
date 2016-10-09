@@ -34,6 +34,36 @@ To this (Racket struct) - (Method "test"
   can appear twice.
 |#
 
+
+
+(define (translate-expr expr)
+  (match expr
+    
+    [(num-exp i) i]
+    [(var-exp i)
+     (match i
+       [(null-node) (None)]
+       [_ (Get-var (translate-expr i))])]
+
+    [(null-node) (None)]
+    [(arith-exp op expr1 expr2)
+     (match op
+       ['= (Equal (translate-expr expr1) (translate-expr expr2))]
+       ['!= (Not (Equal (translate-expr expr1) (translate-expr expr2)))]
+       [ '&& (And (translate-expr expr1) (translate-expr expr2))]
+       ['||  (Or (translate-expr expr1) (translate-expr expr2))]
+       [_ ;; (displayln (string-append "FOUND" (~v op)))])]
+        (void)])]
+     
+    
+    [(paren-exp e)
+     (translate-expr e)]
+    [(obj-deref-exp expr1 expr2)
+     ;; (displayln (string-append "DEREF: " (~v expr1) (~v expr2)))
+     (Dereference (translate-expr expr1) null (translate-expr expr2))]
+    [_ expr]))
+
+
 (define (translate parsed-exp)
   (match parsed-exp
     [(empty-node) null]
@@ -60,8 +90,8 @@ To this (Racket struct) - (Method "test"
     [(if-stmt c) (translate c)]
     [(if-root e) (translate e)]
     [(if-node c p1 p2) (if (empty? (translate p2))
-                           (Single-branch (translate c) (translate p1))
-                           (Branch (translate c) (translate p1) (translate p2)))]
+                           (Single-branch (translate-expr c) (translate p1))
+                           (Branch (translate-expr c) (translate p1) (translate p2)))]
     
     [(var-node v next) (cons (translate v) (translate next))]
     [(var-add-node v next) (cons (translate v) (translate next))]
@@ -83,17 +113,17 @@ To this (Racket struct) - (Method "test"
          (function-call-root? (cast-exp-ptr-e exp))
          (equal? (function-call-node-nm (function-call-root-f (cast-exp-ptr-e exp))) "malloc"))
         
-        (Set-pointer (translate var) `() `()  (New-struct `() `()))]
+        (Set-pointer (translate-expr var) `() `()  (New-struct `() `()))]
        [(object-deref? var)
 
-        (Set-pointer (object-deref-var var) "" (translate (object-deref-deref var)) (translate exp))]
+        (Set-pointer (translate-expr (object-deref-var var)) "" (translate-expr (object-deref-deref var)) (translate-expr exp))]
 
        [else
              (Set-var (translate var) (translate exp))])]
     [(num-exp n)  n]
     [(var-exp i) (Get-var i)]
     [(loop-root loop) (translate loop)]
-    [(while-node exp body) (Loop (translate exp) (translate body))]
+    [(while-node exp body) (Loop (translate-expr exp) (translate body))]
     [(for-node init condition incr body)
      (Loop (translate condition) (append (list init condition) (translate body)))]
     [(comparison-exp op expr1 expr2)
@@ -180,8 +210,10 @@ To this (Racket struct) - (Method "test"
           [(Branch _ _ c p1 p2)
            (string-append "if(" (translate-to-c (list c)) ") {" "\n" (translate-to-c p1) "\n" "} else {" "\n" (translate-to-c p2) "\n" "}")]
           [(Loop _ _ expression body)
+
            (string-append "while(" (translate-to-c (list expression)) "){ " (translate-to-c body) " }")]
           [(Equal expr1 expr2)
+
            (string-append (translate-to-c (list expr1)) " == " (translate-to-c (list expr2)))]
           [(Not expr) (string-append "!" (translate-to-c (list expr)))]
           [(Or expr1 expr2)
