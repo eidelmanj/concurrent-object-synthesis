@@ -1,4 +1,4 @@
- #lang racket
+#lang racket
 (require "../program_representation/simulator-structures.rkt")
 (require "../utilities/utilities.rkt")
 (require "../examples/mooly-example.rkt")
@@ -91,7 +91,22 @@ void copySKETCH(List* l1, List* l2, int z0) {
   (find-argument-helper arg-list 0))
          
 
-       
+(define (reference-arg-list e arg-list)
+  (let*
+      ([matching-entry-number (find-argument-match e arg-list)])
+
+  (cond
+    [(null? matching-entry-number)
+     (Get-var (get-var-id e))]
+    [else
+     (Get-argument matching-entry-number)])))
+
+
+;; (define (expression-create-arg-refs e arg-list)
+;;   (match e
+;;     [(Get-var a) (reference-arg-list a arg-list)]
+;;     [(Dereference id tp offset) (Dereference (reference-arg-list id arg-list) tp offset)]
+;;     [(
          
 
 (define (translate-arg-list method-args arg-list)
@@ -125,10 +140,59 @@ void copySKETCH(List* l1, List* l2, int z0) {
 
 
 
+(define (remove-uneccessary-get-var a)
+  (match a
+    [(Get-var b) b]
+    [(var-exp e) (remove-uneccessary-get-var e)]
+    [_ a]))
+
+
+
+(define (argument-definitions arg-list)
+  (reduce
+   append
+   (map
+    (lambda (a)
+      (list
+       (Create-var (Argument-id a) (Argument-type a))
+       (Set-var (Argument-id a) (Get-argument (find-argument-match (Get-var (Argument-id a)) arg-list)))))
+    arg-list)))
+
+
 (define (complete-racket-translation instr-list arg-list)
   ;; (displayln "translating line...")
   (cond
     [(empty? instr-list) `()]
+
+    [(and
+      (Run-method? (first instr-list))
+      (equal?
+       (substring (Run-method-method (first instr-list)) 0 3)
+       "new")
+      )
+
+
+
+
+
+
+     
+
+
+     (append
+      (list
+       (Create-var (get-return-var (Run-method-args (first instr-list)))
+                   (substring (Run-method-method (first instr-list)) 3 (string-length
+                                                                        (Run-method-method (first instr-list)))))
+       (Set-var (remove-uneccessary-get-var (Run-method-ret (first instr-list)))
+                (New-struct (substring (Run-method-method (first instr-list))
+                                       3
+                                       (string-length
+                                        (Run-method-method (first instr-list))))
+                            (Run-method-args (first instr-list)))))
+      (complete-racket-translation (rest instr-list) arg-list))]
+
+    
     [(Set-var? (first instr-list))
      (append
       (list
@@ -157,7 +221,16 @@ void copySKETCH(List* l1, List* l2, int z0) {
       (list
        (Return (Get-var "_out")))
       (complete-racket-translation (rest instr-list) arg-list))]
-       
+
+    [(Set-pointer? (first instr-list))
+     (append
+      (list
+       (Set-pointer
+        (remove-uneccessary-get-var (Set-pointer-id (first instr-list)))
+        (remove-uneccessary-get-var (Set-pointer-type (first instr-list)))
+        (remove-uneccessary-get-var (Set-pointer-offset (first instr-list)))
+        (remove-uneccessary-get-var (Set-pointer-val (first instr-list)))))
+      (complete-racket-translation (rest instr-list) arg-list))]
 
     [else
      (append
@@ -167,6 +240,9 @@ void copySKETCH(List* l1, List* l2, int z0) {
 
 
       
+
+
+
   
 
 (define (convert-method-args args)
@@ -204,6 +280,7 @@ void copySKETCH(List* l1, List* l2, int z0) {
 (define lib-str   "
 
 void add(List* l, int newVal) {
+
   newNode(newN_s186);
   newN_s186->val = newVal;
   if ((l->first) == (NULL)) {
@@ -278,8 +355,33 @@ void remove(List* l, int idx, int _out) {
                  (input (open-input-string test-program)))
               (translate (simple-math-parser (lex-this simple-math-lexer input)))))
 
+
+
+
+
+
+
+
+
+
+
+
+
+(displayln (Method-id (first lst2)))
+
+
+
+(argument-definitions (Method-args (first lst2)))
+
+
+(define (combine-all-repairs instr-list arg-list)
+  (append
+   (argument-definitions arg-list)
+   (complete-racket-translation instr-list arg-list)))
+
+
 (map
  (lambda (l)
    (displayln l))
- (complete-racket-translation (Method-instr-list (first lst2)) (Method-args (first lst2))))
+ (combine-all-repairs (Method-instr-list (first lst2)) (Method-args (first lst2))))
 
