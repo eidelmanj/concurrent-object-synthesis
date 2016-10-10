@@ -52,7 +52,9 @@ To this (Racket struct) - (Method "test"
        ['!= (Not (Equal (translate-expr expr1) (translate-expr expr2)))]
        [ '&& (And (translate-expr expr1) (translate-expr expr2))]
        ['||  (Or (translate-expr expr1) (translate-expr expr2))]
-       [_ ;; (displayln (string-append "FOUND" (~v op)))])]
+       ['+ (Add (translate-expr expr1) (translate-expr expr2))]
+       ['- (Subtract (translate-expr expr1) (translate-expr expr2))]
+       [_ (displayln (string-append "FOUND" (~v op)))
         (void)])]
      
     
@@ -119,7 +121,7 @@ To this (Racket struct) - (Method "test"
         (Set-pointer (translate-expr (object-deref-var var)) "" (translate-expr (object-deref-deref var)) (translate-expr exp))]
 
        [else
-             (Set-var (translate var) (translate exp))])]
+             (Set-var (translate var) (translate-expr exp))])]
     [(num-exp n)  n]
     [(var-exp i) (Get-var i)]
     [(loop-root loop) (translate loop)]
