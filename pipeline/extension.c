@@ -1,0 +1,11 @@
+[List l1, List l2][get, remove, add] [add ]
+int copy(List l1, List l2, int idx) {
+  int removedNode;
+  removedNode = get(l1, idx);
+
+  add(l2, removedNode);
+  remove(l1, idx);
+  return removedNode;
+  
+}
+  
