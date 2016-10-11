@@ -46,6 +46,7 @@
                             (Create-var (car var) (cdr var))))
      (define vars (cons mut-ret (map car variables)))
 
+
      ; Run the instrumented method and get the results.
      (define results (interpret (append init declarations instrs) vars))
      (define result-trace (hash-ref results reserved-trace-keyword))
@@ -62,6 +63,7 @@
                       op]
                      [_ #f])
                    result-trace))
+
      ; Right now, client operations in the result trace are "tagged" with
      ;  partially-evaluated versions of their arguments. Now that we've processed
      ;  those, get rid of them.
@@ -75,6 +77,7 @@
      ; If some client methods were never run, we say our trace is infeasible.
      ; Client methods that were never run will have void as their return value.
      (define infeasible-witnesses (filter-hash void? results))
+
 
      (cond
        [(empty? infeasible-witnesses)

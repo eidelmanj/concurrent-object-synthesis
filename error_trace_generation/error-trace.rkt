@@ -156,14 +156,17 @@
 
   (define results '())
 
+
   ; why does this work?
   (prompt
    (for ([(trace vars client) (in-producer g stop-value?)])
      ; Three possible results: the trace is linearizable, the trace is not
      ;  linearizable, or we couldn't come up with arguments to make the trace
      ;  feasible.
+
      (define result
        (linearizable trace mut client vars pointers lib interpreter arguments init))
+     ;; (displayln "Did I make it here?")
      (unless (lin-result-t/f result)
        (unless (null? (lin-result-trace result))
          (set! results (append results (list result))))
