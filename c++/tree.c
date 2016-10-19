@@ -308,6 +308,17 @@ EXP *makeExpEqCheck(EXP *left, EXP *right) {
   return e;
 }
 
+EXP *makeExpNeqCheck(EXP *left, EXP *right) {
+  EXP *e;
+  e = NEW(EXP);
+  e->lineno = lineno;
+  e->kind = neqCheckK;
+  e->val.eqCheckE.left = left;
+  e->val.eqCheckE.right = right;
+  return e;
+}
+
+
 EXP *makeExpDotAccess(char *left, char *right) {
   EXP *e;
   e = NEW(EXP);
