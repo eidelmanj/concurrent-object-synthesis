@@ -24,7 +24,7 @@ void yyerror() {
 
 %token <intconst> tINTCONST
 %token <stringconst> tIDENTIFIER 
-%token IF ELSE RETURN ASSERT EQ UNKNOWN
+%token IF ELSE RETURN ASSERT EQ UNKNOWN NEQ
 
 
 %type	<program> program
@@ -102,11 +102,14 @@ exp : tIDENTIFIER
     | exp '-' exp
       { $$ = makeEXPminus ($1, $3); }
 
+	|	'-' exp { $$ = NULL; } %prec '*'
+
     | '(' exp ')'
       { $$ = $2; }
 |	func_call {$$ = makeExpFuncCall($1);}
 	|	tIDENTIFIER '.' tIDENTIFIER
 	{$$ = makeExpDotAccess($1, $3);}
 |	exp EQ exp {$$ = makeExpEqCheck($1, $3); }
+|	exp NEQ exp {$$ = makeExpNeqCheck($1, $3); }
 ;
 %%

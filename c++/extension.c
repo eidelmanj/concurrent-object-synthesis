@@ -1,11 +1,18 @@
-[List l1, List l2][get, remove] [add]
-int copy(List l1, List l2, int idx) {
-  int removedNode;
-  removedNode = get(l1, idx);
+[List l1, List l2][get, remove, push] [push ]
+int copy(List l1, List l2,  int key) {
+  int val1;
+  int val2;
+  val1 = get(l1, key);
 
-  add(l2, removedNode);
-  remove(l1, idx);
-  return removedNode;
-  
+
+
+  if (val1 != -100) {
+    val2 = get(l2, val1);
+    if (val2 != -100) {
+      return val2;
+    }
+  }
+
+  return -100;
 }
   
