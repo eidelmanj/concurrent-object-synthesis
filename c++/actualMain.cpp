@@ -206,7 +206,7 @@ void start(PROGRAM *p)
 
 
   int arity = space_explorer.get_arity("this");
-  vector< pair<PROGRAM*, int> > newP = space_explorer.sequential_search(emptyProg, 2, tNone, arity);
+  vector< pair<PROGRAM*, int> > newP = space_explorer.sequential_search(emptyProg, 4, tNone, arity);
 
 
 

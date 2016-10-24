@@ -80,6 +80,8 @@ searcher::searcher(vector< pair<string, string> > shared_in, vector<string> read
     // For map
     returnType.insert(make_pair("get", "int"));
     returnType.insert(make_pair("remove", "int"));
+    returnType.insert(make_pair("putIfAbsent", "int"));
+    returnType.insert(make_pair("compute", "int"));
     returnType.insert(make_pair("push", "int"));
     
     funcReturnType = funcReturnType_in;
@@ -90,6 +92,8 @@ searcher::searcher(vector< pair<string, string> > shared_in, vector<string> read
     funcArity.insert(make_pair("get", 2));
     funcArity.insert(make_pair("push", 3));
     funcArity.insert(make_pair("remove", 2));
+    funcArity.insert(make_pair("putIfAbsent", 3));
+    funcArity.insert(make_pair("compute", 1));
     funcArity.insert(make_pair("this", 3));
 
     // funcArity.insert(make_pair("this", 3));
@@ -287,6 +291,7 @@ pair<PROGRAM*, int> searcher::perform_transformation(PROGRAM *p, transform_choic
     cout << "Adding read statments\n";
 
     addAssignment(innerP, curVarId);
+    // curVarId++;
     curVarId = addReadStmt(innerP, curVarId);
 
 
@@ -711,7 +716,7 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
 
   bool fstFlag = false;
   if (curVarId == get_arity("this")) {
-    // fstFlag = true;
+    fstFlag = true;
   }
   
   curVarId++;
@@ -727,7 +732,9 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
   // but I haven't seen any examples like that so to make the search faster
   // this is what we'll do
   for (int i = get_arity("this"); i < curVarId; i++) {
-    ifStr += "("  + getVarId(i) + " == -1 ) |";
+    ifStr += "("  + getVarId(i) + " == -100 ) | (" + getVarId(i) + " != -100 ) |";
+      // (" + getVarId(i) + " == ??) | (" + getVarId(i) + " != ??)
+      // ifStr += "|";
   }
 
   ifStr += "}";
@@ -826,6 +833,9 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
 
     }
 
+
+    std::cout << "one line empty: ";
+
     std::cout << regexStr;
 
 
@@ -876,15 +886,41 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
         newE->kind = regexK;
 
     string regexStr = "";
-    for (int i = get_arity("this"); i< curVarId; i++) {
+    for (int i = // get_arity("this")
+	   curVarId - 1
+	   ; i< curVarId; i++) {
 
-      if (! fstFlag) {
+      // if (! fstFlag) {
 	regexStr += "if("+ ifStr +") {" + getVarId(i) + " = {|";
-      }
-      else {
-	regexStr +=  getVarId(i) + " = {|";
-      }
+      // }
+      // else {
+      // 	regexStr +=  getVarId(i) + " = {|";
+      // }
       for(vector<string>::iterator it = reads.begin(); it != reads.end(); ++it) {
+
+	// If we're writing the first line, we skip anything that isn't a read
+
+	if (fstFlag && (*it).compare("get")) {
+	  std::cout << "skipping " << *it << "\n";
+	  continue;
+	}
+
+
+	if (!(*it).compare("compute")) {
+
+	  for (int i = get_arity("this"); i < curVarId; i++) {
+	    regexStr += "compute(" + getVarId(i) +") |";
+	  }
+
+
+	  continue;
+	  
+	}
+	  
+
+
+
+	
 	for (vector< pair<string, string> >::iterator jt = shared.begin(); jt != shared.end(); ++jt) {
 
 	  funcCallVec = generateCall("", *it, (*jt).second, curVarId);
@@ -922,22 +958,30 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
       }
       
       regexStr += "};\n";
-      if (! fstFlag) {
-	regexStr += "}\n";
-      }
+
+      regexStr += "}\n";
+
     }
+
 
 
 
 
     if (fstFlag) {
+    regexStr += "if(";
+    regexStr += ifStr;
+    regexStr +=") { return {|-100 | ";
 
-      regexStr += "if(";
-      regexStr += getVarId(curVarId - 1);
-      regexStr += " == -100) { return -100; }\n";
-
+    for (int i = get_arity("this"); i < curVarId; i++) {
+      regexStr +=  getVarId(i) +" |";
     }
 
+    regexStr +="}; }";
+    }
+      
+  
+
+    std::cout << "One line full: ";
     std::cout << regexStr;
 
 
@@ -1082,7 +1126,10 @@ void searcher::addAssignment(PROGRAM *p, int numVars) {
   // }
   cout << " Initializing new exp...\n";
   EXP *newE = new EXP;
-  string regexStr = "{|";
+  string regexStr = ""; // "int ";
+  // regexStr += getVarId(numVars);
+  // regexStr += ";\n";
+  regexStr += "{|";
   PROGRAM *newP = copyProgram(p);
   cout << "Program copied\n";
   
