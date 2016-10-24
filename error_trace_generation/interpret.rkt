@@ -27,13 +27,18 @@
 (define (make-define-lambda method [log #f])
   (match method
     [(Method (q id) args ret-type instr-list)
+
      (define parameters (map make-arg args))
+     ;; (display "Method to interpret: ")
+     ;; (displayln (transform-and-instrument instr-list log))
      `(define (,id ,@parameters)
+        
         ; Support for the return keyword
         (let/cc return
           ; A list of parameters for Get-argument
           (define ,reserved-parameters-keyword (list ,@parameters))
           ; Method body
+          
           ,@(transform-and-instrument instr-list log)))]))
 
 ; Return a function that takes a list of instructions and executes them
@@ -43,6 +48,10 @@
   ;  in the execution environment.
   (define library-defs
     (map make-define-lambda library))
+
+
+  ;; (displayln "Methods:")
+  ;; (map pretty-display library-defs)
 
   ; This namespace requires the larger racket library and then instantiates
   ;  the library method definitions so compiled programs can just call the
@@ -54,6 +63,10 @@
 
       ; Important struct definitions. Node is temporary.
       (eval '(struct Node (next key val bits) #:mutable))
+      (eval '(struct None ()))
+      (eval '(struct List (first last) #:mutable))
+
+      
 
       ; Dummy methods for lock and unlock.
       (eval '(define (lock x) (void)))
@@ -182,10 +195,20 @@
     [(Create-var _ _ (q id) _) `(define ,id (void))]
     [(Set-var _ _ (q id) (x assignment)) `(set! ,id ,assignment)]
     [(Get-var (q id)) id]
-    [(Set-pointer _ _ (x id) type offset (x val)) (to-mutator id type offset val)]
+    [(Set-pointer _ _ (x id) type offset (x val))
+     ;; (display "set pointer: ")
+     ;; (displayln (to-mutator id type offset val))
+     
+
+
+     (to-mutator id type offset val)]
     [(Return _ _ (x expr)) `(return ,expr)]
 
-    [(New-struct (q type) parameters) `(,type ,@(map transform parameters))]
+    [(New-struct (q type) parameters)
+     ;; (display "new struct ") (display  type) (display ": ")
+     ;; (displayln parameters)
+     ;; (exit)
+     `(,type ,@(map transform parameters))]
 
     ; Method parameters are stored in a list with id reserved-parameters-keyword.
     [(Get-argument _ _ index) `(list-ref ,reserved-parameters-keyword ,index)]

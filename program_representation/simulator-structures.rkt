@@ -348,7 +348,7 @@
    Run-Method))
 
 
-(struct New-struct (type arg-list))
+(struct New-struct (type arg-list) #:transparent)
 
 (define-struct Dereference (id type offset) #:transparent)
 (define-struct Equal (expr1 expr2) #:transparent)

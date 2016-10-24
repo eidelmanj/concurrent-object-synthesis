@@ -14,7 +14,8 @@
          return-type
          number-lines
          make-pointers-table
-         pick-arguments)
+         pick-arguments
+         num-instrumentation-points)
 
 
 ; Given a method name and a library, return the corresponding Method struct in library.
@@ -272,3 +273,51 @@
                                      (hash-set! args-of-type type (rest values))
                                      (first values)]
       [else (first (hash-ref pointers type))])))
+
+; Return the number of possible instrumentation points (in this case, method calls)
+;  present in instrs.
+(define (num-instrumentation-points instrs)
+  (define (helper instrs accumulator)
+    (match instrs
+      ['() accumulator]
+      [`(,(Run-method _ _ _) . ,tail) (helper tail (add1 accumulator))]
+      [`(,(Single-branch _ branch) . ,tail) (helper tail
+                                                   (+ accumulator
+                                                      (num-instrumentation-points branch)))]
+      [`(,(Branch _ b1 b2) . ,tail) (helper tail (+ accumulator
+                                                   (num-instrumentation-points b1)
+                                                   (num-instrumentation-points b2)))]
+      [`(,(Loop _ body) . ,tail) (helper tail (+ accumulator
+                                                (num-instrumentation-points body)))]
+      [`(,head . ,tail) (helper tail accumulator)]))
+  (helper instrs 0))
+
+(module+ test
+  (define flat-ast
+    `(,(Create-var 'x 'int)
+      ,(Set-var 'x 0)
+      ,(Run-method 'a '() null)
+      ,(Set-var 'x 2)
+      ,(Run-method 'b '() null)
+      ,(Return (Get-var 'x))))
+  (check-equal? (num-instrumentation-points flat-ast) 2)
+
+  (define two-level-ast
+    `(,(Create-var 'x 'int)
+      ,(Set-var 'x 0)
+      ,(Single-branch #f `(,(Run-method 'a '() null)
+                           ,(Run-method 'b '() null)))
+      ,(Run-method 'c '() null)
+      ,(Return (Get-var 'x))))
+  (check-equal? (num-instrumentation-points two-level-ast) 3)
+
+  (define many-level-ast
+    `(,(Create-var 'x 'int)
+      ,(Set-var 'x 0)
+      ,(Branch #f
+               `(,(Run-method 'a '() null)
+                 ,(Loop #f `(,(Run-method 'b '() null))))
+               `(,(Single-branch #f `(,(Run-method 'c '() null)))))
+      ,(Run-method 'd '() null)
+      ,(Return (Get-var 'x))))
+  (check-equal? (num-instrumentation-points many-level-ast) 4))

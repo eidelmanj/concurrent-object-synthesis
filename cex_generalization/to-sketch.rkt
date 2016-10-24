@@ -356,7 +356,12 @@
      (string-append "(" (New-struct-type instr) " " (reduce string-append (map (lambda (v) (string-append " " (to-string-instr v arg-store scope-num parent-scope))) (New-struct-arg-list  instr))) ")")]
 
     [(list? instr)
-     (string-append "(list " (reduce (lambda (a b) (string-append a " " b)) (map (lambda (i) (to-string-instr i arg-store scope-num parent-scope)) instr)) ")")]
+     ;; (display "found list: ")
+     ;; (displayln instr)
+     (string-append "(list " (reduce (lambda (a b) (string-append a " " b))
+                                     (map
+                                      (lambda (i)
+                                        (to-string-instr i arg-store scope-num parent-scope)) instr)) ")")]
 
 
     [(None? instr)
