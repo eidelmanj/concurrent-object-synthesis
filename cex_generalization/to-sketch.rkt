@@ -105,14 +105,14 @@
   (cond
     [(empty? instr-list) ""]
     [else
-     ;; (display "FIRST INSTR: ") (displayln instr-list)
+     (display "FIRST INSTR: ") (displayln instr-list)
      (let ([elem (first instr-list)])
        (cond
          [(Loop? elem)
           (let ([loop-name (new-sim-loop-name)])
             (string-append
              "(define (" loop-name " c )\n"
-             "(if c\n"
+             "(if (and (void? TO-RETURN) c)\n"
              "(begin\n"
              (print-non-sketch-simulation (Loop-instr-list elem) library arg-store ret-store scope-num parent-scope)
              "(" loop-name " " (to-string-instr (Loop-condition elem) arg-store scope-num parent-scope) "))\n"
@@ -226,7 +226,10 @@
 
          [(Set-var? elem)
           ;; "todo\n"]
-          ;; (display "found set var\n")
+
+          (display "SETVARID: ")
+          (displayln (Set-var-id elem))
+          (display "string?: ") (if (string? (Set-var-id elem)) (displayln "STRING") (displayln "nope"))
           (string-append
            "(set! " (Set-var-id elem) ;; (~v (get-most-recent-binding (Set-var-id elem) scope-num parent-scope))
            " " (to-string-instr (Set-var-assignment elem) arg-store scope-num parent-scope) ")\n"
@@ -266,12 +269,16 @@
 
 
          [(Return? elem)
+          ;; (displayln "found return")
+          ;; (displayln (to-string-instr (Return-val elem) arg-store scope-num parent-scope))
           (string-append
            ;; "(display \"returning....."  (to-string-instr (Return-val elem) arg-store scope-num parent-scope) "\n\")\n"
            ;; "(set! " ret-store ;; (~v (get-most-recent-binding ret-store scope-num parent-scope))
            ;; " " (to-string-instr (Return-val elem) arg-store scope-num parent-scope) ")\n"
            "(set! method-exit #t)\n"
+           "(if (void? TO-RETURN) (begin "
            "(set! TO-RETURN " (to-string-instr (Return-val elem) arg-store scope-num parent-scope) " )\n"
+           ") (begin (void) ))\n"
            ;; (to-string-instr (Return-val elem) arg-store scope-num parent-scope)
           )]
            ;; (print-non-sketch-simulation (rest instr-list) library arg-store ret-store))]
@@ -299,7 +306,7 @@
       "set! " (to-string-instr instr arg-store scope-num parent-scope))]))
 
 (define (to-string-instr instr arg-store scope-num parent-scope)
-  ;; (display "to-string: ") (display instr) (display "\n")
+  (display "to-string-instr: ") (display instr) (display "\n")
   (cond
 
     [(Optimistic-Condition? instr)
@@ -330,6 +337,14 @@
      (string-append "(not " (to-string-instr (Not-expr instr) arg-store scope-num parent-scope) ")")]
     [(And? instr)
      (string-append "(and " (to-string-instr (And-expr1 instr) arg-store scope-num parent-scope) " " (to-string-instr (And-expr2 instr) arg-store scope-num parent-scope) ")")]
+
+    [(Add? instr)
+     (string-append "(+ " (to-string-instr (Add-expr1 instr) arg-store scope-num parent-scope) " " (to-string-instr (Add-expr2 instr) arg-store scope-num parent-scope) ")")]
+
+    [(Subtract? instr)
+     (string-append "(- " (to-string-instr (Subtract-expr1 instr) arg-store scope-num parent-scope) " " (to-string-instr (Subtract-expr2 instr) arg-store scope-num parent-scope) ")")]
+
+    
     [(Get-var? instr)
      (string-append (Get-var-id instr) ;; (~v (get-most-recent-binding (Get-var-id instr) scope-num parent-scope))
                     )]
