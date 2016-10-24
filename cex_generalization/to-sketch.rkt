@@ -26,11 +26,14 @@
 ;; Find all the return variables of interfering methods
 ;; so that we can initialize them in sketch
 (define (get-interfering-ret-vars t)
+
   (let ([interfering-lines
          (filter
           (lambda (ti)
             (and (Run-method? ti) (boolean? (C-Instruction-thread-id ti))))
           t)])
+
+    (display "getting interfering for: ") (displayln t)
     (unique
      equal?
      (map
@@ -330,6 +333,8 @@
      (string-append "(not " (to-string-instr (Not-expr instr) arg-store scope-num parent-scope) ")")]
     [(And? instr)
      (string-append "(and " (to-string-instr (And-expr1 instr) arg-store scope-num parent-scope) " " (to-string-instr (And-expr2 instr) arg-store scope-num parent-scope) ")")]
+    [(Multiply? instr)
+     (string-append "(* " (to-string-instr (Multiply-expr1 instr) arg-store scope-num parent-scope) " " (to-string-instr (Multiply-expr2 instr) arg-store scope-num parent-scope) ")")]
     [(Get-var? instr)
      (string-append (Get-var-id instr) ;; (~v (get-most-recent-binding (Get-var-id instr) scope-num parent-scope))
                     )]
@@ -974,8 +979,9 @@ opt-conds)))
       (let ([opt-meta-id (~v (Optimistic-Info-id opt-info))]
             [opt-possible-vals (Optimistic-Info-possible-vals opt-info)])
         (string-append
-         "(define OPT" opt-meta-id " (lambda ()
+         "(define OPT" opt-meta-id "(choose\n (lambda () #f)\n (lambda ()
 (choose
+
  (not (equal? (method-choice" opt-meta-id (~v depth)") (var-choice" opt-meta-id (~v depth)")))\n"
 
 
@@ -995,10 +1001,10 @@ opt-conds)))
           (range1 1 i)))
         ")\n"))
      (range1 2 depth)))
-   ")))\n"]
+   "))))\n"]
 
   [else
-   ")))\n"]))))
+   "))))\n"]))))
 
 opt-info-list)))
 
@@ -1024,7 +1030,7 @@ opt-info-list)))
            (string-append
             "
 (define method-choice" opt-meta-id (~v depth) "\n"
- "            (choose\n"
+ "            (choose\n (lambda () #f)\n"
 
                (reduce
 string-append
@@ -1052,7 +1058,7 @@ opt-info-list))
            (string-append
             "
 (define var-choice" opt-meta-id (~v depth) "\n"
- "            (choose\n"
+ "            (choose\n (lambda () #f)\n"
 
                (reduce
 string-append
