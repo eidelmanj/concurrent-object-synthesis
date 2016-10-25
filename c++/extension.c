@@ -6,11 +6,11 @@ int copy(List l1, List l2,  int key) {
 
 
 
+
   if (val1 != -100) {
-    val2 = get(l2, val1);
-    if (val2 != -100) {
-      return val2;
-    }
+    remove(l2, key);
+    val2 = push(l2, key, val1);
+    return val2;
   }
 
   return -100;
