@@ -312,6 +312,7 @@
 ;; Run Aliya's code to find error traces
 ;; For now  initial values are preset
 (bound 1)
+(max-client-length 2)
 (define-values (err-traces numbered-method)
   (error-traces
    library
