@@ -549,9 +549,9 @@
       (C-Instruction? (first trace))
       (equal? (C-Instruction-instr-id (first trace)) (Hole-method1 hole)))
 
-     ;; (display "found: ") (displayln (C-Instruction-instr-id (first trace)))
-     ;; (display "found-hole: ") (displayln (Hole-method1 hole))
-     ;; (display "to-end-of-hole: ") (displayln (to-end-of-hole (rest trace) hole))
+     (display "found: ") (displayln (C-Instruction-instr-id (first trace)))
+     (display "found-hole: ") (displayln (Hole-method1 hole))
+     (display "to-end-of-hole: ") (displayln (to-end-of-hole (rest trace) hole))
      (map (append-list (list (first trace)
                              (Optimistic-Check opt-id #f)))
           (map
@@ -587,18 +587,32 @@
 
 
 (define (shuffle-in trace instr opt-id)
-  ;; (display "shuffling: ") (displayln trace)
+  (display "shuffling: ") (displayln trace)
   (cond
     [(empty? trace) (list (list
                            instr
                            (Optimistic-Check opt-id #t)))]
+    [(null? instr)
+     (list trace)]
+
+    ;; This way we don't have to remove the interfering things beforehand
+    [(boolean? (C-Instruction-thread-id (first trace)))
+     (shuffle-in (rest trace) instr opt-id)]
+    
     [else
-     (map (lambda (l) (append (list (first trace)
-                                    instr
-                                    (Optimistic-Check opt-id #t))
-                              l))
+     (append
+      (map (lambda (l) (append (list (first trace)
+                                     instr
+                                     (Optimistic-Check opt-id #t))
+                               l))
                                     
-          (shuffle-in (rest trace) instr opt-id))]))
+           (shuffle-in (rest trace) `() opt-id))
+      
+      (map (lambda (l) (append (list (first trace)
+                               l)))
+                                    
+           (shuffle-in (rest trace) instr opt-id)))]))
+      
 
       
 
@@ -1606,14 +1620,15 @@
   ;; ;; (displayln (second hole-set))
 
 
+  
+
+
   ;; To repair a hole we need a witness to that hole
   (define witness-traces
 
     (map (lambda (h)
            (cons h (find-matching-trace result-trace-lists h)))
          hole-set))
-
-
 
 
   ;; We then need to get a concrete instance of the hole - confusingly called a Hole
@@ -1628,6 +1643,7 @@
      witness-traces))
 
   ;; ;; (displayln all-concrete-holes)
+
 
 
 
@@ -1672,6 +1688,8 @@
 
   ;; Why does this only sometimes happen?
   (define all-no-interrupt-witnesses all-no-decl-witnesses)
+
+
   
   
   (define counter-count (void))
@@ -1689,7 +1707,8 @@
         (cdr instr-list)
         (car instr-list)))
      all-no-interrupt-witnesses))
-  
+
+
   
   
   ;; (optimistic-merge (first opt-trace-list) (second opt-trace-list))
@@ -1704,6 +1723,10 @@
      (map
       (lambda (t) (optimistic-verification-condition (Optimistic-Trace-instr-list t) (Optimistic-Trace-hole t) (Optimistic-Trace-id t)))
       opt-trace-list)))
+
+  (displayln "WITNESSES: ")
+  (map (lambda (l) (displayln l)) all-feasible-traces)
+
   
   
   
