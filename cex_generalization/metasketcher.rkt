@@ -22,6 +22,7 @@
  optimistic-grammar-sketch
  minimal-lock
  optimistic-repair
+ connect-solutions-end-to-end
  )
 
 (define optimistic-count (void))
@@ -448,7 +449,16 @@
 
 
 
-
+;; Determines if a Run-Method is a read or not. Works for lists and maps. 
+(define (is-read? m)
+  (cond
+    [(and
+      (Run-method? m)
+      (or
+       (equal? (Run-method-method m) "get")
+       (equal? (Run-method-method m) "contains")))]
+    [else
+     #f]))
 
 ;; Optimistic Concurrency: Generates the grammar of possible optimistic conditions
 (define (optimistic-grammar-sketch trace hole)
@@ -466,7 +476,9 @@
       (equal? (C-Instruction-instr-id (first trace)) (Hole-method1 hole)))
      `()]
 
-    [(Run-method? (first trace))
+    [(and
+      (Run-method? (first trace))
+      (is-read? (first trace)))
      (append
       (list (first trace))
       (optimistic-grammar-sketch (rest trace) hole))]
@@ -537,9 +549,9 @@
       (C-Instruction? (first trace))
       (equal? (C-Instruction-instr-id (first trace)) (Hole-method1 hole)))
 
-     ;; (display "found: ") (displayln (C-Instruction-instr-id (first trace)))
-     ;; (display "found-hole: ") (displayln (Hole-method1 hole))
-     ;; (display "to-end-of-hole: ") (displayln (to-end-of-hole (rest trace) hole))
+     (display "found: ") (displayln (C-Instruction-instr-id (first trace)))
+     (display "found-hole: ") (displayln (Hole-method1 hole))
+     (display "to-end-of-hole: ") (displayln (to-end-of-hole (rest trace) hole))
      (map (append-list (list (first trace)
                              (Optimistic-Check opt-id #f)))
           (map
@@ -575,18 +587,32 @@
 
 
 (define (shuffle-in trace instr opt-id)
-  ;; (display "shuffling: ") (displayln trace)
+  (display "shuffling: ") (displayln trace)
   (cond
     [(empty? trace) (list (list
                            instr
                            (Optimistic-Check opt-id #t)))]
+    [(null? instr)
+     (list trace)]
+
+    ;; This way we don't have to remove the interfering things beforehand
+    [(boolean? (C-Instruction-thread-id (first trace)))
+     (shuffle-in (rest trace) instr opt-id)]
+    
     [else
-     (map (lambda (l) (append (list (first trace)
-                                    instr
-                                    (Optimistic-Check opt-id #t))
-                              l))
+     (append
+      (map (lambda (l) (append (list (first trace)
+                                     instr
+                                     (Optimistic-Check opt-id #t))
+                               l))
                                     
-          (shuffle-in (rest trace) instr opt-id))]))
+           (shuffle-in (rest trace) `() opt-id))
+      
+      (map (lambda (l) (append (list (first trace)
+                               l)))
+                                    
+           (shuffle-in (rest trace) instr opt-id)))]))
+      
 
       
 
@@ -1189,58 +1215,308 @@
 
 
 
-  
+;; (define (from-before-hole instr-list h)
+;;   (cond
+;;     [(empty? 
+
+(define (remove-all-locks instr-list h locknum)
+  (cond
+    [(empty? instr-list)
+     `()]
+    [(Single-branch? (first instr-list))
+     (append
+      (list (Single-branch (Single-branch-condition (first instr-list))
+                           (remove-all-locks (Single-branch-branch (first instr-list))
+                                             h
+                                             locknum)))
+      (remove-all-locks (rest instr-list) h locknum))]
+    [(Branch? (first instr-list))
+     (append
+      (list
+       (Branch (Branch-condition (first instr-list))
+               (remove-all-locks (Branch-branch1 (first instr-list)) h locknum)
+               (remove-all-locks (Branch-branch2 (first instr-list)) h locknum)))
+      (remove-all-locks (rest instr-list) h locknum))]
+    [(and
+      (Lock? (first instr-list))
+      (equal? (Lock-id (first instr-list)) locknum))
+     (remove-all-locks (rest instr-list) h locknum)]
+    [else
+     (append
+      (list (first instr-list))
+      (remove-all-locks (rest instr-list) h locknum))]))
+
+
+
+
+(define (from-before-hole instr-list h locknum)
+  (displayln "from before hole")
+  (displayln instr-list)
+  (displayln h)
+  (displayln "------------------")
+  (cond
+    [(empty? instr-list)
+     `()]
+    [(Single-branch? (first instr-list))
+     (append
+      (list (Single-branch (Single-branch-condition (first instr-list))
+                           (from-before-hole (Single-branch-branch (first instr-list))
+                                             h
+                                             locknum)))
+      (from-before-hole (rest instr-list) h locknum))]
+    [(Branch? (first instr-list))
+     (append
+      (list
+       (Branch (Branch-condition (first instr-list))
+               (from-before-hole (Branch-branch1 (first instr-list)) h locknum)
+               (from-before-hole (Branch-branch2 (first instr-list)) h locknum)))
+      (from-before-hole (rest instr-list) h locknum))]
+    [(and
+      (C-Instruction? (first instr-list))
+      (equal? (C-Instruction-instr-id (first instr-list))
+              (hole-before h)))
+
+     (display "LOCKING: ") (displayln locknum) (displayln "")
+
+     (append
+      (list (Lock locknum))
+      (list (first instr-list))
+      (remove-all-locks (rest instr-list) h locknum))]
+    [else
+      (from-before-hole (rest instr-list) h locknum)]))
+
+
+(define (hole-ends-inside s h)
+  (cond
+    [(empty? s) #f]
+    [(and
+      (C-Instruction? (first s))
+      (equal? (C-Instruction-instr-id (first s))
+              (hole-after h)))
+     #t]
+    [else
+     (or
+      #f
+      (hole-ends-inside (rest s) h))]))
+     
+
+            
+(define (connect-solutions-end-to-end s1 s2 h1 h2  locknum switch)
 
   
-  
+  (cond
+    [(empty? s1) `()]
 
+    [(Single-branch? (first s1))
+
+       
+     (append
+      (list (Single-branch (Single-branch-condition (first s1))
+                           (connect-solutions-end-to-end
+                            (Single-branch-branch (first s1))
+                            s2
+                            h1
+                            h2
+                            locknum
+                            switch)))
+      (connect-solutions-end-to-end
+       (rest s1)
+       s2
+       h1
+       h2
+       locknum
+       switch))]
+ 
+      ;; (if (hole-ends-inside (Single-branch-branch (first s1)) h1)
+      ;;     (remove-all-locks (rest s1) h2 locknum)
+      ;;     (connect-solutions-end-to-end
+      ;;                       (rest s1)
+      ;;                       s2
+      ;;                       h1
+      ;;                       h2
+      ;;                       locknum
+      ;;                       switch)))]
+          
+
+
+
+            
+    [(and (C-Instruction? (first s1))
+          (equal?
+           (C-Instruction-instr-id (first s1))
+           (hole-after h1)))
+     
+     (append
+      (list (Lock locknum) (first s1) )
+      (connect-solutions-end-to-end
+       (rest s1)
+       s2
+       h1
+       h2
+       locknum
+       switch))]
+
+      ;; (from-before-hole s2 h2 locknum))]
+    [else
+     (append
+      (list (first s1))
+      (connect-solutions-end-to-end (rest s1) s2 h1 h2 locknum switch))]))
+         
+          
+          
+
+          
+
+                          
+
+(define (combine-solutions s1 s2 h1 h2)
+  (cond
+    [(equal?
+      (Hole-method2 h1)
+      (Hole-method1 h2))
+     (connect-solutions-end-to-end s1 s2 h1 h2 0)]))
+
+
+(define (not-released match-ends new-acquired-list)
+
+  (cond
+    [(list? match-ends)
+     (filter
+      (lambda (i)
+        (not (member i match-ends))
+        )
+      new-acquired-list)]
+    [else
+     (filter
+      (lambda (i)
+        (not (equal? match-ends i)))
+      new-acquired-list)]))
+
+
+
+
+(define (release-remaining acquired-list id)
+  (display "releasing what's left of ") (displayln acquired-list)
+  (display "current: ") (displayln id)
+  (let*
+      ([to-release
+        (filter
+         (lambda (l)
+           (and
+            (< id (Hole-method2 (car l)))
+            (> id (Hole-method1 (car l)))))
+         acquired-list)])
+    (map (lambda (l) (Unlock (cdr l))) to-release)))
 
 ;; Repairs given Method using Minimal Locking Algorithm
 (define (minimal-lock instr-list hole-list-redundant acquired-list)
 
   ;; TODO: Solidify ordering of hole merges
   (define hole-list (flatten (list (reduce lock-merge hole-list-redundant))))
-
-    
-
-
   
-  (cond
-    [(empty? instr-list) `()]
-    [(Single-branch? (first instr-list))
-     (let ([just-ends (only-end-in-branch (Single-branch-branch (first instr-list)) hole-list)])
-       ;; (displayln "have just-ends")
-       (let ([releases (create-release-statements
-                        just-ends
-                        acquired-list)])
+  (define returned-acquires (void))
+  (set! returned-acquires `())
 
+
+  (cons
+   (cond
+     [(empty? instr-list) `()]
+     [(Single-branch? (first instr-list))
+      (let ([just-ends (only-end-in-branch (Single-branch-branch (first instr-list)) hole-list)])
+        ;; (displayln "have just-ends")
+        (let ([releases (create-release-statements
+                         just-ends
+                         acquired-list)])
+          (let*
+              ([branch-solution
+                (minimal-lock (Single-branch-branch (first instr-list)) hole-list acquired-list)]
+               [rest-solution (minimal-lock (rest instr-list) hole-list acquired-list)])
+                
+            (set! returned-acquires (append returned-acquires
+                                            (cdr branch-solution) (cdr rest-solution)))
+            (if (not (empty? releases))
+                (append
+                 
+                 
+                 (list (Branch (Single-branch-condition (first instr-list))
+                               (car branch-solution )
+                               releases))
+               
+               
+                 (car rest-solution))
+              
+              (append
+               
+               
+               (list (Single-branch (Single-branch-condition (first instr-list))
+                                    (car (minimal-lock (Single-branch-branch (first instr-list)) hole-list acquired-list))))
+               
+               
+               
+               (car (minimal-lock (rest instr-list) hole-list acquired-list)))))))]
+     
+     
+     
+     [(Return? (first instr-list))
+      (let*
+          ([rest-solution (minimal-lock (rest instr-list) hole-list acquired-list)])
+        (set! returned-acquires (append returned-acquires (cdr rest-solution)))
          (append
+          (release-remaining acquired-list (C-Instruction-instr-id (first instr-list)))
+          (list (first instr-list))
+          (car rest-solution)))]
+      
+     
+     
+     [(C-Instruction? (first instr-list))
+      (let
+          ([match-starts (hole-start-match hole-list (C-Instruction-instr-id (first instr-list)))]
+           [match-ends (hole-end-match hole-list (C-Instruction-instr-id (first instr-list)))])
+        (let
+            ([start-locks (new-locks match-starts)])
+          (let*
+              ([new-acquired-list (append acquired-list start-locks)]
+               [new-acquires (create-acquire-statements start-locks)]
+               [new-releases (create-release-statements match-ends acquired-list)]
+               [without-released (not-released match-ends new-acquired-list)]
+               [rest-solution (minimal-lock (rest instr-list) hole-list new-acquired-list)])
+            
+            
+            ;; (display "new acquired list: ")(displayln without-released)
 
-          
-          (list (Branch (Single-branch-condition (first instr-list))
-                        (minimal-lock (Single-branch-branch (first instr-list)) hole-list acquired-list)
-                        releases))
+
+            ;; We need to know which object and key to associate with each lock
+            ;; this allows us to do local locking
+            (set! returned-acquires
+                  (unique
+                   (lambda (a b) (equal? (cdr a) (cdr b)))
+                   (append returned-acquires
+
+                           (map
+                            (lambda (p)
+                              (cons
+                               (Hole (Hole-method1 (car p))
+                                     (first instr-list)
+                                     (Hole-method2 (car p)))
+                               
+                               (cdr p)))
+                            
+                               
+
+                            new-acquired-list)
 
 
-          (minimal-lock (rest instr-list) hole-list acquired-list))))]
-    
+                           (cdr rest-solution))))
+            (append
+             new-acquires
+             (list (first instr-list))
+             new-releases
+             (car rest-solution)))))]
+     
+     )
 
-    [(C-Instruction? (first instr-list))
-     (let
-         ([match-starts (hole-start-match hole-list (C-Instruction-instr-id (first instr-list)))]
-          [match-ends (hole-end-match hole-list (C-Instruction-instr-id (first instr-list)))])
-       (let
-           ([start-locks (new-locks match-starts)])
-         (let
-             ([new-acquired-list (append acquired-list start-locks)]
-              [new-acquires (create-acquire-statements start-locks)]
-              [new-releases (create-release-statements match-ends acquired-list)])
+   returned-acquires))
 
-           (append
-            new-acquires
-            (list (first instr-list))
-            new-releases
-            (minimal-lock (rest instr-list) hole-list new-acquired-list)))))]))
            
             
 
@@ -1256,7 +1532,12 @@
            ([varname (string-append "TMP" (~v (freshvar)))])
          (cond
            [(Method-Call-Short? (Opt-Inequality-elem1 c))
-            (set! final-expr (Or final-expr (Not (Equal varname (Opt-Inequality-elem2 c)))))
+            (if (boolean? final-expr)
+                (set! final-expr (Not (Equal (Get-var varname)
+                                                            (Get-var (Opt-Inequality-elem2 c)))))
+                (set! final-expr (Or final-expr (Not (Equal (Get-var varname)
+                                                            (Get-var (Opt-Inequality-elem2 c)))))))
+                
             (list
              (Create-var varname "int")
              (Run-method
@@ -1315,20 +1596,24 @@
       (equal?
        (C-Instruction-instr-id (first instr-list))
        (Hole-method2 hole)))
+     (display "problem with: ") (displayln id)
+     (display "got: ") (hash-ref conditions id)
      (let*
-         ([new-lock 100] ;; TODO: make new lock
+         
+         ([new-lock (+ id 100)] ;; TODO: make new lock
           [optimistic-expressions (generate-all-optimistic-expressions (hash-ref conditions id))])
+       
        (append
         (list
          (Lock new-lock))
         (car optimistic-expressions)
         (list (Single-branch (cdr optimistic-expressions)
-                       (list
-                        (Unlock id)
-                        (Goto id 0)))
-
+                             (list
+                              (Unlock new-lock)
+                              (Goto id 0)))
+              
               (first instr-list)
-              (Unlock id))
+              (Unlock new-lock))
         (repair-extension-instr-list (rest instr-list) hole id conditions)))]
 
          
@@ -1344,7 +1629,9 @@
 (define (optimistic-repair trace-list conditions library method-name)
   (define extension-instr-list (void))
   (set! extension-instr-list
-        (Method-instr-list (get-lib-method library "extension")))
+        (Method-instr-list (get-lib-method library method-name)))
+
+
 
   (define already-seen (void))
   (set! already-seen `())
@@ -1354,6 +1641,11 @@
          [id (Optimistic-Trace-id t)]
          [instr-list (Optimistic-Trace-instr-list t)])
 
+      ;; (cond
+      ;;   [(not (hash-has-key? conditions (string-append "OPT" (~v id))))
+      ;;    (hash-set! conditions (string-append "OPT" (~v id)) ""
+          
+        
       (if (not (member id already-seen ))
           (begin
             (set! extension-instr-list
@@ -1395,7 +1687,7 @@
         (equal? (hole-before hole) (C-Instruction-instr-id (first t)))
         (not (null? (next-method-call (rest t))))
         (equal? (hole-interrupt hole) (Run-method-method (next-method-call (rest t)))))
-       ;; (display "found interruptor: ") (displayln (Run-method-method (next-method-call (rest t))))
+       ;; ;; (display "found interruptor: ") ;; (displayln (Run-method-method (next-method-call (rest t))))
        #t]
       [else
        (matches-hole (rest t))]))
@@ -1426,7 +1718,10 @@
 
 
 (define (optimistic-sketch-from-hole-list result-trace-lists hole-set library)
-  ;; (displayln (second hole-set))
+  ;; ;; (displayln (second hole-set))
+
+
+  
 
 
   ;; To repair a hole we need a witness to that hole
@@ -1435,7 +1730,6 @@
     (map (lambda (h)
            (cons h (find-matching-trace result-trace-lists h)))
          hole-set))
-
 
 
   ;; We then need to get a concrete instance of the hole - confusingly called a Hole
@@ -1449,7 +1743,8 @@
         (cdr pair)))
      witness-traces))
 
-  ;; (displayln all-concrete-holes)
+  ;; ;; (displayln all-concrete-holes)
+
 
 
 
@@ -1481,16 +1776,21 @@
      all-concrete-holes))
   
 
-  (define all-no-interrupt-witnesses
-    (map
-     (lambda (instr-list) (filter (lambda (instr)
-                                    (or
-                                     (Hole? instr)
-                                     (and
-                                      (C-Instruction? instr)
-                                      (not (boolean? (C-Instruction-thread-id instr))))))
-                                  instr-list))
-     all-no-decl-witnesses))
+  ;; (define all-no-interrupt-witnesses
+  ;;   (map
+  ;;    (lambda (instr-list) (filter (lambda (instr)
+  ;;                                   (or
+  ;;                                    (Hole? instr)
+  ;;                                    (and
+  ;;                                     (C-Instruction? instr)
+  ;;                                     (not (boolean? (C-Instruction-thread-id instr))))))
+  ;;                                 instr-list))
+  ;;    all-no-decl-witnesses))
+
+  ;; Why does this only sometimes happen?
+  (define all-no-interrupt-witnesses all-no-decl-witnesses)
+
+
   
   
   (define counter-count (void))
@@ -1508,10 +1808,11 @@
         (cdr instr-list)
         (car instr-list)))
      all-no-interrupt-witnesses))
+
+
   
   
-  
-  (optimistic-merge (first opt-trace-list) (second opt-trace-list))
+  ;; (optimistic-merge (first opt-trace-list) (second opt-trace-list))
   
   
   
@@ -1523,10 +1824,15 @@
      (map
       (lambda (t) (optimistic-verification-condition (Optimistic-Trace-instr-list t) (Optimistic-Trace-hole t) (Optimistic-Trace-id t)))
       opt-trace-list)))
+
+  (displayln "WITNESSES: ")
+  (map (lambda (l) (displayln l)) all-feasible-traces)
+
   
   
   
-  
+  ;; (displayln "got all feasible traces")
+  ;; (displayln all-feasible-traces)
 
   (define prelude "
     
@@ -1569,14 +1875,31 @@
 
 
 (struct Node (next key val bits) #:mutable)
+(struct List (first last) #:mutable)
+
+
+
+(define shared1 (void))
+(define shared2 (void))
+
+
+
+
+(struct None ())
+(set! shared1 (List (None) (None)))
+(set! shared2 (List (None) (None)))
+
+
+
+
 
 (define shared (void))
-(struct None ())
+
 (set! shared (Node  (None) \"test\" \"testval\" (None)))
 
 
 (define first-args (void))
-(set! first-args (list shared 1))
+(set! first-args (list shared1 shared2 1))
 (define POSSIBLE (void))
 (set! POSSIBLE #t)
 
@@ -1593,8 +1916,21 @@
 (define-symbolic pick-trace integer?)")
 
 
+
+
 (define initialize-data-structure
-  "(METHOD-push (list (list-ref first-args 0) (list-ref first-args 1) 5))")
+
+  "(METHOD-push (list shared1 1 2))\n
+(METHOD-push (list shared1 1 5))
+\n(METHOD-push (list shared1 2 7))
+\n(METHOD-push (list shared2 2 4))")
+
+     ;; ,(Run-method "push" `(,(Get-var "shared1") 1 2) null)
+     ;; ,(Run-method "push" `(,(Get-var "shared1") 1 5) null)
+     ;; ,(Run-method "push" `(,(Get-var "shared1") 2 7) null)
+     ;; ,(Run-method "push" `(,(Get-var "shared2") 2 4) null))))
+
+
 
 
 
@@ -1603,14 +1939,17 @@
 
 
 (define all-optimistic-checks (collect-all-optimistic-checks all-feasible-traces))
+;; (displayln "optimistic checks")
 ;; (displayln all-optimistic-checks)
 
 
 (define opt-cond-declarations (generate-optimistic-condition-sketches all-optimistic-checks 3))
-
+;; (displayln "opt cond")
 ;; (displayln opt-cond-declarations)
 
 (define opt-cond-list-defs (generate-optimistic-condition-lists all-optimistic-checks))
+;; (displayln "opt-cond-list-defs")
+;; (displayln opt-cond-list-defs)
 
 
 (define opt-info-count (void))
@@ -1618,6 +1957,9 @@
 (define (new-opt-info-id)
   (set! opt-info-count (+ opt-info-count 1))
   opt-info-count)
+;; (displayln "opt-info-count")
+;; (displayln opt-info-count)
+
 
 (define opt-info-list
   (map
@@ -1627,7 +1969,10 @@
       (optimistic-grammar-sketch (cdr (first all-concrete-holes)) (car (first all-concrete-holes)))))
    all-concrete-holes))
 
-;; (displayln (generate-smart-optimistic-condition-grammar opt-info-list "first-args" 2))
+;; (displayln "opt-info-list")
+;; (displayln opt-info-list)
+
+;; ;; (displayln (generate-smart-optimistic-condition-grammar opt-info-list "first-args" 2))
 
 ;; (define smart-opt-cond-list-defs
 ;;   (generate-smart-optimistic-condition-grammar opt-info-list arg-store depth
@@ -1637,8 +1982,14 @@
 
 
 (define smart-opt-cond-top-level (generate-top-level-grammar opt-info-list "first-args" 1))
+;; (displayln "top level")
+;; (displayln smart-opt-cond-top-level)
+
+;; (display "opt-info-list: ") ;; (displayln opt-info-list)
 
 (define smart-opt-cond-decl (generate-smart-optimistic-condition-grammar opt-info-list "first-args" 1))
+;; (displayln "cond level")
+;; (displayln smart-opt-cond-decl)
 
 
 
@@ -1654,12 +2005,25 @@
 
 
 
-
+;; (displayln "Arrived at spit out traces definition")
 (define (spit-out-traces traces hole lin-solutions)
   (define ret-string (void))
   (set! ret-string "")
 
 
+  ;; (displayln "interfering var decs")
+
+  (map displayln
+
+
+       
+       (map (lambda (ti) (list (string-append "(define " (format "~a" ti) " (void))\n")))
+            (get-interfering-ret-vars (first traces))))
+
+
+
+
+  
   (define interfering-var-declarations
     (reduce
      string-append
@@ -1674,7 +2038,7 @@
            (map (lambda (ti) (list (string-append "(define " (format "~a" ti) " (void))\n")))
                 (get-interfering-ret-vars which-trace))))
         traces)))))
-
+  ;; (displayln "interfering vars done")
 
 
 
@@ -1687,8 +2051,12 @@
    (map (lambda (i) (string-append "(define POSSIBLE" (~v i) " (void))\n (set! POSSIBLE" (~v i) " #t)\n(define META-CHOICE" (~v i) " #t)"))
         (range (length traces))))))
 
+
+  ;; (displayln "adding declarations")
   (set! ret-string (string-append ret-string  (instr-list-to-sketch all-declarations library "first-args" 0 0) ))
+  ;; (displayln "declarations added")
   (set! ret-string (string-append ret-string  interfering-var-declarations))
+
   (set! ret-string (string-append ret-string   (generate-library-code library)))
   (set! ret-string (string-append ret-string  initialize-data-structure))
 
@@ -1701,6 +2069,7 @@
   (set! ret-string (string-append ret-string  "(cond "))
 
 
+  ;; (displayln "going through traces")
   (map (lambda (which-trace)
          (set! trace-counter (+ trace-counter 1))
   
@@ -1785,7 +2154,7 @@ ret-string
 
 
 
-
+;; (displayln "spitting out traces")
 (list
  (spit-out-traces ;; (list (second feasible-traces))
                   all-feasible-traces

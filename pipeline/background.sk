@@ -1,5 +1,6 @@
 struct Node {
   int val;
+  int key;
   Node next;
 }
 
@@ -21,61 +22,94 @@ List newList() {
   newL.last = null;
   return newL;
 }
-  
-int add(List l, int newVal) {
-  Node newN = newNode();
-  
-  newN.val = newVal;
 
-  if (l.first==null) {
+
+
+
+int push(List l, int key, int val) {
+  Node cur = l.first;
+  Node prev = l.first;
+
+  if (cur == null) {
+    Node newN = newNode();
+    newN.key = key;
+    newN.val = val;
     l.first = newN;
-    l.last = newN;
+    return val;
   }
-  else {
-    l.last.next = newN;
-    l.last =  newN;
-  }
-
-  return newVal;
-
-}
-
-int get(List l, int idx) {
-  Node cur = l.first;
   
-  int i = 0;
-  while (cur!=null) {
-    if (i==idx)
-      return cur.val;
+  
+  while (cur != null && cur.key != key) {
+    prev = cur;
     cur = cur.next;
-    i = i + 1;
   }
 
-  return -100;
+  if (cur != null) {
+    cur.key = key;
+    cur.val = val;
+    return val;
+  }
+
+  Node newN = newNode();
+  newN.key = key;
+  newN.val = val;
+  prev.next = newN;
+  return val;
 }
 
 
-int remove(List l, int idx) {
+int get(List l, int key) {
   Node cur = l.first;
-  Node toRemove;
-  
-  int i = 0;
-  while (cur!=null) {
-    if (i==idx-1) {
-      toRemove = cur.next;
-      cur.next = cur.next.next;
-      if (l.last == toRemove)
-	l.last = cur.next;
-      return toRemove.val;
-    }
-    i = i - 1;
+
+  while (cur != null && cur.key != key) {
+    cur = cur.next;
   }
 
-  return -100;
+  if (cur == null) {
+    return -100;
+  }
+
+  return cur.val;
+  
 }
 
-  
 
+int remove(List l, int key) {
+  Node cur = l.first;
+
+  if (cur == null) {
+    return -100;
+  }
+
+  if (cur.key == key) {
+     l.first = null;
+     return cur.val;
+  }
+
+  Node prev = l.first;
+
+  while (cur != null && cur.key != key) {
+    prev = cur;
+    cur = cur.next;
+  }
+
+  if (cur == null) {
+    return -100;
+  }
+
+  int retVal = cur.val;
+  prev.next = cur.next;
+
+  return retVal;
+
+
+  
+}
+
+
+
+
+  
 /* int copy(List l1, List l2, int idx) { */
 /*   int tmp; */
 /*   tmp = get(l1, idx); */
@@ -95,56 +129,112 @@ SKETCH
 
 
 
-
+void checkList(List l1, List l2) {
+  Node cur1 = l1.first;
+  Node cur2 = l2.first;
+  while (cur1!=null) {
+    assert(cur1.key == cur2.key);
+    assert(cur1.val == cur2.val);
+    cur1 = cur1.next;
+    cur2 = cur2.next;
+  }
+  assert(cur2 == null);
+}
 
 
 
 harness void blah() {
-
   List l1 = newList();
   List l2 = newList();
 
-  List l1prime = newList();
-  List l2prime = newList();
+  int t1 = copy(l1, 1);
+  int t2 = copySKETCH(l2, 1);
 
-  add(l1, 1);
-  add(l1, 2);
-  add(l1, 3);
-  add(l1, 4);
+  assert(t1 == t2);
+  checkList(l1, l2);
 
-  int a = copy(l1, l2, 1);
+  push(l1, 5, 6);
+  push(l2, 5, 6);
+
+  push(l1, 2, 3);
+  push(l2, 2, 3);
+
+  push(l1, 7, 10);
+  push(l2, 7, 10);
+  
+
+  t1 = copy(l1, 1);
+  t2 = copySKETCH(l2, 1);
+
+  assert(t1 == t2);
+  checkList(l1, l2);
 
 
-  add(l1prime, 1);
-  add(l1prime, 2);
-  add(l1prime, 3);
-  add(l1prime, 4);
+  t1 = copy(l1, 5);
+  t2 = copySKETCH(l2, 5);
 
-  int b = copySKETCH(l1prime, l2prime, 1);
-  assert(a == b);
+  assert(t1 == t2);
+  checkList(l1, l2);
 
-  a = copy(l1, l2, 1);
-  b = copySKETCH(l1prime, l2prime, 1);
 
-  assert(a == b);
+  t1 = copy(l1, 2);
+  t2 = copySKETCH(l2, 2);
 
-  Node cur1 = l1.first;
-  Node cur2 = l1prime.first;
-  while (cur1!=null) {
-    assert(cur1.val == cur2.val);
-    cur1 = cur1.next;
-    cur2 = cur2.next;
-  }
-  assert(cur2 == null);
+  assert(t1 == t2);
+  checkList(l1, l2);
 
-  cur1 = l2.first;
-  cur2 = l2prime.first;
-  while (cur1!=null) {
-    assert(cur1.val == cur2.val);
-    cur1 = cur1.next;
-    cur2 = cur2.next;
-  }
-  assert(cur2 == null);
+
+
+
+  
+
+
+  
+
+  /* List l1 = newList(); */
+  /* List l2 = newList(); */
+
+  /* List l1prime = newList(); */
+  /* List l2prime = newList(); */
+
+  /* add(l1, 1); */
+  /* add(l1, 2); */
+  /* add(l1, 3); */
+  /* add(l1, 4); */
+
+  /* int a = copy(l1, l2, 1); */
+
+
+  /* add(l1prime, 1); */
+  /* add(l1prime, 2); */
+  /* add(l1prime, 3); */
+  /* add(l1prime, 4); */
+
+  /* int b = copySKETCH(l1prime, l2prime, 1); */
+  /* assert(a == b); */
+
+  /* a = copy(l1, l2, 1); */
+  /* b = copySKETCH(l1prime, l2prime, 1); */
+
+  /* assert(a == b); */
+
+  /* Node cur1 = l1.first; */
+  /* Node cur2 = l1prime.first; */
+  /* while (cur1!=null) { */
+  /*   assert(cur1.val == cur2.val); */
+  /*   cur1 = cur1.next; */
+  /*   cur2 = cur2.next; */
+  /* } */
+  /* assert(cur2 == null); */
+
+  /* cur1 = l2.first; */
+  /* cur2 = l2prime.first; */
+  /* while (cur1!=null) { */
+  /*   assert(cur1.val == cur2.val); */
+  /*   cur1 = cur1.next; */
+  /*   cur2 = cur2.next; */
+  /* } */
+  /* assert(cur2 == null); */
 }  
 
   

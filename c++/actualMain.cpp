@@ -177,16 +177,21 @@ void start(PROGRAM *p)
 
 
   vector<string> readList = get_reads(p->stmt);
-  vector<string> writeList = get_writes(p->stmt);
+  std::cout << readList[1] << "\n";
+  // vector<string> writeList = get_writes(p->stmt);
+  vector<string> writeList;
   vector< pair<string, string> > sharedList = get_shared(p->stmt);
   vector<string> sharedIdList;
 
   for (vector< pair<string, string> >::iterator it=sharedList.begin(); it!=sharedList.end(); ++it) {
     sharedIdList.push_back((*it).second);
   }
-  
 
-  searcher space_explorer(sharedList, readList, writeList, "Node");
+
+
+
+  
+  searcher space_explorer(sharedList, readList, writeList, "int");
 
 
   PROGRAM *emptyProg = createNewEmptySketch(p->stmt, sharedIdList);
@@ -195,27 +200,30 @@ void start(PROGRAM *p)
   vector<string> args;
   args.push_back("l1");
   args.push_back("l2");
+  // args.push_back("z1");
   args.push_back("z0");
 
-  
+
+
   int arity = space_explorer.get_arity("this");
   vector< pair<PROGRAM*, int> > newP = space_explorer.sequential_search(emptyProg, 4, tNone, arity);
 
 
 
-
+  std::cout << "here\n";
 
   int i =0;
   for(vector< pair<PROGRAM*, int> >::iterator it = newP.begin(); it != newP.end(); ++it) {
 
+    
     space_explorer.addInits((*it).first, (*it).second, args);
     space_explorer.addReturn((*it).first, (*it).second);
     int emptyQ = space_explorer.is_empty((*it).first);
 
     if (!emptyQ) {
       if (space_explorer.runSketch((*it).first, i)) {
-	cout << "Found a solution!\n";
-	break;
+    	cout << "Found a solution!\n";
+    	break;
       }
       i++;
 

@@ -51,7 +51,7 @@
 
 
   ;; (displayln "Methods:")
-  ;; (map pretty-display library-defs)
+  (map pretty-display library-defs)
 
   ; This namespace requires the larger racket library and then instantiates
   ;  the library method definitions so compiled programs can just call the
@@ -89,7 +89,12 @@
                                    (reverse ,reserved-trace-keyword))
                              ,@(map (λ (var-name)
                                       `(cons (quote ,var-name) ,var-name))
+
+
                                     vars-of-interest))))
+
+
+
 
     (define to-eval
       ; Use block instead of begin so variables will be defined in a new

@@ -61,7 +61,7 @@ TRACE-TYPE: no-optimistic-restart
 (define (filter-str str)
   
   (let
-      ([all-lines (string-split test-str "\n")])
+      ([all-lines (string-split str "\n")])
     (let
         ([only-racket-lines
           (filter
@@ -149,7 +149,7 @@ TRACE-TYPE: no-optimistic-restart
          (lambda (s)
            (cond
              [(regexp-match-positions #rx"list-ref" s)
-              (Argument-Ref (third (string-split s " ")))]
+              (Get-argument (string->number (third (string-split s " "))))]
              [else
               (Variable s)]))
          arg-list-sanitized)]
@@ -300,11 +300,14 @@ TRACE-TYPE: no-optimistic-restart
 (define (string->opts str)
   
 
-  (define ret-pair (parse-str test-str))
+  (define ret-pair (parse-str str))
   (define opt-map (cdr ret-pair))
   (define keyword-map (car ret-pair))
 
+
+
   (substitute-arguments opt-map keyword-map)
+  (displayln opt-map)
   opt-map)
 
 

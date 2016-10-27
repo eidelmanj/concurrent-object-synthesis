@@ -2,7 +2,9 @@ int copySKETCH(List l1, List l2, int z0) {
 int z1 = 0;
 int z2 = 0;
 int z3 = 0;
-if(??) {z3 = {|get(l1,z3) |get(l1,z2) |get(l1,z1) |get(l1,z0) |get(l2,z3) |get(l2,z2) |get(l2,z1) |get(l2,z0) |remove(l1,z3) |remove(l1,z2) |remove(l1,z1) |remove(l1,z0) |remove(l2,z3) |remove(l2,z2) |remove(l2,z1) |remove(l2,z0) |}; }
+if({|?? |(z3 == -100 ) | (z3 != -100 ) |}) {z3 = {|get(l1,z3) |get(l1,z2) |get(l1,z1) |get(l1,z0) |get(l2,z3) |get(l2,z2) |get(l2,z1) |get(l2,z0) |};
+}
+if({|?? |(z3 == -100 ) | (z3 != -100 ) |}) { return {|-100 | z3 |}; }{|z0 |z1 |z2 |} = ??;
 return {|z0 |z1 |z2 |z3 |};
 
 }

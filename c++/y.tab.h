@@ -52,7 +52,8 @@ extern int yydebug;
     RETURN = 262,
     ASSERT = 263,
     EQ = 264,
-    UNKNOWN = 265
+    UNKNOWN = 265,
+    NEQ = 266
   };
 #endif
 /* Tokens.  */
@@ -64,6 +65,7 @@ extern int yydebug;
 #define ASSERT 263
 #define EQ 264
 #define UNKNOWN 265
+#define NEQ 266
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -82,7 +84,7 @@ union YYSTYPE
     struct FUNC_DECL *func_decl;
 
 
-#line 86 "y.tab.h" /* yacc.c:1909  */
+#line 88 "y.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1

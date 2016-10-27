@@ -29,6 +29,7 @@ extern int lineno;
 "assert"  return ASSERT;
 "return"  return RETURN;
 "=="      return EQ;
+"!="      return NEQ;
 "??"      return UNKNOWN;
 
 

@@ -20,7 +20,8 @@ vector< pair<string, string> > get_shared(STMT *s);
 int getDepth(ARG_LIST *l);
 STMT *getNextStmt(PROGRAM *p);
 
-typedef enum {t1, t2, t3, t4, t5, tNone} transform_choice;
+// typedef enum {t1, t2, t3, t4, t5, tNone} transform_choice;
+typedef enum {t1, tNone} transform_choice;
 class searcher{
 protected:
   int varId;
@@ -61,6 +62,7 @@ public:
   vector< pair<PROGRAM*, int> > sequential_search(PROGRAM *p, int depth, transform_choice noRepeat, int curVarId);
 
   void addReturn(PROGRAM *p, int numVars);
+  void addAssignment(PROGRAM *p, int numVars);
   void addInits(PROGRAM *p, int numVars, vector<string> args);
   int get_arity(string whichFunc);
 };

@@ -221,8 +221,11 @@ void prettyEXP(EXP *e) {
     std::cout << e->val.dotE.left;
     std::cout << ".";
     std::cout << e->val.dotE.right;
+    break;
   case regexK:
+    // std::cout << "this is a line\n";
     std::cout << e->val.regexE;
+    break;
   default:
     break;
   }

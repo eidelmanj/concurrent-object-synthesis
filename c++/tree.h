@@ -12,7 +12,7 @@ typedef enum {firstK, restK, emptyArgK} ARG_LISTKind;
 typedef enum {fullK, emptyK} PROGRAMKind;
 
 typedef enum {idK,intconstK,timesK,divK,plusK,minusK, func_callK, dotK,
-	      eqCheckK, unknownK, regexK} EXPKind;
+	      eqCheckK, unknownK, regexK, neqCheckK} EXPKind;
 
 typedef enum {declK, nonDeclK} ARG_LISTDeclKind;
  
@@ -156,6 +156,7 @@ EXP *makeExpUnknown();
 
 EXP *makeEXPplus(EXP *left, EXP *right);
 EXP *makeExpEqCheck(EXP *left, EXP *right);
+EXP *makeExpNeqCheck(EXP *left, EXP *right);
 EXP *makeEXPminus(EXP *left, EXP *right);
 EXP *makeExpDotAccess(char *left, char *right);
 

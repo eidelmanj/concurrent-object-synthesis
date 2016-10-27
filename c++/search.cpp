@@ -73,17 +73,34 @@ searcher::searcher(vector< pair<string, string> > shared_in, vector<string> read
     reads = reads_in;
     writes = writes_in;
     varId = 0;
-    returnType.insert(make_pair("get", "Node"));
-    returnType.insert(make_pair("remove", "Node"));
-    funcReturnType = funcReturnType_in;
-    funcArity.insert(make_pair("get", 2));
-    funcArity.insert(make_pair("remove", 2));
-    funcArity.insert(make_pair("add", 2));
+    // returnType.insert(make_pair("get", "int"));
+    // returnType.insert(make_pair("remove", "int"));
+    // returnType.insert(make_pair("add", "int"));
 
+    // For map
+    returnType.insert(make_pair("get", "int"));
+    returnType.insert(make_pair("remove", "int"));
+    returnType.insert(make_pair("putIfAbsent", "int"));
+    returnType.insert(make_pair("compute", "int"));
+    returnType.insert(make_pair("push", "int"));
+    
+    funcReturnType = funcReturnType_in;
+    // funcArity.insert(make_pair("get", 2));
+    // funcArity.insert(make_pair("remove", 2));
+    // funcArity.insert(make_pair("add", 2));
+
+    funcArity.insert(make_pair("get", 2));
+    funcArity.insert(make_pair("push", 3));
+    funcArity.insert(make_pair("remove", 2));
+    funcArity.insert(make_pair("putIfAbsent", 3));
+    funcArity.insert(make_pair("compute", 1));
     funcArity.insert(make_pair("this", 3));
+
+    // funcArity.insert(make_pair("this", 3));
 
 
     vector< pair<string, string> > tmpVec;
+    tmpVec.push_back(make_pair("key", "int"));
     tmpVec.push_back(make_pair("val", "int"));
     tmpVec.push_back(make_pair("next", "node"));
 		     
@@ -271,13 +288,19 @@ pair<PROGRAM*, int> searcher::perform_transformation(PROGRAM *p, transform_choic
   
   switch (transform) {
   case t1:
-    // cout << "Adding read statments\n";
+    cout << "Adding read statments\n";
+
+    addAssignment(innerP, curVarId);
+    // curVarId++;
     curVarId = addReadStmt(innerP, curVarId);
+
+
+
     break;
-  case t2:
-    // cout << "Adding write statements\n";
-    curVarId = addWriteStmt(innerP, curVarId);
-    break;
+  // case t2:
+  //   // cout << "Adding write statements\n";
+  //   curVarId = addWriteStmt(innerP, curVarId);
+  //   break;
   default:
     // cout << "Returning empty program\n";
     freeProgram(newP);
@@ -332,11 +355,12 @@ vector< pair<PROGRAM*, int> > searcher::sequential_search(PROGRAM *p, int depth,
 
 
   int thisLevelVarId;
-  for (int transformation = t1; transformation!=t5; transformation++) {
+  // for (int transformation = t1; transformation!=t5; transformation++) {
+  int transformation = t1;
     thisLevelVarId = curVarId;
     transform_choice t = static_cast<transform_choice>(transformation);
-    if (t==noRepeat)
-      continue;
+    // if (t==noRepeat)
+    //   continue;
     
 
 
@@ -346,6 +370,7 @@ vector< pair<PROGRAM*, int> > searcher::sequential_search(PROGRAM *p, int depth,
     thisLevelVarId = retPair.second;
 
     if (!is_empty(retPrgrm)) {
+
       retPrgrmVec.push_back(retPair);
 
 
@@ -353,7 +378,7 @@ vector< pair<PROGRAM*, int> > searcher::sequential_search(PROGRAM *p, int depth,
       retPrgrmVec.insert(retPrgrmVec.end(), recursiveRet.begin(), recursiveRet.end());
     }
     
-  }
+  // }
 
   
 
@@ -417,6 +442,7 @@ int searcher::runSketch(PROGRAM *p, int i) {
   if (sketchFile.is_open()) {
 
     while ( getline (sketchFile,line) ){
+
 
       sketchText = sketchText+line + ("\n");
 
@@ -489,7 +515,7 @@ int searcher::runSketch(PROGRAM *p, int i) {
 
   }
 
-
+  
   if (logText.find("BUILD SUCCESS") != string::npos) {
     return SUCCESS;
   }
@@ -631,8 +657,13 @@ vector<string> searcher::generateCall(string varId, string methodName, string ca
   int n, r;
 
   n = curVarId;
+
+  // std::cout << "about to get arity of " << methodName << "\n";
   r = funcArity.at(methodName) -1 ;
-  
+
+  // std::cout << "generating all combos of " << r << " for numbers less than " << n <<" for method " << methodName << "\n";
+
+  // std::cout << "Got method arity of " << methodName << " \n";
   vector<bool> v(n);
   fill(v.begin() + n - r, v.end(), true);
 
@@ -660,9 +691,12 @@ vector<string> searcher::generateCall(string varId, string methodName, string ca
     else
       retVec[i] = methodName + "(" + callerName;
 
+    // std::cout << "tuple: ";
     for (int j=0; j<allTuples[i].size(); j++) {
+      // std::cout << getVarId(allTuples[i][j]) << ", ";
       retVec[i] = retVec[i] + "," +  getVarId(allTuples[i][j]);
     }
+    // std::cout << "\n";
     retVec[i] = retVec[i] + ")";
   }
 
@@ -679,30 +713,66 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
   EXP *newE;
     
   string freshVarIdStr;
+
+  bool fstFlag = false;
+  if (curVarId == get_arity("this")) {
+    fstFlag = true;
+  }
+  
   curVarId++;
   vector<string> funcCallVec;
+
+
+
+  // If condition string - make sure we are able to find programs with branches
+  // std::cout << "Preparing to write if condition string\n";
+
+  string ifStr = "{|?? |";
+  // Note: this should probably include argument variables in the search
+  // but I haven't seen any examples like that so to make the search faster
+  // this is what we'll do
+  for (int i = get_arity("this"); i < curVarId; i++) {
+    ifStr += "("  + getVarId(i) + " == -100 ) | (" + getVarId(i) + " != -100 ) |";
+      // (" + getVarId(i) + " == ??) | (" + getVarId(i) + " != ??)
+      // ifStr += "|";
+  }
+
+  ifStr += "}";
+  // std::cout << "string: " << ifStr << "\n";
+
+
   switch(p->kind) {
   case emptyK: {
     newP = new PROGRAM;
     newS = new STMT;
     newE = new EXP;
 
+
+
+    
     
 
     
-    newE->kind = regexK;
+    
 
     string regexStr = "";
     for (int i = get_arity("this"); i< curVarId; i++) {
-      regexStr += "if(??) {" + getVarId(i) + " = {|";	  
+
+      regexStr += "if("+ ifStr +") {" + getVarId(i) + " = {|";	  
       for(vector<string>::iterator it = reads.begin(); it != reads.end(); ++it) {
+	std::cout << "starting loop\n";
+
 	for (vector< pair<string, string> >::iterator jt = shared.begin(); jt != shared.end(); ++jt) {
 
+
+	  // std::cout << "about to generate call\n";
 	  funcCallVec = generateCall("", *it, (*jt).second, curVarId);
+
 	  // We try assigning the result of this read to each existing variable
 	  // For variables that have no type yet, assign them a type
-
+	  // std::cout << "call generated\n";
 	  if (varType.count(i)<1) {
+	    // std::cout << "need to assign var type\n";
 	    
 
 	    for (vector<string>::iterator ct = funcCallVec.begin(); ct != funcCallVec.end(); ++ct) {
@@ -714,14 +784,22 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
 				       
 	    // regexStr =  regexStr + generateCall(getVarId(i), *it, (*jt).second)[0]; // getVarId(i) + "=" +  *it + "(" + (*jt).second + ")";
 	    // regexStr = regexStr + " | ";
+	    // std::cout << "about to do at for " << *it << "\n";
 	    varType.insert(make_pair(i, returnType.at(*it)));
+	    // std::cout << "success\n";
+
 	  }
+
+
+
 	  // For variables that have a type, if the type matches the read we're doing
 	  // then perform the assignment
 	  else if (varType.at(i) == returnType.at(*it)) {
+
 	    for (vector<string>::iterator ct = funcCallVec.begin(); ct != funcCallVec.end(); ++ct) {
 	      regexStr = regexStr + *ct + " |";
 	    }
+
 
 	    // regexStr =  regexStr + generateCall(getVarId(i), *it, (*jt).second)[0]; // getVarId(i) + "=" +  *it + "(" + (*jt).second + ")";
 	    // regexStr = regexStr + " | ";
@@ -729,9 +807,12 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
 
 
 
+
 	}
+	// std::cout << "iterating through methods - empty\n";
       }
       regexStr += "}; }\n";
+
     }
 
     // TODO: Need a better way to do this
@@ -743,6 +824,19 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
     //   }
     // }
 
+    if (fstFlag) {
+
+      // regexStr += "if(";
+      // regexStr += getVarId(curVarId);
+
+      // regexStr += " == -100) { return -100; }\n";
+
+    }
+
+
+    std::cout << "one line empty: ";
+
+    std::cout << regexStr;
 
 
 
@@ -750,11 +844,16 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
     
 
     const char *tmpStr = regexStr.c_str();
+
+    newE->kind = regexK;
     newE->val.regexE = (char *) malloc(strlen(tmpStr));
     strcpy(newE->val.regexE, tmpStr);
 
+
+
     newS->kind = expK;
     newS->val.expE.e = newE;
+
 
     newP->kind = emptyK;
 
@@ -765,6 +864,8 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
     p->prgrm = newP;
     p->stmt = newS;
     p->kind = fullK;
+
+
 
     // addGuards(p);
     // addRepeats(p);
@@ -779,14 +880,47 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
 
 
 
+
     // curVarId = addReadStmt(p->prgrm, curVarId);
 
         newE->kind = regexK;
 
     string regexStr = "";
-    for (int i = get_arity("this"); i< curVarId; i++) {
-      regexStr += "if(??) {" + getVarId(i) + " = {|";	  
+    for (int i = // get_arity("this")
+	   curVarId - 1
+	   ; i< curVarId; i++) {
+
+      // if (! fstFlag) {
+	regexStr += "if("+ ifStr +") {" + getVarId(i) + " = {|";
+      // }
+      // else {
+      // 	regexStr +=  getVarId(i) + " = {|";
+      // }
       for(vector<string>::iterator it = reads.begin(); it != reads.end(); ++it) {
+
+	// If we're writing the first line, we skip anything that isn't a read
+
+	if (fstFlag && (*it).compare("get")) {
+	  std::cout << "skipping " << *it << "\n";
+	  continue;
+	}
+
+
+	if (!(*it).compare("compute")) {
+
+	  for (int i = get_arity("this"); i < curVarId; i++) {
+	    regexStr += "compute(" + getVarId(i) +") |";
+	  }
+
+
+	  continue;
+	  
+	}
+	  
+
+
+
+	
 	for (vector< pair<string, string> >::iterator jt = shared.begin(); jt != shared.end(); ++jt) {
 
 	  funcCallVec = generateCall("", *it, (*jt).second, curVarId);
@@ -822,11 +956,37 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
 
 	}
       }
-      regexStr += "}; }\n";
+      
+      regexStr += "};\n";
+
+      regexStr += "}\n";
+
     }
 
 
 
+
+
+    if (fstFlag) {
+    regexStr += "if(";
+    regexStr += ifStr;
+    regexStr +=") { return {|-100 | ";
+
+    for (int i = get_arity("this"); i < curVarId; i++) {
+      regexStr +=  getVarId(i) +" |";
+    }
+
+    regexStr +="}; }";
+    }
+      
+  
+
+    std::cout << "One line full: ";
+    std::cout << regexStr;
+
+
+
+    newE->kind = regexK;
 
     const char *tmpStr = regexStr.c_str();
     newE->val.regexE = (char *) malloc(strlen(tmpStr));
@@ -835,17 +995,21 @@ int searcher::addReadStmt(PROGRAM *p, int curVarId) {
     newS->kind = expK;
     newS->val.expE.e = newE;
 
+    // std::cout << "Generated read: " << newE->val.regexE << "\n";
+
     newP->kind = fullK;
     newP->stmt = newS;
     newP->prgrm = p->prgrm;
     p->prgrm = newP;
 
 
-    addGuards(newP);
-    addRepeats(newP);
+    // addGuards(newP);
+    // addRepeats(newP);
     break;
   }
   }
+
+
   return curVarId;
 }
 
@@ -880,6 +1044,7 @@ int searcher::addStructAccess(PROGRAM *p, int curVarId) {
 }
 
 int searcher::addWriteStmt(PROGRAM *p, int curVarId) {
+
   switch(p->kind) {
   case emptyK:
     break;
@@ -898,9 +1063,11 @@ int searcher::addWriteStmt(PROGRAM *p, int curVarId) {
     string regexStr = ("");
 
     for(vector<string>::iterator it = writes.begin(); it != writes.end(); ++it) {
+      std::cout << " going through possible writes\n";
       for (vector< pair<string, string> >::iterator jt = shared.begin(); jt != shared.end(); ++jt) {
 	vector<string> allCalls = generateCall("", *it,  (*jt).second, curVarId);
-
+	std::cout << "Adding write!\n";
+	std::cout << "Adding write: " << curVarId << "\n";
 	for (vector<string>::iterator ct = allCalls.begin(); ct != allCalls.end(); ++ct) {
 	  regexStr = regexStr + "if (??) {" + *ct + ";}\n";
 	}
@@ -946,6 +1113,51 @@ int searcher::addWriteStmt(PROGRAM *p, int curVarId) {
   }
   return curVarId;
 }
+
+
+void searcher::addAssignment(PROGRAM *p, int numVars) {
+  // PROGRAM *innerP;
+  // if (p->kind==fullK && p->stmt->kind == RWfunc_declK) {
+  //   innerP = p->stmt->val.RWfunc_declE.f->program;
+  // }
+  
+  // if (innerP->kind!=emptyK && innerP->kind!=fullK) {
+  //   return;
+  // }
+  cout << " Initializing new exp...\n";
+  EXP *newE = new EXP;
+  string regexStr = ""; // "int ";
+  // regexStr += getVarId(numVars);
+  // regexStr += ";\n";
+  regexStr += "{|";
+  PROGRAM *newP = copyProgram(p);
+  cout << "Program copied\n";
+  
+
+
+
+  for (int i=0; i<numVars; i++) {
+    regexStr += getVarId(i) + " |";
+  }
+
+  regexStr+="} = ??;\n";
+
+  newE->kind = regexK;
+  newE->val.regexE = (char *) malloc(regexStr.size());
+  strcpy(newE->val.regexE, regexStr.c_str());
+  
+  
+  STMT *newRet = new STMT;
+  newRet->kind = expK;
+  newRet->val.expE.e = newE;
+
+
+
+  p->kind = fullK;
+  p->stmt = newRet;
+  p->prgrm = newP;
+}
+
 
 
 
