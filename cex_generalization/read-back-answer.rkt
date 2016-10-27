@@ -149,7 +149,7 @@ TRACE-TYPE: no-optimistic-restart
          (lambda (s)
            (cond
              [(regexp-match-positions #rx"list-ref" s)
-              (Argument-Ref (third (string-split s " ")))]
+              (Get-argument (string->number (third (string-split s " "))))]
              [else
               (Variable s)]))
          arg-list-sanitized)]

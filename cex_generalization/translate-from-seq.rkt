@@ -620,7 +620,7 @@ void remove(List* l, int idx, int _out) {
   (append
    (list (Create-var "TMP-PTR" "Node"))
    (list (Create-var "_out" (Argument-type (last arg-list))))
-   (argument-definitions (all-but-last arg-list))
+   ;; (argument-definitions (all-but-last arg-list))
    (find-create-vars instr-list arg-list `())
    (complete-racket-translation instr-list arg-list `())))
 

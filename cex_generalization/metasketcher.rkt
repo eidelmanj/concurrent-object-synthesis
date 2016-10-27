@@ -1376,52 +1376,147 @@
       (Hole-method1 h2))
      (connect-solutions-end-to-end s1 s2 h1 h2 0)]))
 
+
+(define (not-released match-ends new-acquired-list)
+
+  (cond
+    [(list? match-ends)
+     (filter
+      (lambda (i)
+        (not (member i match-ends))
+        )
+      new-acquired-list)]
+    [else
+     (filter
+      (lambda (i)
+        (not (equal? match-ends i)))
+      new-acquired-list)]))
+
+
+
+
+(define (release-remaining acquired-list id)
+  (display "releasing what's left of ") (displayln acquired-list)
+  (display "current: ") (displayln id)
+  (let*
+      ([to-release
+        (filter
+         (lambda (l)
+           (and
+            (< id (Hole-method2 (car l)))
+            (> id (Hole-method1 (car l)))))
+         acquired-list)])
+    (map (lambda (l) (Unlock (cdr l))) to-release)))
+
 ;; Repairs given Method using Minimal Locking Algorithm
 (define (minimal-lock instr-list hole-list-redundant acquired-list)
 
   ;; TODO: Solidify ordering of hole merges
   (define hole-list (flatten (list (reduce lock-merge hole-list-redundant))))
-
-    
-
-
   
-  (cond
-    [(empty? instr-list) `()]
-    [(Single-branch? (first instr-list))
-     (let ([just-ends (only-end-in-branch (Single-branch-branch (first instr-list)) hole-list)])
-       ;; (displayln "have just-ends")
-       (let ([releases (create-release-statements
-                        just-ends
-                        acquired-list)])
+  (define returned-acquires (void))
+  (set! returned-acquires `())
 
+
+  (cons
+   (cond
+     [(empty? instr-list) `()]
+     [(Single-branch? (first instr-list))
+      (let ([just-ends (only-end-in-branch (Single-branch-branch (first instr-list)) hole-list)])
+        ;; (displayln "have just-ends")
+        (let ([releases (create-release-statements
+                         just-ends
+                         acquired-list)])
+          (let*
+              ([branch-solution
+                (minimal-lock (Single-branch-branch (first instr-list)) hole-list acquired-list)]
+               [rest-solution (minimal-lock (rest instr-list) hole-list acquired-list)])
+                
+            (set! returned-acquires (append returned-acquires
+                                            (cdr branch-solution) (cdr rest-solution)))
+            (if (not (empty? releases))
+                (append
+                 
+                 
+                 (list (Branch (Single-branch-condition (first instr-list))
+                               (car branch-solution )
+                               releases))
+               
+               
+                 (car rest-solution))
+              
+              (append
+               
+               
+               (list (Single-branch (Single-branch-condition (first instr-list))
+                                    (car (minimal-lock (Single-branch-branch (first instr-list)) hole-list acquired-list))))
+               
+               
+               
+               (car (minimal-lock (rest instr-list) hole-list acquired-list)))))))]
+     
+     
+     
+     [(Return? (first instr-list))
+      (let*
+          ([rest-solution (minimal-lock (rest instr-list) hole-list acquired-list)])
+        (set! returned-acquires (append returned-acquires (cdr rest-solution)))
          (append
+          (release-remaining acquired-list (C-Instruction-instr-id (first instr-list)))
+          (list (first instr-list))
+          (car rest-solution)))]
+      
+     
+     
+     [(C-Instruction? (first instr-list))
+      (let
+          ([match-starts (hole-start-match hole-list (C-Instruction-instr-id (first instr-list)))]
+           [match-ends (hole-end-match hole-list (C-Instruction-instr-id (first instr-list)))])
+        (let
+            ([start-locks (new-locks match-starts)])
+          (let*
+              ([new-acquired-list (append acquired-list start-locks)]
+               [new-acquires (create-acquire-statements start-locks)]
+               [new-releases (create-release-statements match-ends acquired-list)]
+               [without-released (not-released match-ends new-acquired-list)]
+               [rest-solution (minimal-lock (rest instr-list) hole-list new-acquired-list)])
+            
+            
+            ;; (display "new acquired list: ")(displayln without-released)
 
-          
-          (list (Branch (Single-branch-condition (first instr-list))
-                        (minimal-lock (Single-branch-branch (first instr-list)) hole-list acquired-list)
-                        releases))
+
+            ;; We need to know which object and key to associate with each lock
+            ;; this allows us to do local locking
+            (set! returned-acquires
+                  (unique
+                   (lambda (a b) (equal? (cdr a) (cdr b)))
+                   (append returned-acquires
+
+                           (map
+                            (lambda (p)
+                              (cons
+                               (Hole (Hole-method1 (car p))
+                                     (first instr-list)
+                                     (Hole-method2 (car p)))
+                               
+                               (cdr p)))
+                            
+                               
+
+                            new-acquired-list)
 
 
-          (minimal-lock (rest instr-list) hole-list acquired-list))))]
-    
+                           (cdr rest-solution))))
+            (append
+             new-acquires
+             (list (first instr-list))
+             new-releases
+             (car rest-solution)))))]
+     
+     )
 
-    [(C-Instruction? (first instr-list))
-     (let
-         ([match-starts (hole-start-match hole-list (C-Instruction-instr-id (first instr-list)))]
-          [match-ends (hole-end-match hole-list (C-Instruction-instr-id (first instr-list)))])
-       (let
-           ([start-locks (new-locks match-starts)])
-         (let
-             ([new-acquired-list (append acquired-list start-locks)]
-              [new-acquires (create-acquire-statements start-locks)]
-              [new-releases (create-release-statements match-ends acquired-list)])
+   returned-acquires))
 
-           (append
-            new-acquires
-            (list (first instr-list))
-            new-releases
-            (minimal-lock (rest instr-list) hole-list new-acquired-list)))))]))
            
             
 
@@ -1437,7 +1532,12 @@
            ([varname (string-append "TMP" (~v (freshvar)))])
          (cond
            [(Method-Call-Short? (Opt-Inequality-elem1 c))
-            (set! final-expr (Or final-expr (Not (Equal (Get-var varname) (Opt-Inequality-elem2 c)))))
+            (if (boolean? final-expr)
+                (set! final-expr (Not (Equal (Get-var varname)
+                                                            (Get-var (Opt-Inequality-elem2 c)))))
+                (set! final-expr (Or final-expr (Not (Equal (Get-var varname)
+                                                            (Get-var (Opt-Inequality-elem2 c)))))))
+                
             (list
              (Create-var varname "int")
              (Run-method
@@ -1500,19 +1600,20 @@
      (display "got: ") (hash-ref conditions id)
      (let*
          
-         ([new-lock 100] ;; TODO: make new lock
+         ([new-lock (+ id 100)] ;; TODO: make new lock
           [optimistic-expressions (generate-all-optimistic-expressions (hash-ref conditions id))])
+       
        (append
         (list
          (Lock new-lock))
         (car optimistic-expressions)
         (list (Single-branch (cdr optimistic-expressions)
-                       (list
-                        (Unlock id)
-                        (Goto id 0)))
-
+                             (list
+                              (Unlock new-lock)
+                              (Goto id 0)))
+              
               (first instr-list)
-              (Unlock id))
+              (Unlock new-lock))
         (repair-extension-instr-list (rest instr-list) hole id conditions)))]
 
          
