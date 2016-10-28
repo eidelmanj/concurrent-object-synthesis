@@ -3,6 +3,7 @@
 (require "../utilities/utilities.rkt")
 (require "../examples/mooly-example.rkt")
 (require "../examples/mooly-library.rkt")
+(require "../cex_generalization/to-c-program.rkt")
 
 (require racket/string)
 
@@ -413,7 +414,7 @@
   ;; (define throwout3 (system "rm -f OUTPUT.txt"))
   
   
-  ;; (displayln optimistic-conditions)
+  (displayln optimistic-conditions)
   (displayln "-----------------------")
   
   ;; Use the resolved sketch optimistic conditions to repair the library extension
@@ -439,26 +440,37 @@
 
       (append
 
-       (list (locked-solution (rest h)))
-       (list (optimistic-solution (list (first h))))))
+       (list (locked-solution h))
+       (list (cons (optimistic-solution (list (first h))) `()))))
 
     filtered-hole-set)))
 
 
-(displayln (second solution-set))
+(displayln (method->c (get-lib-method library "copySKETCH")))
 
-(define merged-set
-  (reduce
-   append
-   (map
-    (lambda (h)
-      (displayln (connect-solutions-end-to-end (second solution-set)
-                                               (locked-solution  (rest h))
-                                               (first h)
-                                               (second h)
-                                               1
-                                               0)))
-    filtered-hole-set)))
+(let*
+    ([lock-set (cdr (first solution-set))])
+
+  (displayln (method->c (Method "copySKETCH" (list "List" "List" "int")  "int" (car (first solution-set)
+                                                                                    ))
+                        "local"
+                        lock-set))
+
+  (displayln lock-set))
+
+
+;; (define merged-set
+;;   (reduce
+;;    append
+;;    (map
+;;     (lambda (h)
+;;       (displayln (connect-solutions-end-to-end (second solution-set)
+;;                                                (locked-solution  (rest h))
+;;                                                (first h)
+;;                                                (second h)
+;;                                                1
+;;                                                0)))
+;;     filtered-hole-set)))
 
 
 
