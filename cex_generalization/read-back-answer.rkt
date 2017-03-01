@@ -1,6 +1,8 @@
 #lang racket
 (require "../program_representation/simulator-structures.rkt")
-(require "../utilities/utilities.rkt")
+;; (require "../utilities/utilities.rkt")
+(require (only-in "../utilities/utilities.rkt"
+                  reduce))
 
 (provide
  string->opts

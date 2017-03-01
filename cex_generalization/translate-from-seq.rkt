@@ -1,26 +1,25 @@
 #lang racket
 (require "../program_representation/simulator-structures.rkt")
-(require "../utilities/utilities.rkt")
-(require "../examples/mooly-example.rkt")
-(require "../examples/mooly-library.rkt")
+;; (require "../utilities/utilities.rkt")
+(require (only-in "../utilities/utilities.rkt"
+                  reduce)
+         (only-in "../parser/parser.rkt"
+                  simple-math-parser
+                  lex-this
+                  simple-math-lexer
+                  var-exp
+                  num-exp)
 
-(require racket/string)
-
-(require "../cex_generalization/to-sketch.rkt")
-;; (require "../cex_generalization/read-back-answer.rkt")
-(require "../cex_generalization/metasketcher.rkt")
-
-(require "../error_trace_generation/error-trace.rkt")
-(require (only-in "../error_trace_generation/linearizable.rkt" lin-result-trace))
-(require (only-in "../error_trace_generation/methods.rkt" number-lines))
-(require "../optimal_cover/cover.rkt" )
+         (only-in "../program_representation/racket-synthesis.rkt"
+                  translate))
 
 
-(require "../parser/parser.rkt")
-(require         "../program_representation/racket-synthesis.rkt")
 
 
-(provide repair-all-methods)
+
+
+(provide repair-all-methods
+         simplify-redundant-method)
 
 (define input-string "
 
@@ -104,12 +103,6 @@ void copySKETCH(List* l1, List* l2, int z0) {
      (Get-argument matching-entry-number)])))
 
 
-;; (define (expression-create-arg-refs e arg-list)
-;;   (match e
-;;     [(Get-var a) (reference-arg-list a arg-list)]
-;;     [(Dereference id tp offset) (Dereference (reference-arg-list id arg-list) tp offset)]
-;;     [(
-         
 
 (define (translate-arg-list method-args arg-list)
 
@@ -616,13 +609,17 @@ void remove(List* l, int idx, int _out) {
 
 
 (define (combine-all-repairs instr-list arg-list)
-  
-  (append
-   (list (Create-var "TMP-PTR" "Node"))
-   (list (Create-var "_out" (Argument-type (last arg-list))))
-   ;; (argument-definitions (all-but-last arg-list))
-   (find-create-vars instr-list arg-list `())
-   (complete-racket-translation instr-list arg-list `())))
+  (let
+      ([fixed-translation (complete-racket-translation instr-list arg-list `())])
+    (append
+     ;; (list (Create-var "TMP-PTR" "Node"))
+     (list (Create-var "_out" (Argument-type (last arg-list))))
+     ;; (argument-definitions (all-but-last arg-list))
+     (find-create-vars instr-list arg-list `())
+     (if (Return? (last fixed-translation))
+         fixed-translation
+         (append fixed-translation (list (Return (Get-var "_out")))))
+     )))
 
 
 ;; (map
@@ -638,6 +635,64 @@ void remove(List* l, int idx, int _out) {
    (lambda (a) (Argument-type a))
    (all-but-last arg-list)))
 
+
+(define (expression-equivalent? e1 e2)
+  (cond
+    [(and (Not? e1) (Not? e2))
+     (expression-equivalent? (Not-expr e1) (Not-expr e2))]
+        
+    [(and (Is-none?? e1) (Is-none?? e2))
+          (expression-equivalent? (Is-none?-val e1) (Is-none?-val e2))]
+    [(and
+      (Get-var? e1) (Get-var? e2)
+      (equal? (Get-var-id e1) (Get-var-id e2)))
+     #t]
+
+    ;; TODO: Other cases of redundancy
+    [else
+     #f]))
+
+
+
+(define (remove-post-return l)
+  (cond
+    [(empty? l) l]
+    [(Return? l) (list (first l))]
+    [else
+     (append
+      (list (first l))
+      (remove-post-return (rest l)))]))
+
+(define (simplify-redundant-method instr-list)
+  (cond
+    [(> 2 (length instr-list)) instr-list]
+    [(and
+      (Single-branch? (first instr-list))
+      (Single-branch? (second instr-list))
+      (expression-equivalent? (Single-branch-condition (first instr-list))
+                              (Single-branch-condition (second instr-list))))
+     (let*
+         ([combined-branch
+           (remove-post-return
+            (append
+             (Single-branch-branch (first instr-list))
+             (Single-branch-branch (second instr-list))))])
+
+
+             
+
+     (append
+      (list
+       (Single-branch (Single-branch-condition (first instr-list))
+                      combined-branch))
+      (simplify-redundant-method (rest (rest instr-list)))))]
+    [else
+     (append
+      (list (first instr-list))
+      (simplify-redundant-method (rest instr-list)))]))
+
+
+     
 
 (define (repair-all-methods library)
   (map
