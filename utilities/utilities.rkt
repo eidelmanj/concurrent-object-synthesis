@@ -13,9 +13,10 @@
  get-lib-method
  replace-lib-method
  transform-to-traces
+ all-but-last
  reduce)
 
-
+(define (all-but-last l) (reverse (cdr (reverse l))))
 ;; Takes in a list of lists of C-Instructions, and returns a list of traces each with an ID   
 (define (transform-to-traces l)
   (define (helper l n)

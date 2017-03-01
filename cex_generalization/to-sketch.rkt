@@ -33,7 +33,7 @@
             (and (Run-method? ti) (boolean? (C-Instruction-thread-id ti))))
           t)])
 
-    (display "getting interfering for: ") (displayln t)
+    ;; (display "getting interfering for: ") (displayln t)
     (unique
      equal?
      (map
@@ -108,7 +108,7 @@
   (cond
     [(empty? instr-list) ""]
     [else
-     (display "FIRST INSTR: ") (displayln instr-list)
+     ;; (display "FIRST INSTR: ") (displayln instr-list)
      (let ([elem (first instr-list)])
        (cond
          [(Loop? elem)
@@ -230,9 +230,9 @@
          [(Set-var? elem)
           ;; "todo\n"]
 
-          (display "SETVARID: ")
-          (displayln (Set-var-id elem))
-          (display "string?: ") (if (string? (Set-var-id elem)) (displayln "STRING") (displayln "nope"))
+          ;; (display "SETVARID: ")
+          ;; (displayln (Set-var-id elem))
+          ;; (display "string?: ") (if (string? (Set-var-id elem)) (displayln "STRING") (displayln "nope"))
           (string-append
            "(set! " (Set-var-id elem) ;; (~v (get-most-recent-binding (Set-var-id elem) scope-num parent-scope))
            " " (to-string-instr (Set-var-assignment elem) arg-store scope-num parent-scope) ")\n"
@@ -309,7 +309,7 @@
       "set! " (to-string-instr instr arg-store scope-num parent-scope))]))
 
 (define (to-string-instr instr arg-store scope-num parent-scope)
-  (display "to-string-instr: ") (display instr) (display "\n")
+  ;; (display "to-string-instr: ") (display instr) (display "\n")
   (cond
 
     [(Optimistic-Condition? instr)
